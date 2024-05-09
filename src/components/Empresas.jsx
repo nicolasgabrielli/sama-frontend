@@ -17,8 +17,8 @@ function Empresas() {
                     <Typography variant="h4" color={"primary.main"} fontWeight={"bold"} sx={{ mb: 2 }}>Empresas</Typography>
                     {listaEmpresas.map((empresa, index) => {
                         return (
-                            <Box sx={{ pl: 2, pr: 2}}>
-                                <Grid container alignItems="center" justifyContent="space-between" key={index} borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, mb: 1, py: 1}}>
+                            <Box sx={{ pl: 2, pr: 2 }}>
+                                <Grid container alignItems="center" justifyContent="space-between" key={index} borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, mb: 1, py: 1 }}>
                                     <Grid item xs={6}>
                                         <Typography variant="h5" color={"#000000"} sx={{ fontFamily: "Segoe UI" }}>
                                             {empresa}
@@ -31,7 +31,7 @@ function Empresas() {
                                         <Button variant="outlined" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}>
                                             Ver Detalles
                                         </Button>
-                                        <Button variant="outlined" color="cuaternary" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic"}}>
+                                        <Button variant="outlined" color="cuaternary" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic" }}>
                                             Ver Reportes
                                         </Button>
                                     </Grid>
@@ -41,6 +41,15 @@ function Empresas() {
                     })}
                 </Paper>
             </Container>
+            <Box bgcolor="#fff" sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, boxShadow: "0px -4px 6px rgba(0, 0, 0, 0.1)" }}>
+                <Box sx={{ display: "flex", justifyContent: "center", mt: 2, mb: 2 }}>
+
+                    <Button variant="contained" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1, fontSize: "1.2rem" }}>
+                        Agregar Empresa
+                    </Button>
+
+                </Box>
+            </Box>
         </>
     );
 }

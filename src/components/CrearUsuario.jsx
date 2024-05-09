@@ -16,7 +16,7 @@ function CrearUsuario() {
             <Container>
                 <Paper sx={{ mt: 2, p: 2 }}>
                     <Typography variant="h4" color={"primary.main"} fontWeight={"bold"} sx={{ mb: 2 }}>Crear Usuario</Typography>
-                    <Grid container spacing={2}>
+                    <Grid container spacing={2} sx={{ p: 1 }}>
                         <Grid item xs={12}>
                             <TextField
                                 label="Nombre"
@@ -52,7 +52,7 @@ function CrearUsuario() {
                                 </Select>
                             </FormControl>
                         </Grid>
-                        <Grid item xs={12}>
+                        <Grid item xs={12}  sx={{ p: 1 }}>
                             <Typography variant="h6" color={"primary.main"} fontWeight={"bold"} sx={{ mb: 2 }}>Acceso a empresas:</Typography>
                             {listaEmpresas.map((empresa, index) => (
                                 <Grid item xs={12} key={index}>
@@ -63,8 +63,8 @@ function CrearUsuario() {
                                 </Grid>
                             ))}
                         </Grid>
-                        <Grid item xs={12}>
-                            <Button variant="contained" color="primary" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}>
+                        <Grid item xs={12} container justifyContent="flex-end">
+                            <Button variant="contained" color="primary" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1, fontSize: "1.1rem" }}>
                                 Crear Usuario
                             </Button>
                         </Grid>

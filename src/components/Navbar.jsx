@@ -5,7 +5,6 @@ import { Link } from "react-router-dom";
 
 function Navbar({ useSectionMode, secciones, seccionesRutas, seccionActual }) {
     const [openCollapse, setOpenCollapse] = useState(true);
-    const [rotateIcon, setRotateIcon] = useState(true);
     const [tabValue, setTabValue] = useState(secciones.indexOf(seccionActual));
 
     const toggleCollapse = () => {
