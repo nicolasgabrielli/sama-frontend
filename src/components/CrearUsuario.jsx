@@ -80,8 +80,8 @@ function CrearUsuario() {
                         </Grid>
                         <Grid item xs={6} container justifyContent="flex-end">
                             <Link to="/usuarios" style={{ textDecoration: "none" }}>
-                                <Button variant="contained" color="primary" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1, fontSize: "1.1rem", maxHeight: 0.7 }}>
-                                    Descartar y Volver
+                                <Button variant="outlined" color="primary" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1, fontSize: "1.1rem", maxHeight: 0.7 }}>
+                                    Volver
                                 </Button>
                             </Link>
                         </Grid>

@@ -157,7 +157,7 @@ function Usuarios() {
                 <DialogTitle>Eliminar Usuario</DialogTitle>
                 <DialogContent>
                     <Typography variant="body1" sx={{ mb: 1 }}>
-                        Usted está a punto de eliminar el usuario "<Typography component="span" variant="body1" color="primary.main" sx={{ fontStyle: "italic" }}>{usuarioAEliminar}</Typography>", para <strong><Typography component="span" variant="body1" color="error.main">eliminarlo</Typography></strong> ingrese nuevamente el nombre de usuario en el cuadro de texto:
+                        Usted está a punto de eliminar el usuario "<Typography component="span" variant="body1" color="primary.main" sx={{ fontStyle: "italic" }}>{usuarioAEliminar}</Typography>", para confirmar la <strong><Typography component="span" variant="body1" color="error.main">eliminación</Typography></strong> ingrese nuevamente el nombre de usuario en el cuadro de texto:
                     </Typography>
 
                     <TextField
