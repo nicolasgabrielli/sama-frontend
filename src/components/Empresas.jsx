@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Container, Typography, Paper, Button, Grid, Box } from "@mui/material";
 import Navbar from "./Navbar";
+import empresaService from "../services/EmpresaService";
 
 function Empresas() {
     const useSectionMode = true;
@@ -8,8 +9,21 @@ function Empresas() {
     const seccionesRutas = ["/", "/empresas", "/usuarios"];
     const seccionActual = "Empresas";
 
-    const listaEmpresas = ["Empresa A", "Empresa B", "Empresa C", "Empresa D", "Empresa E", "Empresa F", "Empresa G", "Empresa H", "Empresa I", "Empresa J"];
-    return (
+    const [listaEmpresas, setListaEmpresas] = useState([]);
+    useEffect(() => {
+        const fetchEmpresas = async () => {
+            try {
+                const response = await empresaService.getListaEmpresas();
+                if (response && response.data) {
+                    setListaEmpresas(response.data);
+                }
+            } catch (error) {
+                console.error('Error al obtener la lista de empresas:', error);
+            }
+        };
+
+        fetchEmpresas();
+    }, []);    return (
         <>
             <Navbar seccionActual={seccionActual} useSectionMode={useSectionMode} secciones={secciones} seccionesRutas={seccionesRutas} />
             <Container>
@@ -21,7 +35,7 @@ function Empresas() {
                                 <Grid container alignItems="center" justifyContent="space-between" key={index} borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, mb: 1, py: 1 }}>
                                     <Grid item xs={6}>
                                         <Typography variant="h5" color={"#000000"} sx={{ fontFamily: "Segoe UI" }}>
-                                            {empresa}
+                                            {empresa.nombre}
                                         </Typography>
                                     </Grid>
                                     <Grid item xs={6} container justifyContent="flex-end" spacing={1}>

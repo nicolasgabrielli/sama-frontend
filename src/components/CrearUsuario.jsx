@@ -21,8 +21,6 @@ function CrearUsuario() {
         fetchEmpresas();
     }, []);
 
-    console.log(listaEmpresas);
-
     const useSectionMode = true;
     const secciones = ["Home", "Empresas", "Usuarios"];
     const seccionesRutas = ["/", "/empresas", "/usuarios"];
