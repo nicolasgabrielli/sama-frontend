@@ -1,14 +1,32 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Container, Typography, Paper, Button, Grid, TextField, FormControl, InputLabel, Select, MenuItem, Checkbox, FormControlLabel, FormGroup, FormLabel } from "@mui/material";
 import Navbar from "./Navbar";
+import empresaService from "../services/EmpresaService";
 
 function CrearUsuario() {
+
+    const [listaEmpresas, setListaEmpresas] = useState([]);
+    useEffect(() => {
+        const fetchEmpresas = async () => {
+            try {
+                const response = await empresaService.getListaEmpresas();
+                if (response && response.data) {
+                    setListaEmpresas(response.data);
+                }
+            } catch (error) {
+                console.error('Error al obtener la lista de empresas:', error);
+            }
+        };
+
+        fetchEmpresas();
+    }, []);
+
+    console.log(listaEmpresas);
+
     const useSectionMode = true;
     const secciones = ["Home", "Empresas", "Usuarios"];
     const seccionesRutas = ["/", "/empresas", "/usuarios"];
     const seccionActual = "Usuarios";
-
-     const listaEmpresas = ["Empresa A", "Empresa B", "Empresa C", "Empresa D", "Empresa E", "Empresa F", "Empresa G", "Empresa H", "Empresa I", "Empresa J"];
 
      return (
         <>
@@ -58,7 +76,7 @@ function CrearUsuario() {
                                 <Grid item xs={12} key={index}>
                                     <FormControlLabel
                                         control={<Checkbox />}
-                                        label={empresa}
+                                        label={empresa.nombre}
                                     />
                                 </Grid>
                             ))}
