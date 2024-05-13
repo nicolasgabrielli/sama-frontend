@@ -1,8 +1,23 @@
 import React, { useState } from "react";
-import { Container, Typography, Paper, Button, Grid, Box, TextField, InputAdornment, IconButton } from "@mui/material";
-import Navbar from "./Navbar";
+import {
+    Container,
+    Typography,
+    Paper,
+    Button,
+    Grid,
+    Box,
+    TextField,
+    InputAdornment,
+    IconButton,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+} from "@mui/material";
 import { Link } from 'react-router-dom';
 import ClearIcon from '@mui/icons-material/Clear';
+import DeleteIcon from '@mui/icons-material/Delete';
+import Navbar from "./Navbar";
 
 function Usuarios() {
     // Datos de la barra de navegación
@@ -18,6 +33,15 @@ function Usuarios() {
     // Estado para el valor del campo de búsqueda
     const [searchValue, setSearchValue] = useState("");
 
+    // Estado para controlar la apertura y cierre del diálogo
+    const [openDialog, setOpenDialog] = useState(false);
+
+    // Estado para almacenar el nombre del usuario a eliminar
+    const [usuarioAEliminar, setUsuarioAEliminar] = useState("");
+
+    // Estado para almacenar el nombre ingresado por el usuario
+    const [nombreIngresado, setNombreIngresado] = useState("");
+
     // Función para manejar cambios en el campo de búsqueda
     const handleSearchChange = (event) => {
         setSearchValue(event.target.value);
@@ -26,6 +50,34 @@ function Usuarios() {
     // Función para limpiar el campo de búsqueda
     const handleClearSearch = () => {
         setSearchValue("");
+    };
+
+    // Función para abrir el diálogo de eliminación
+    const handleOpenDialog = (usuario) => {
+        setUsuarioAEliminar(usuario);
+        setNombreIngresado(""); // Limpiar el nombre ingresado cada vez que se abre el diálogo
+        setOpenDialog(true);
+    };
+
+    // Función para cerrar el diálogo de eliminación
+    const handleCloseDialog = () => {
+        setOpenDialog(false);
+    };
+
+    // Función para manejar cambios en el nombre ingresado por el usuario
+    const handleNombreIngresadoChange = (event) => {
+        setNombreIngresado(event.target.value);
+    };
+
+    // Función para manejar la eliminación del usuario
+    const handleEliminarUsuario = () => {
+        if (nombreIngresado.toLowerCase() === usuarioAEliminar.toLowerCase()) {
+            // Realizar la eliminación del usuario aquí
+            console.log("Usuario eliminado:", usuarioAEliminar);
+            setOpenDialog(false);
+        } else {
+            alert("El nombre ingresado no coincide con el usuario a eliminar.");
+        }
     };
 
     // Filtrar la lista de usuarios según el término de búsqueda
@@ -77,7 +129,7 @@ function Usuarios() {
                                         </Typography>
                                     </Grid>
                                     <Grid item xs={6} container justifyContent="flex-end" spacing={1}>
-                                        <Button variant="outlined" color="error" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}>
+                                        <Button variant="outlined" color="error" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }} onClick={() => handleOpenDialog(usuario)}>
                                             Eliminar
                                         </Button>
                                         <Button variant="outlined" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}>
@@ -91,7 +143,7 @@ function Usuarios() {
                 </Paper>
             </Container>
             <Box bgcolor="#fff" sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, boxShadow: "0px -4px 6px rgba(0, 0, 0, 0.1)" }}>
-                <Box sx={{ display: "flex", justifyContent: "center", mt: 2, mb: 2}}>
+                <Box sx={{ display: "flex", justifyContent: "center", mt: 2, mb: 2 }}>
                     <Link to="/usuarios/crear" style={{ textDecoration: 'none' }}>
                         <Button variant="contained" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1, fontSize: "1.2rem" }}>
                             Agregar Usuario
@@ -99,6 +151,34 @@ function Usuarios() {
                     </Link>
                 </Box>
             </Box>
+
+            {/* Diálogo de eliminación */}
+            <Dialog open={openDialog} onClose={handleCloseDialog}>
+                <DialogTitle>Eliminar Usuario</DialogTitle>
+                <DialogContent>
+                    <Typography variant="body1" sx={{ mb: 1 }}>
+                        Usted está a punto de eliminar el usuario "<Typography component="span" variant="body1" color="primary.main" sx={{ fontStyle: "italic" }}>{usuarioAEliminar}</Typography>", para <strong><Typography component="span" variant="body1" color="error.main">eliminarlo</Typography></strong> ingrese nuevamente el nombre de usuario en el cuadro de texto:
+                    </Typography>
+
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        label="Nombre de Usuario a Eliminar"
+                        type="text"
+                        fullWidth
+                        value={nombreIngresado}
+                        onChange={handleNombreIngresadoChange}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseDialog} color="primary" variant="outlined">
+                        Cancelar
+                    </Button>
+                    <Button onClick={handleEliminarUsuario} color="error" variant="contained">
+                        Eliminar <DeleteIcon sx={{ ml: 0.5, mr: -0.5 }} />
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </>
     );
 }

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Container, Typography, Paper, Button, Grid, Box, TextField } from "@mui/material";
+import { Container, Typography, Paper, Button, Grid, Box, TextField, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import Navbar from "./Navbar";
 import empresaService from "../services/EmpresaService";
+import DeleteIcon from '@mui/icons-material/Delete';
 
 function Empresas() {
     const useSectionMode = true;
@@ -11,6 +12,8 @@ function Empresas() {
 
     const [listaEmpresas, setListaEmpresas] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
+    const [openDialog, setOpenDialog] = useState(false);
+    const [empresaAEliminar, setEmpresaAEliminar] = useState(null);
 
     useEffect(() => {
         const fetchEmpresas = async () => {
@@ -26,10 +29,29 @@ function Empresas() {
 
         fetchEmpresas();
     }, []);
-
+    
     // Función para manejar cambios en el campo de búsqueda
     const handleSearchChange = (event) => {
         setSearchTerm(event.target.value);
+    };
+
+    // Función para manejar la apertura del diálogo de confirmación de eliminación
+    const handleOpenDialog = (empresa) => {
+        setEmpresaAEliminar(empresa);
+        setOpenDialog(true);
+    };
+
+    // Función para manejar la confirmación de eliminación de la empresa
+    const handleConfirmarEliminacion = () => {
+        // Realizar la eliminación de la empresa aquí
+        console.log("Empresa eliminada:", empresaAEliminar);
+        // Cerrar el diálogo
+        setOpenDialog(false);
+    };
+
+    // Función para cerrar el diálogo de confirmación de eliminación
+    const handleCloseDialog = () => {
+        setOpenDialog(false);
     };
 
     // Filtrar la lista de empresas según el término de búsqueda
@@ -53,7 +75,7 @@ function Empresas() {
                     />
                     {filteredEmpresas.map((empresa, index) => {
                         return (
-                            <Box sx={{ pl: 2, pr: 2 }}>
+                            <Box sx={{ pl: 2, pr: 2 }} key={index}>
                                 <Grid container alignItems="center" justifyContent="space-between" key={index} borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, mb: 1, py: 1 }}>
                                     <Grid item xs={6}>
                                         <Typography variant="h5" color={"#000000"} sx={{ fontFamily: "Segoe UI" }}>
@@ -61,7 +83,7 @@ function Empresas() {
                                         </Typography>
                                     </Grid>
                                     <Grid item xs={6} container justifyContent="flex-end" spacing={1}>
-                                        <Button variant="outlined" color="error" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}>
+                                        <Button variant="outlined" color="error" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }} onClick={() => handleOpenDialog(empresa)}>
                                             Eliminar
                                         </Button>
                                         <Button variant="outlined" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}>
@@ -84,6 +106,31 @@ function Empresas() {
                     </Button>
                 </Box>
             </Box>
+
+            {/* Diálogo de confirmación de eliminación */}
+            <Dialog open={openDialog} onClose={handleCloseDialog}>
+                <DialogTitle>Eliminar Empresa</DialogTitle>
+                <DialogContent>
+                    <Typography variant="body1">
+                        Usted está a punto de eliminar la empresa "<Typography component="span" variant="body1" color="primary.main" sx={{ fontStyle: "italic" }}>{empresaAEliminar && empresaAEliminar.nombre}</Typography>". Para confirmar la <Typography component="span" variant="body1" color="red" sx={{ fontWeight: "bold" }}>eliminación</Typography>, escriba el nombre de la empresa:
+                    </Typography>
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        label="Nombre de la Empresa a Eliminar"
+                        type="text"
+                        fullWidth
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseDialog} color="primary" variant="outlined">
+                        Cancelar
+                    </Button>
+                    <Button onClick={handleConfirmarEliminacion} color="error" variant="contained">
+                        Eliminar <DeleteIcon sx={{ ml: 0.5, mr: -0.5 }} />
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </>
     );
 }
