@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { Container, Typography, Paper, Button, Grid, TextField, FormControl, InputLabel, Select, MenuItem, Checkbox, FormControlLabel, FormGroup, FormLabel } from "@mui/material";
+import { Container, Typography, Paper, Button, Grid, TextField, FormControl, InputLabel, Select, MenuItem, Checkbox, FormControlLabel, FormGroup, FormLabel, List, ListItem, ListItemText, ListItemIcon, Divider } from "@mui/material";
 import Navbar from "./Navbar";
+import { Search, Check } from "@mui/icons-material";
+import { Autocomplete } from "@mui/material";
 import empresaService from "../services/EmpresaService";
+import { Link } from "react-router-dom";
 
 function CrearUsuario() {
 
     const [listaEmpresas, setListaEmpresas] = useState([]);
+
+    const listaRoles = ["Administrador", "Autorizador de Reporte", "Autorizador de Registro", "Editor de Reporte"];
+
     useEffect(() => {
         const fetchEmpresas = async () => {
             try {
@@ -21,22 +27,71 @@ function CrearUsuario() {
         fetchEmpresas();
     }, []);
 
-    const useSectionMode = true;
-    const secciones = ["Home", "Empresas", "Usuarios"];
-    const seccionesRutas = ["/", "/empresas", "/usuarios"];
-    const seccionActual = "Usuarios";
+    const [selectedEmpresas, setSelectedEmpresas] = useState([]);
+    const [searchValue, setSearchValue] = useState("");
 
-     return (
+    // Función para manejar cambios en el campo de búsqueda
+    const handleSearchChange = (event) => {
+        setSearchValue(event.target.value);
+    };
+
+    // Filtrar la lista de empresas según el término de búsqueda
+    const filteredEmpresas = listaEmpresas.filter(empresa =>
+        empresa.nombre.toLowerCase().includes(searchValue.toLowerCase())
+    );
+
+    // Función para manejar la selección/deselección de todas las empresas
+    const handleSelectAll = () => {
+        setSelectedEmpresas(filteredEmpresas);
+    };
+
+    // Función para manejar la selección/deselección de empresas individuales
+    const handleEmpresaToggle = (empresa) => {
+        const selectedIndex = selectedEmpresas.findIndex(e => e.nombre === empresa.nombre);
+        let newSelectedEmpresas = [];
+
+        if (selectedIndex === -1) {
+            newSelectedEmpresas = [...selectedEmpresas, empresa];
+        } else if (selectedIndex === 0) {
+            newSelectedEmpresas = selectedEmpresas.slice(1);
+        } else if (selectedIndex === selectedEmpresas.length - 1) {
+            newSelectedEmpresas = selectedEmpresas.slice(0, -1);
+        } else if (selectedIndex > 0) {
+            newSelectedEmpresas = [
+                ...selectedEmpresas.slice(0, selectedIndex),
+                ...selectedEmpresas.slice(selectedIndex + 1)
+            ];
+        }
+
+        setSelectedEmpresas(newSelectedEmpresas.sort((a, b) => a.nombre.localeCompare(b.nombre)));
+    };
+
+    // Función para manejar la selección/deselección de todas las empresas
+    const isSelected = (empresa) => selectedEmpresas.some(e => e.nombre === empresa.nombre);
+
+    return (
         <>
-            <Navbar seccionActual={seccionActual} useSectionMode={useSectionMode} secciones={secciones} seccionesRutas={seccionesRutas} />
+            <Navbar />
             <Container>
                 <Paper sx={{ mt: 2, p: 2 }}>
-                    <Typography variant="h4" color={"primary.main"} fontWeight={"bold"} sx={{ mb: 2 }}>Crear Usuario</Typography>
+                    <Grid container spacing={2}>
+                        <Grid item xs={6}>
+                            <Typography variant="h4" color={"primary.main"} fontWeight={"bold"} sx={{ mb: 2 }}>Crear Usuario</Typography>
+                        </Grid>
+                        <Grid item xs={6} container justifyContent="flex-end">
+                            <Link to="/usuarios" style={{ textDecoration: "none" }}>
+                                <Button variant="contained" color="primary" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1, fontSize: "1.1rem", maxHeight: 0.7 }}>
+                                    Descartar y Volver
+                                </Button>
+                            </Link>
+                        </Grid>
+                    </Grid>
                     <Grid container spacing={2} sx={{ p: 1 }}>
                         <Grid item xs={12}>
                             <TextField
                                 label="Nombre"
                                 variant="outlined"
+                                helperText="Nombre completo del usuario"
                                 fullWidth
                             />
                         </Grid>
@@ -44,6 +99,7 @@ function CrearUsuario() {
                             <TextField
                                 label="Correo"
                                 variant="outlined"
+                                helperText="Correo electrónico del usuario"
                                 fullWidth
                             />
                         </Grid>
@@ -52,6 +108,7 @@ function CrearUsuario() {
                                 label="Contraseña"
                                 type="password"
                                 variant="outlined"
+                                helperText="Contraseña asignada al usuario"
                                 fullWidth
                             />
                         </Grid>
@@ -61,23 +118,67 @@ function CrearUsuario() {
                                 <Select
                                     label="Rol"
                                     defaultValue=""
+                                    fullWidth
                                 >
-                                    <MenuItem value={"Administrador"}>Autorizador de reporte</MenuItem>
-                                    <MenuItem value={"Usuario Regular"}>Autorizador de registro</MenuItem>
-                                    <MenuItem value={"Usuario Regular"}>Visualizador de evidencia</MenuItem>
+                                    {listaRoles.map((rol, index) => (
+                                        <MenuItem key={index} value={index}>{rol}</MenuItem>
+                                    ))}
                                 </Select>
                             </FormControl>
                         </Grid>
-                        <Grid item xs={12}  sx={{ p: 1 }}>
+                        <Grid item xs={12} sx={{ p: 1 }}>
                             <Typography variant="h6" color={"primary.main"} fontWeight={"bold"} sx={{ mb: 2 }}>Acceso a empresas:</Typography>
-                            {listaEmpresas.map((empresa, index) => (
-                                <Grid item xs={12} key={index}>
-                                    <FormControlLabel
-                                        control={<Checkbox />}
-                                        label={empresa.nombre}
+                            <Autocomplete
+                                disablePortal
+                                fullWidth
+                                multiple
+                                options={filteredEmpresas}
+                                getOptionLabel={(empresa) => empresa.nombre}
+                                value={selectedEmpresas}
+                                onChange={(event, newValue) => {
+                                    setSelectedEmpresas(newValue.sort((a, b) => a.nombre.localeCompare(b.nombre)));
+                                }}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        label="Empresas"
+                                        variant="outlined"
+                                        InputProps={{
+                                            ...params.InputProps,
+                                            startAdornment: (
+                                                <>
+                                                    <Search />
+                                                    {params.InputProps.startAdornment}
+                                                </>
+                                            ),
+                                            endAdornment: (
+                                                <>
+                                                    <Button
+                                                        onClick={handleSelectAll}
+                                                        color="primary"
+                                                        startIcon={<Check />}
+                                                    >
+                                                        Seleccionar Todo
+                                                    </Button>
+                                                    {params.InputProps.endAdornment}
+                                                </>
+                                            )
+                                        }}
+                                        onChange={handleSearchChange}
                                     />
-                                </Grid>
-                            ))}
+                                )}
+                                renderOption={(props, option, { selected }) => (
+                                    <li {...props}>
+                                        <Checkbox
+                                            icon={<span className="MuiBox-root" />}
+                                            checkedIcon={<span className="MuiBox-root" />}
+                                            checked={isSelected(option)}
+                                            onClick={() => handleEmpresaToggle(option)}
+                                        />
+                                        <ListItemText primary={option.nombre} />
+                                    </li>
+                                )}
+                            />
                         </Grid>
                         <Grid item xs={12} container justifyContent="flex-end">
                             <Button variant="contained" color="primary" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1, fontSize: "1.1rem" }}>
