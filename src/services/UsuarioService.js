@@ -1,5 +1,5 @@
 import axios from 'axios';
-const API_URL = 'http://localhost:8081/api/usuario/';
+const API_URL = 'http://localhost:8081/api/usuario';
 
 class UsuarioService {
     getListaUsuarios() {
@@ -19,7 +19,7 @@ class UsuarioService {
     }
 
     deleteUsuario(id) {
-        return axios.delete(API_URL + id);
+        return axios.delete(API_URL+ "/" + id);
     }
 }
 
