@@ -103,7 +103,7 @@ function Usuarios() {
                     <Typography variant="h4" color={"primary.main"} fontWeight={"bold"} sx={{ mb: 2 }}>Usuarios</Typography>
                     {/* Campo de búsqueda */}
                     <TextField
-                        label="Buscar usuario"
+                        label="Buscar Usuario"
                         variant="outlined"
                         value={searchValue}
                         onChange={handleSearchChange}

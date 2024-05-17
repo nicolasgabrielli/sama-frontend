@@ -59,7 +59,7 @@ function ListaReportes() {
                                             <Button variant="outlined" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}>
                                                 Abrir Reporte
                                             </Button>
-                                            <Button variant="outlined" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}>
+                                            <Button variant="outlined" color="cuaternary" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}>
                                                 Descargar Reporte
                                             </Button>
                                         </Grid>

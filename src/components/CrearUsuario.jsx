@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Container, Typography, Paper, Button, Grid, TextField, FormControl, InputLabel, Select, MenuItem, Checkbox, FormControlLabel, FormGroup, FormLabel, List, ListItem, ListItemText, ListItemIcon, Divider } from "@mui/material";
+import { Container, Typography, Paper, Button, Grid, TextField, FormControl, InputLabel, Select, MenuItem, Checkbox, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, ListItemText } from "@mui/material";
 import Navbar from "./Navbar";
 import { Search, Check } from "@mui/icons-material";
 import { Autocomplete } from "@mui/material";
@@ -8,12 +8,12 @@ import { Link } from "react-router-dom";
 import usuarioService from "../services/UsuarioService";
 
 function CrearUsuario() {
-
     const [nombre, setNombre] = useState("");
     const [correo, setCorreo] = useState("");
     const [contrasenia, setContrasenia] = useState("");
     const [rol, setRol] = useState("");
     const [listaEmpresas, setListaEmpresas] = useState([]);
+    const [openDialog, setOpenDialog] = useState(false);
 
     const listaRoles = ["Administrador", "Autorizador de Reporte", "Autorizador de Registro", "Editor de Reporte"];
 
@@ -27,22 +27,18 @@ function CrearUsuario() {
     const [selectedEmpresas, setSelectedEmpresas] = useState([]);
     const [searchValue, setSearchValue] = useState("");
 
-    // Función para manejar cambios en el campo de búsqueda
     const handleSearchChange = (event) => {
         setSearchValue(event.target.value);
     };
 
-    // Filtrar la lista de empresas según el término de búsqueda
     const filteredEmpresas = listaEmpresas.filter(empresa =>
         empresa.nombre.toLowerCase().includes(searchValue.toLowerCase())
     );
 
-    // Función para manejar la selección/deselección de todas las empresas
     const handleSelectAll = () => {
         setSelectedEmpresas(filteredEmpresas);
     };
 
-    // Función para manejar la selección/deselección de empresas individuales
     const handleEmpresaToggle = (empresa) => {
         const selectedIndex = selectedEmpresas.findIndex(e => e.nombre === empresa.nombre);
         let newSelectedEmpresas = [];
@@ -63,12 +59,11 @@ function CrearUsuario() {
         setSelectedEmpresas(newSelectedEmpresas.sort((a, b) => a.nombre.localeCompare(b.nombre)));
     };
 
-    // Función para manejar la selección/deselección de todas las empresas
     const isSelected = (empresa) => selectedEmpresas.some(e => e.nombre === empresa.nombre);
 
+    const handleCrearUsuario = async (event) => {
+        event.preventDefault();
 
-    // Crear un nuevo usuario
-    const handleCrearUsuario = () => {
         const userData = {
             nombre: nombre,
             correo: correo,
@@ -76,7 +71,17 @@ function CrearUsuario() {
             rol: rol,
             empresas: selectedEmpresas.map(empresa => empresa.id)
         };
-        usuarioService.crearUsuario(userData);
+
+        try {
+            await usuarioService.crearUsuario(userData);
+            setOpenDialog(true);
+        } catch (error) {
+            console.error('Error al crear el usuario:', error);
+        }
+    };
+
+    const handleCloseDialog = () => {
+        setOpenDialog(false);
     };
 
     return (
@@ -96,122 +101,144 @@ function CrearUsuario() {
                             </Link>
                         </Grid>
                     </Grid>
-                    <Grid container spacing={2} sx={{ p: 1 }}>
-                        <Grid item xs={12}>
-                            <TextField
-                                label="Nombre"
-                                name="nombre"
-                                variant="outlined"
-                                helperText="Nombre completo del usuario"
-                                fullWidth
-                                onChange={(event) => setNombre(event.target.value)}
-                            />
-                        </Grid>
-                        <Grid item xs={12}>
-                            <TextField
-                                label="Correo"
-                                name="correo"
-                                variant="outlined"
-                                helperText="Correo electrónico del usuario"
-                                fullWidth
-                                onChange={(event) => setCorreo(event.target.value)}
-                            />
-                        </Grid>
-                        <Grid item xs={12}>
-                            <TextField
-                                label="Contraseña"
-                                name="contrasenia"
-                                type="password"
-                                variant="outlined"
-                                helperText="Contraseña asignada al usuario"
-                                fullWidth
-                                onChange={(event) => setContrasenia(event.target.value)}
-                            />
-                        </Grid>
-                        <Grid item xs={12}>
-                            <FormControl variant="outlined" fullWidth>
-                                <InputLabel>Rol</InputLabel>
-                                <Select
-                                    label="Rol"
-                                    name="rol"
-                                    defaultValue=""
+                    <form onSubmit={handleCrearUsuario}>
+                        <Grid container spacing={2} sx={{ p: 1 }}>
+                            <Grid item xs={12}>
+                                <TextField
+                                    label="Nombre"
+                                    name="nombre"
+                                    variant="outlined"
+                                    helperText="Nombre completo del usuario"
                                     fullWidth
-                                    onChange={(event) => setRol(event.target.value)}
-                                >
-                                    {listaRoles.map((rol, index) => (
-                                        <MenuItem key={index} value={index}>{rol}</MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                        </Grid>
-                        <Grid item xs={12} sx={{ p: 1 }}>
-                            <Typography variant="h6" color={"primary.main"} fontWeight={"bold"} sx={{ mb: 2 }}>Acceso a empresas:</Typography>
-                            <Autocomplete
-                                disablePortal
-                                fullWidth
-                                multiple
-                                options={filteredEmpresas}
-                                getOptionLabel={(empresa) => empresa.nombre}
-                                value={selectedEmpresas}
-                                onChange={(event, newValue) => {
-                                    setSelectedEmpresas(newValue.sort((a, b) => a.nombre.localeCompare(b.nombre)));
-                                }}
-                                renderInput={(params) => (
-                                    <TextField
-                                        {...params}
-                                        label="Empresas"
-                                        variant="outlined"
-                                        InputProps={{
-                                            ...params.InputProps,
-                                            startAdornment: (
-                                                <>
-                                                    <Search />
-                                                    {params.InputProps.startAdornment}
-                                                </>
-                                            ),
-                                            endAdornment: (
-                                                <>
-                                                    <Button
-                                                        onClick={handleSelectAll}
-                                                        color="primary"
-                                                        startIcon={<Check />}
-                                                    >
-                                                        Seleccionar Todo
-                                                    </Button>
-                                                    {params.InputProps.endAdornment}
-                                                </>
-                                            )
-                                        }}
-                                        onChange={handleSearchChange}
-                                    />
-                                )}
-                                renderOption={(props, option, { selected }) => (
-                                    <li key={option.nombre}{...props}>
-                                        <Checkbox
-                                            icon={<span className="MuiBox-root" />}
-                                            checkedIcon={<span className="MuiBox-root" />}
-                                            checked={isSelected(option)}
-                                            onClick={() => handleEmpresaToggle(option)}
+                                    required
+                                    onChange={(event) => setNombre(event.target.value)}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextField
+                                    label="Correo"
+                                    name="correo"
+                                    type="email"
+                                    variant="outlined"
+                                    helperText="Correo electrónico del usuario"
+                                    fullWidth
+                                    required
+                                    onChange={(event) => setCorreo(event.target.value)}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextField
+                                    label="Contraseña"
+                                    name="contrasenia"
+                                    type="password"
+                                    variant="outlined"
+                                    helperText="Contraseña asignada al usuario"
+                                    fullWidth
+                                    required
+                                    onChange={(event) => setContrasenia(event.target.value)}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <FormControl variant="outlined" fullWidth required>
+                                    <InputLabel>Rol</InputLabel>
+                                    <Select
+                                        label="Rol"
+                                        name="rol"
+                                        value={rol}
+                                        onChange={(event) => setRol(event.target.value)}
+                                    >
+                                        {listaRoles.map((rol, index) => (
+                                            <MenuItem key={index} value={rol}>{rol}</MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid item xs={12} sx={{ p: 1 }}>
+                                <Typography variant="h6" color={"primary.main"} fontWeight={"bold"} sx={{ mb: 2 }}>Acceso a empresas:</Typography>
+                                <Autocomplete
+                                    disablePortal
+                                    fullWidth
+                                    multiple
+                                    options={filteredEmpresas}
+                                    getOptionLabel={(empresa) => empresa.nombre}
+                                    value={selectedEmpresas}
+                                    onChange={(event, newValue) => {
+                                        setSelectedEmpresas(newValue.sort((a, b) => a.nombre.localeCompare(b.nombre)));
+                                    }}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            label="Empresas"
+                                            variant="outlined"
+                                            required
+                                            InputProps={{
+                                                ...params.InputProps,
+                                                startAdornment: (
+                                                    <>
+                                                        <Search />
+                                                        {params.InputProps.startAdornment}
+                                                    </>
+                                                ),
+                                                endAdornment: (
+                                                    <>
+                                                        <Button
+                                                            onClick={handleSelectAll}
+                                                            color="primary"
+                                                            startIcon={<Check />}
+                                                        >
+                                                            Seleccionar Todo
+                                                        </Button>
+                                                        {params.InputProps.endAdornment}
+                                                    </>
+                                                )
+                                            }}
+                                            onChange={handleSearchChange}
                                         />
-                                        <ListItemText primary={option.nombre} />
-                                    </li>
-                                )}
-                            />
-                        </Grid>
-                        <Grid item xs={12} container justifyContent="flex-end">
-                            <Link to="/usuarios" style={{ textDecoration: 'none' }}>
+                                    )}
+                                    renderOption={(props, option, { selected }) => (
+                                        <li key={option.nombre} {...props}>
+                                            <Checkbox
+                                                icon={<span className="MuiBox-root" />}
+                                                checkedIcon={<span className="MuiBox-root" />}
+                                                checked={isSelected(option)}
+                                                onClick={() => handleEmpresaToggle(option)}
+                                            />
+                                            <ListItemText primary={option.nombre} />
+                                        </li>
+                                    )}
+                                />
+                            </Grid>
+                            <Grid item xs={12} container justifyContent="flex-end">
                                 <Button
+                                    type="submit"
                                     variant="contained"
                                     color="primary"
                                     sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1, fontSize: "1.1rem" }}
-                                    onClick={handleCrearUsuario}
                                 >
                                     Crear Usuario
                                 </Button>
-                            </Link>
+                            </Grid>
                         </Grid>
-                    </Grid>
+                    </form>
                 </Paper>
+                <Dialog
+                    open={openDialog}
+                    onClose={handleCloseDialog}
+                    aria-labelledby="alert-dialog-title"
+                    aria-describedby="alert-dialog-description"
+                >
+                    <DialogTitle id="alert-dialog-title">{"Usuario creado"}</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText id="alert-dialog-description">
+                            El usuario ha sido creado exitosamente.
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleCloseDialog} color="primary" autoFocus>
+                            OK
+                        </Button>
+                    </DialogActions>
+                </Dialog>
             </Container>
         </>
     );
