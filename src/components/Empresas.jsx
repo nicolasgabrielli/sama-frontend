@@ -16,19 +16,11 @@ function Empresas() {
     const [empresaAEliminar, setEmpresaAEliminar] = useState(null);
 
     useEffect(() => {
-        const fetchEmpresas = async () => {
-            try {
-                const response = await empresaService.getListaEmpresas();
-                if (response && response.data) {
-                    setListaEmpresas(response.data);
-                }
-            } catch (error) {
-                console.error('Error al obtener la lista de empresas:', error);
-            }
-        };
-
-        fetchEmpresas();
-    }, []);
+        empresaService.getListaEmpresas()
+            .then(response => response.data)
+            .then(data => setListaEmpresas(data))
+            .catch(error => console.error('Error al obtener la lista de empresas:', error));
+    }, []);   
     
     // Función para manejar cambios en el campo de búsqueda
     const handleSearchChange = (event) => {

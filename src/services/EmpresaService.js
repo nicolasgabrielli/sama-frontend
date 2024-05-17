@@ -1,9 +1,9 @@
 import axios from 'axios';
-const API_URL = 'http://localhost:8081/api/empresa/';
+const API_URL = 'http://localhost:8081/api/empresa';
 
 class EmpresaService {
     getListaEmpresas() {
-        return axios.get(API_URL+"nombres"); // Tuplas de id y nombre
+        return axios.get(API_URL+"/nombres"); // Tuplas de id y nombre
     }
 
     getEmpresa(id) {

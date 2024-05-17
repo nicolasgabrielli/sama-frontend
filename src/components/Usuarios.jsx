@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     Container,
     Typography,
@@ -18,6 +18,7 @@ import { Link } from 'react-router-dom';
 import ClearIcon from '@mui/icons-material/Clear';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Navbar from "./Navbar";
+import usuarioService from "../services/UsuarioService";
 
 function Usuarios() {
     // Datos de la barra de navegación
@@ -27,8 +28,16 @@ function Usuarios() {
     const seccionActual = "Usuarios";
 
     // Listas de usuarios y roles
-    const listaUsuarios = ["Nicolás Gabrielli", "Jesús Medina", "Flavio Ramos", "Ignacio Riquelme"];
+    const [listaUsuarios, setListaUsuarios] = useState([]);
     const listaRoles = ["Administrador", "Editor de Reporte", "Autorizador de Reporte", "Autorizador de Registro"];
+
+    // Obtener la lista de usuarios al cargar el componente
+    useEffect(() => {
+        usuarioService.getListaUsuarios()
+            .then(response => response.data)
+            .then(data => setListaUsuarios(data))
+            .catch(error => console.error('Error al obtener la lista de usuarios:', error));
+    }, []);
 
     // Estado para el valor del campo de búsqueda
     const [searchValue, setSearchValue] = useState("");
@@ -71,10 +80,11 @@ function Usuarios() {
 
     // Función para manejar la eliminación del usuario
     const handleEliminarUsuario = () => {
-        if (nombreIngresado.toLowerCase() === usuarioAEliminar.toLowerCase()) {
-            // Realizar la eliminación del usuario aquí
-            console.log("Usuario eliminado:", usuarioAEliminar);
+        if (nombreIngresado.toLowerCase() === usuarioAEliminar.nombre.toLowerCase()) {
+            const id = usuarioAEliminar.id;
+            usuarioService.deleteUsuario(usuarioAEliminar.id);
             setOpenDialog(false);
+            setListaUsuarios(listaUsuarios.filter(usuario => usuario.id !== id));
         } else {
             alert("El nombre ingresado no coincide con el usuario a eliminar.");
         }
@@ -82,7 +92,7 @@ function Usuarios() {
 
     // Filtrar la lista de usuarios según el término de búsqueda
     const listaUsuariosFiltrada = listaUsuarios.filter(usuario =>
-        usuario.toLowerCase().includes(searchValue.toLowerCase())
+        usuario.nombre.toLowerCase().includes(searchValue.toLowerCase())
     );
 
     return (
@@ -114,18 +124,17 @@ function Usuarios() {
 
                     {/* Lista de usuarios filtrada (Usando el filtro de búsqueda) */}
                     {listaUsuariosFiltrada.map((usuario, index) => {
-                        const usuarioIndex = listaUsuarios.indexOf(usuario);    // Obtener el índice del usuario en la lista original
                         return (
                             <Box sx={{ pl: 2, pr: 2 }} key={index}>
                                 <Grid container alignItems="center" justifyContent="space-between" borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, mb: 1, py: 1 }}>
                                     <Grid item xs={3}>
                                         <Typography variant="h5" color={"#000000"} sx={{ fontFamily: "Segoe UI" }}>
-                                            {usuario}
+                                            {usuario.nombre}
                                         </Typography>
                                     </Grid>
                                     <Grid item xs={3}>
                                         <Typography variant="h6" color={"#000000"} sx={{ fontFamily: "Segoe UI", fontStyle: "italic" }}>
-                                            {listaRoles[usuarioIndex]}
+                                            {listaRoles[usuario.rol]}
                                         </Typography>
                                     </Grid>
                                     <Grid item xs={6} container justifyContent="flex-end" spacing={1}>
@@ -157,7 +166,7 @@ function Usuarios() {
                 <DialogTitle>Eliminar Usuario</DialogTitle>
                 <DialogContent>
                     <Typography variant="body1" sx={{ mb: 1 }}>
-                        Usted está a punto de eliminar el usuario "<Typography component="span" variant="body1" color="primary.main" sx={{ fontStyle: "italic" }}>{usuarioAEliminar}</Typography>", para confirmar la <strong><Typography component="span" variant="body1" color="error.main">eliminación</Typography></strong> ingrese nuevamente el nombre de usuario en el cuadro de texto:
+                        Usted está a punto de eliminar el usuario "<Typography component="span" variant="body1" color="primary.main" sx={{ fontStyle: "italic" }}>{usuarioAEliminar.nombre}</Typography>", para confirmar la <strong><Typography component="span" variant="body1" color="error.main">eliminación</Typography></strong> ingrese nuevamente el nombre de usuario en el cuadro de texto:
                     </Typography>
 
                     <TextField

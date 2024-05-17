@@ -5,26 +5,23 @@ import { Search, Check } from "@mui/icons-material";
 import { Autocomplete } from "@mui/material";
 import empresaService from "../services/EmpresaService";
 import { Link } from "react-router-dom";
+import usuarioService from "../services/UsuarioService";
 
 function CrearUsuario() {
 
+    const [nombre, setNombre] = useState("");
+    const [correo, setCorreo] = useState("");
+    const [contrasenia, setContrasenia] = useState("");
+    const [rol, setRol] = useState("");
     const [listaEmpresas, setListaEmpresas] = useState([]);
 
     const listaRoles = ["Administrador", "Autorizador de Reporte", "Autorizador de Registro", "Editor de Reporte"];
 
     useEffect(() => {
-        const fetchEmpresas = async () => {
-            try {
-                const response = await empresaService.getListaEmpresas();
-                if (response && response.data) {
-                    setListaEmpresas(response.data);
-                }
-            } catch (error) {
-                console.error('Error al obtener la lista de empresas:', error);
-            }
-        };
-
-        fetchEmpresas();
+        empresaService.getListaEmpresas()
+            .then(response => response.data)
+            .then(data => setListaEmpresas(data))
+            .catch(error => console.error('Error al obtener la lista de empresas:', error));
     }, []);
 
     const [selectedEmpresas, setSelectedEmpresas] = useState([]);
@@ -69,6 +66,19 @@ function CrearUsuario() {
     // Función para manejar la selección/deselección de todas las empresas
     const isSelected = (empresa) => selectedEmpresas.some(e => e.nombre === empresa.nombre);
 
+
+    // Crear un nuevo usuario
+    const handleCrearUsuario = () => {
+        const userData = {
+            nombre: nombre,
+            correo: correo,
+            contrasenia: contrasenia,
+            rol: rol,
+            empresas: selectedEmpresas.map(empresa => empresa.id)
+        };
+        usuarioService.crearUsuario(userData);
+    };
+
     return (
         <>
             <Navbar />
@@ -90,26 +100,32 @@ function CrearUsuario() {
                         <Grid item xs={12}>
                             <TextField
                                 label="Nombre"
+                                name="nombre"
                                 variant="outlined"
                                 helperText="Nombre completo del usuario"
                                 fullWidth
+                                onChange={(event) => setNombre(event.target.value)}
                             />
                         </Grid>
                         <Grid item xs={12}>
                             <TextField
                                 label="Correo"
+                                name="correo"
                                 variant="outlined"
                                 helperText="Correo electrónico del usuario"
                                 fullWidth
+                                onChange={(event) => setCorreo(event.target.value)}
                             />
                         </Grid>
                         <Grid item xs={12}>
                             <TextField
                                 label="Contraseña"
+                                name="contrasenia"
                                 type="password"
                                 variant="outlined"
                                 helperText="Contraseña asignada al usuario"
                                 fullWidth
+                                onChange={(event) => setContrasenia(event.target.value)}
                             />
                         </Grid>
                         <Grid item xs={12}>
@@ -117,8 +133,10 @@ function CrearUsuario() {
                                 <InputLabel>Rol</InputLabel>
                                 <Select
                                     label="Rol"
+                                    name="rol"
                                     defaultValue=""
                                     fullWidth
+                                    onChange={(event) => setRol(event.target.value)}
                                 >
                                     {listaRoles.map((rol, index) => (
                                         <MenuItem key={index} value={index}>{rol}</MenuItem>
@@ -168,7 +186,7 @@ function CrearUsuario() {
                                     />
                                 )}
                                 renderOption={(props, option, { selected }) => (
-                                    <li {...props}>
+                                    <li key={option.nombre}{...props}>
                                         <Checkbox
                                             icon={<span className="MuiBox-root" />}
                                             checkedIcon={<span className="MuiBox-root" />}
@@ -181,9 +199,16 @@ function CrearUsuario() {
                             />
                         </Grid>
                         <Grid item xs={12} container justifyContent="flex-end">
-                            <Button variant="contained" color="primary" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1, fontSize: "1.1rem" }}>
-                                Crear Usuario
-                            </Button>
+                            <Link to="/usuarios" style={{ textDecoration: 'none' }}>
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1, fontSize: "1.1rem" }}
+                                    onClick={handleCrearUsuario}
+                                >
+                                    Crear Usuario
+                                </Button>
+                            </Link>
                         </Grid>
                     </Grid>
                 </Paper>
