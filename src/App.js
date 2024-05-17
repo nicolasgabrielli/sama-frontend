@@ -7,6 +7,7 @@ import Usuarios from './components/Usuarios';
 import CrearUsuario from './components/CrearUsuario';
 import Reporte from './components/Reporte';
 import ListaReportes from './components/ListaReportes';
+import CrearEmpresa from './components/CrearEmpresa';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/empresas" element={<Empresas />} />
+          <Route path="/empresas/crear" element={<CrearEmpresa />} />
           <Route path="/empresas/:idEmpresa/reportes/:idReporte" element={<Reporte />} />
           <Route path="/empresas/:idEmpresa/reportes" element={<ListaReportes />} />
           <Route path="/usuarios" element={<Usuarios />} />

@@ -3,6 +3,7 @@ import { Container, Typography, Paper, Button, Grid, Box, TextField, Dialog, Dia
 import Navbar from "./Navbar";
 import empresaService from "../services/EmpresaService";
 import DeleteIcon from '@mui/icons-material/Delete';
+import { Link } from "react-router-dom";
 
 function Empresas() {
     const useSectionMode = true;
@@ -93,9 +94,11 @@ function Empresas() {
             </Container>
             <Box bgcolor="#fff" sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, boxShadow: "0px -4px 6px rgba(0, 0, 0, 0.1)" }}>
                 <Box sx={{ display: "flex", justifyContent: "center", mt: 2, mb: 2 }}>
+                <Link to="/empresas/crear" style={{ textDecoration: "none" }}>
                     <Button variant="contained" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1, fontSize: "1.2rem" }}>
                         Agregar Empresa
                     </Button>
+                </Link>
                 </Box>
             </Box>
 

@@ -170,7 +170,7 @@ function CrearUsuario() {
                                             {...params}
                                             label="Empresas"
                                             variant="outlined"
-                                            required
+                                            
                                             InputProps={{
                                                 ...params.InputProps,
                                                 startAdornment: (
