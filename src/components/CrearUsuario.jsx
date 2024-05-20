@@ -6,6 +6,7 @@ import { Autocomplete } from "@mui/material";
 import empresaService from "../services/EmpresaService";
 import { Link } from "react-router-dom";
 import usuarioService from "../services/UsuarioService";
+import { clear } from "@testing-library/user-event/dist/clear";
 
 function CrearUsuario() {
     const [nombre, setNombre] = useState("");
@@ -74,7 +75,8 @@ function CrearUsuario() {
 
         try {
             await usuarioService.crearUsuario(userData);
-            setOpenDialog(true);
+            clearForm();
+            setOpenDialog(true);  
         } catch (error) {
             console.error('Error al crear el usuario:', error);
         }
@@ -82,6 +84,14 @@ function CrearUsuario() {
 
     const handleCloseDialog = () => {
         setOpenDialog(false);
+    };
+
+    const clearForm = () => {
+        setNombre('');
+        setCorreo('');
+        setContrasenia('');
+        setRol('');
+        setSelectedEmpresas([]);
     };
 
     return (

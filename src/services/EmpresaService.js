@@ -7,7 +7,7 @@ class EmpresaService {
     }
 
     getEmpresa(id) {
-        return axios.get(API_URL + id);
+        return axios.get(API_URL + "/" + id);
     }
 
     crearEmpresa(empresa) {
@@ -18,8 +18,8 @@ class EmpresaService {
         return axios.put(API_URL, empresa);
     }
 
-    deleteEmpresa(id) {
-        return axios.delete(API_URL + id);
+    eliminarEmpresa(id) {
+        return axios.delete(API_URL + "/" + id);
     }
 }
 

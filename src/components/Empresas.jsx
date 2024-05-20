@@ -36,9 +36,8 @@ function Empresas() {
 
     // Función para manejar la confirmación de eliminación de la empresa
     const handleConfirmarEliminacion = () => {
-        // Realizar la eliminación de la empresa aquí
-        console.log("Empresa eliminada:", empresaAEliminar);
-        // Cerrar el diálogo
+        empresaService.eliminarEmpresa(empresaAEliminar.id);
+        setListaEmpresas(listaEmpresas.filter(empresa => empresa.id !== empresaAEliminar.id));
         setOpenDialog(false);
     };
 
@@ -79,11 +78,10 @@ function Empresas() {
                                         <Button variant="outlined" color="error" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }} onClick={() => handleOpenDialog(empresa)}>
                                             Eliminar
                                         </Button>
-                                        <Button variant="outlined" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}>
+                                        <Button variant="outlined" color="cuaternary" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic" }}
+                                        component={Link}
+                                        to={`/empresas/${empresa.id}/reportes`}>
                                             Ver Detalles
-                                        </Button>
-                                        <Button variant="outlined" color="cuaternary" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic" }}>
-                                            Ver Reportes
                                         </Button>
                                     </Grid>
                                 </Grid>
