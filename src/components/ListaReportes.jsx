@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Container, Typography, Paper, Button, Grid, Box, TextField, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
+import { Container, Typography, Paper, Button, Grid, Box } from "@mui/material";
 import Navbar from "./Navbar";
 import InformacionEmpresa from "./InformacionEmpresa";
 import reporteService from "../services/ReporteService";
@@ -25,7 +25,7 @@ function ListaReportes() {
             .then(response => response.data)
             .then(data => setInfoEmpresa(data))
             .catch(error => console.error('Error al obtener la información de la empresa:', error));
-    }, []);
+    });
 
     return (
         <>
