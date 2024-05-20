@@ -7,14 +7,17 @@ import { Link } from "react-router-dom";
 
 function Empresas() {
     const useSectionMode = true;
-    const secciones = ["Home", "Empresas", "Usuarios"];
-    const seccionesRutas = ["/", "/empresas", "/usuarios"];
+    const secciones = ["Empresas", "Usuarios"];
+    const seccionesRutas = ["/empresas", "/usuarios"];
     const seccionActual = "Empresas";
 
     const [listaEmpresas, setListaEmpresas] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [openDialog, setOpenDialog] = useState(false);
     const [empresaAEliminar, setEmpresaAEliminar] = useState(null);
+
+    // Estado para almacenar el nombre ingresado para confirmar la eliminación
+    const [nombreIngresado, setNombreIngresado] = useState("");
 
     useEffect(() => {
         empresaService.getListaEmpresas()
@@ -36,6 +39,9 @@ function Empresas() {
 
     // Función para manejar la confirmación de eliminación de la empresa
     const handleConfirmarEliminacion = () => {
+        if (nombreIngresado !== empresaAEliminar.nombre) {
+            return;
+        }
         empresaService.eliminarEmpresa(empresaAEliminar.id);
         setListaEmpresas(listaEmpresas.filter(empresa => empresa.id !== empresaAEliminar.id));
         setOpenDialog(false);
@@ -44,6 +50,11 @@ function Empresas() {
     // Función para cerrar el diálogo de confirmación de eliminación
     const handleCloseDialog = () => {
         setOpenDialog(false);
+    };
+
+    // Función para manejar cambios en el nombre ingresado por el usuario
+    const handleNombreIngresadoChange = (event) => {
+        setNombreIngresado(event.target.value);
     };
 
     // Filtrar la lista de empresas según el término de búsqueda
@@ -78,7 +89,7 @@ function Empresas() {
                                         <Button variant="outlined" color="error" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }} onClick={() => handleOpenDialog(empresa)}>
                                             Eliminar
                                         </Button>
-                                        <Button variant="outlined" color="cuaternary" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic" }}
+                                        <Button variant="outlined" color="primary" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic" }}
                                         component={Link}
                                         to={`/empresas/${empresa.id}/reportes`}>
                                             Ver Detalles
@@ -112,6 +123,8 @@ function Empresas() {
                         margin="dense"
                         label="Nombre de la Empresa a Eliminar"
                         type="text"
+                        value={nombreIngresado}
+                        onChange={handleNombreIngresadoChange}
                         fullWidth
                     />
                 </DialogContent>

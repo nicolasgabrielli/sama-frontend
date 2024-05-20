@@ -14,7 +14,7 @@ function App() {
     <div style={{ backgroundColor: "#f0f0f0", minHeight: "100vh" }}>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Empresas />} />
           <Route path="/empresas" element={<Empresas />} />
           <Route path="/empresas/crear" element={<CrearEmpresa />} />
           <Route path="/empresas/:idEmpresa/reportes/:idReporte" element={<Reporte />} />

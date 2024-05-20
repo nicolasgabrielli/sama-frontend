@@ -23,8 +23,8 @@ import usuarioService from "../services/UsuarioService";
 function Usuarios() {
     // Datos de la barra de navegación
     const useSectionMode = true;
-    const secciones = ["Home", "Empresas", "Usuarios"];
-    const seccionesRutas = ["/", "/empresas", "/usuarios"];
+    const secciones = ["Empresas", "Usuarios"];
+    const seccionesRutas = ["/empresas", "/usuarios"];
     const seccionActual = "Usuarios";
 
     // Listas de usuarios y roles
@@ -184,7 +184,7 @@ function Usuarios() {
                         Cancelar
                     </Button>
                     <Button onClick={handleEliminarUsuario} color="error" variant="contained">
-                        Eliminar <DeleteIcon sx={{ ml: 0.5, mr: -0.5 }} />
+                    <DeleteIcon sx={{ ml: -0.5, mr: 0.5 }}   /> Eliminar
                     </Button>
                 </DialogActions>
             </Dialog>

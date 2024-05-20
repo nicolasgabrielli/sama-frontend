@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { Container, Typography, Paper, Button, Grid, Box } from "@mui/material";
 import Navbar from "./Navbar";
+
 import InformacionEmpresa from "./InformacionEmpresa";
 import reporteService from "../services/ReporteService";
 import empresaService from "../services/EmpresaService";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 
 function ListaReportes() {
     const useSectionMode = false;
-    const secciones = ["Empresa A", "Empresa B", "Empresa C", "Empresa D"];
-    const seccionesRutas = ["/empresas/:idEmpresa/reportes", "/empresas/:idEmpresa/reportes", "/empresas/:idEmpresa/reportes", "/empresas/:idEmpresa/reportes"];
+    const secciones = ["Empresas", "Usuarios"];
+    const seccionesRutas = ["/empresas", "/usuarios"];
     const seccionActual = "Empresa A";
     const [listaReportes, setReportes] = useState([]);
     const [infoEmpresa, setInfoEmpresa] = useState({});
@@ -38,23 +39,38 @@ function ListaReportes() {
                     {/*Lista de reportes*/}
                     <Grid item xs={12} md={9}>
                         <Paper sx={{ mt: 2, p: 2 }}>
-                            <Typography variant="h4" color="primary" fontWeight="bold" sx={{ mb: 2 }}>Lista de Reportes</Typography>
+                            <Grid container>
+                                <Grid item xs={6}>
+                                    <Typography variant="h4" color="primary" fontWeight="bold" sx={{ mb: 2 }}>Lista de Reportes</Typography>
+                                </Grid>
+                                <Grid item xs={6} container justifyContent="flex-end">
+                                    <Link to="/empresas">
+                                        <Button variant="outlined" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1, fontSize: "1.1rem", maxHeight: 0.7 }}>
+                                            Volver
+                                        </Button>
+                                    </Link>
+                                </Grid>
+                            </Grid>
                             {listaReportes.map((reporte) => (
                                 <Box key={reporte.id} sx={{ pl: 2, pr: 2 }}>
                                     <Grid container alignItems="center" justifyContent="space-between" borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, mb: 1, py: 1 }}>
-                                        <Grid item xs={6}>
-                                            <Typography variant="h5" color={"#000000"} sx={{ fontFamily: "Segoe UI" }}>{"Reporte "+ reporte.titulo + " " + reporte.anio}</Typography>
+                                        <Grid item xs={4}>
+                                            <Typography variant="h5" color={"#000000"} sx={{ fontFamily: "Segoe UI" }}>{"Reporte " + reporte.titulo + " " + reporte.anio}</Typography>
                                             <Typography variant="body2">Fecha creación: {reporte.fechaCreacion}</Typography>
                                             <Typography variant="body2">Fecha modificación: {reporte.fechaModificacion}</Typography>
                                             <Typography variant="body2">Estado: {reporte.estado}</Typography>
                                         </Grid>
-                                        <Grid item xs={6} container justifyContent="flex-end" spacing={1}>
-                                            <Button variant="outlined" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}>
-                                                Abrir Reporte
+                                        <Grid item xs={8} container justifyContent="flex-end" spacing={1}>
+                                            <Button variant="outlined" color="error" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}>
+                                                Eliminar Reporte
                                             </Button>
                                             <Button variant="outlined" color="cuaternary" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}>
                                                 Descargar Reporte
                                             </Button>
+                                            <Button variant="outlined" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}>
+                                                Abrir Reporte
+                                            </Button>
+
                                         </Grid>
                                     </Grid>
                                 </Box>

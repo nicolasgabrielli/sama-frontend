@@ -17,28 +17,24 @@ const listaSecciones = [
                 nombre: "Misión",
                 valor: "Ser la mejor empresa en el ramo de la construcción",
                 tipoDeDato: "string",
-                tieneSubcampos: false,
                 subcampos: []
             },
             {
                 nombre: "Visión",
                 valor: "Ser la empresa líder en el ramo de la construcción",
                 tipoDeDato: "string",
-                tieneSubcampos: false,
                 subcampos: []
             },
             {
                 nombre: "Propósito",
                 valor: "Construir edificaciones de calidad",
                 tipoDeDato: "string",
-                tieneSubcampos: false,
                 subcampos: []
             },
             {
                 nombre: "Valores",
                 valor: true,
                 tipoDeDato: "boolean",
-                tieneSubcampos: true,
                 subcampos: [
                     {
                         nombre: "Honestidad",
@@ -66,14 +62,12 @@ const listaSecciones = [
                 nombre: "Año de Fundación",
                 valor: "2000",
                 tipoDeDato: "number",
-                tieneSubcampos: false,
                 subcampos: []
             },
             {
                 nombre: "Cantidad de Empleados",
                 valor: "100",
                 tipoDeDato: "number",
-                tieneSubcampos: false,
                 subcampos: []
             }
         ]
@@ -84,21 +78,54 @@ const porcentajeAutorizado = 0.33;
 
 function Reporte() {
     const [openDialog, setOpenDialog] = useState(false);
+    const [openSectionDialog, setOpenSectionDialog] = useState(false);
     const [currentField, setCurrentField] = useState(null);
     const [editedField, setEditedField] = useState(null);
     const [alerta, setAlerta] = useState(false);
     const [alertaTexto, setAlertaTexto] = useState("");
-    
+    const [isAdding, setIsAdding] = useState(false);
+    const [currentSection, setCurrentSection] = useState(null);
+    const [editedSection, setEditedSection] = useState(null);
+    const [openEliminarCampoDialog, setOpenEliminarCampoDialog] = useState(false);
+    const [nombreIngresado, setNombreIngresado] = useState("");
 
-    const handleOpenDialog = (campo) => {
+
+    const handleNombreIngresadoChange = (event) => {
+        setNombreIngresado(event.target.value);
+    };
+
+    const handleOpenEditDialog = (campo, section = null) => {
         setCurrentField(campo);
         setEditedField({ ...campo });
+        setIsAdding(!campo);
+        setCurrentSection(section);
         setOpenDialog(true);
     };
 
-    const handleCloseDialog = () => {
+    const handleCloseEditDialog = () => {
         setOpenDialog(false);
         setEditedField(null);
+        setIsAdding(false);
+        setCurrentSection(null);
+    };
+
+    const handleEliminarCampoDialog = (campo) => {
+        setCurrentField(campo);
+        setOpenEliminarCampoDialog(true);
+    };
+
+    const handleCerrarEliminarCampoDialog = () => {
+        setOpenEliminarCampoDialog(false);
+    };
+
+    const handleOpenSectionDialog = () => {
+        setOpenSectionDialog(true);
+        setEditedSection({ nombre: "" });
+    };
+
+    const handleCloseSectionDialog = () => {
+        setOpenSectionDialog(false);
+        setEditedSection(null);
     };
 
     const handleOpenAlert = (texto) => {
@@ -108,6 +135,23 @@ function Reporte() {
 
     const handleCloseAlert = () => {
         setAlerta(false);
+    };
+
+    const handleEliminarCampo = (campo, seccion) => {
+
+        if (nombreIngresado.toLowerCase() === campo.nombre.toLowerCase()) {
+            // Eliminar el campo
+
+        } else {
+            handleOpenAlert("El nombre ingresado no coincide con el campo a eliminar.");
+        }
+        
+
+        // Aquí se eliminaría el campo usando axios.
+        // La variable que tiene el campo a eliminar es campo.
+
+        // Ojalá se puediera refrescar la página después de eliminar el campo.
+        setOpenDialog(false);
     };
 
     const handleSaveField = () => {
@@ -142,10 +186,33 @@ function Reporte() {
             }
         }
 
-        // Aquí se guardaría el campo editado usando axios.
-        
+        if (isAdding) {
+            // Aquí se guardaría el campo nuevo usando axios.
+        }
+        else {
+            // Aquí se guardaría el campo editado usando axios.
+        }
+
+        // Ojalá se puediera refrescar la página después de guardar el campo.
         console.log(editedField);
         setOpenDialog(false);
+    };
+
+    const handleSaveSection = () => {
+        // Aquí se guardaría la sección editada usando axios.
+        // La variable que tiene la sección editada es editedSection, contiene la información de la sección y los campos.
+
+        // Validación de que los campos estén completos
+        const seccion = editedSection;
+        if (seccion.nombre === "" || seccion.nombre === null || seccion.nombre === undefined) {
+            handleOpenAlert("Por favor, complete el nombre de la sección.");
+            return;
+        }
+
+        // Aquí se guardaría la sección editada usando axios.
+        // Ojalá se puediera refrescar la página después de guardar la sección.
+        console.log(editedSection);
+        setOpenSectionDialog(false);
     };
 
     const handleFieldChange = (event) => {
@@ -219,9 +286,17 @@ function Reporte() {
                                     <Grid item xs={4} container justifyContent={"flex-end"}>
                                         <Button
                                             variant="outlined"
+                                            color="error"
+                                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", mr: 1}}
+                                            onClick={() => handleEliminarCampoDialog(campo)}
+                                        >
+                                            Eliminar Campo
+                                        </Button>
+                                        <Button
+                                            variant="outlined"
                                             color="primary"
                                             sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem" }}
-                                            onClick={() => handleOpenDialog(campo)}
+                                            onClick={() => handleOpenEditDialog(campo, seccion)}
                                         >
                                             Editar Campo
                                         </Button>
@@ -260,28 +335,39 @@ function Reporte() {
                                     fontSize: "1rem",
                                     mt: 2,
                                 }}
+                                onClick={() => handleOpenEditDialog(null, seccion)}
                             >
                                 Agregar Campo
                             </Button>
                         </Grid>
                     </Paper>
                 ))}
-                <Button variant="contained" color="primary" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1.5rem", my: 2 }}>
+                <Button variant="contained" color="primary" onClick={handleOpenSectionDialog} sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1.5rem", my: 2 }}>
                     Agregar Sección
                 </Button>
             </Container>
 
             {/* Diálogo para editar campos */}
-            <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
+            <Dialog open={openDialog} onClose={handleCloseEditDialog} maxWidth="md" fullWidth>
                 <DialogContent>
                     {/* Título */}
-                    <Typography
-                        variant="h5"
-                        color="primary"
-                        fontWeight="bold"
-                    >
-                        Editar Campo
-                    </Typography>
+                    {isAdding ? (
+                        <Typography
+                            variant="h5"
+                            color="primary"
+                            fontWeight="bold"
+                        >
+                            Agregar Campo
+                        </Typography>
+                    ) : (
+                        <Typography
+                            variant="h5"
+                            color="primary"
+                            fontWeight="bold"
+                        >
+                            Editar Campo
+                        </Typography>
+                    )}
 
                     {/* Campo */}
                     {editedField && (
@@ -289,7 +375,7 @@ function Reporte() {
                             <Grid container sx={{ p: 2 }}>
                                 <Grid item xs={12}>
                                     <TextField
-                                        label="Nombre"
+                                        label="Nombre del Campo"
                                         name="nombre"
                                         variant="outlined"
                                         fullWidth
@@ -363,7 +449,7 @@ function Reporte() {
                                     >
                                         Subcampos
                                     </Typography>
-                                    {editedField.subcampos.map((subcampo, index) => (
+                                    {(editedField.subcampos != null) && editedField.subcampos.map((subcampo, index) => (
                                         <Grid container key={index} sx={{ mb: 1, p: 2 }} borderBottom={1} borderColor={"secondary.main"}>
                                             <Grid item xs={12}>
                                                 <TextField
@@ -455,24 +541,65 @@ function Reporte() {
                                     </Button>
                                 </Grid>
                             </Grid>
-
                         </>
                     )}
                 </DialogContent>
-                <DialogActions sx={{ minHeight: "50px"}}>
+                <DialogActions sx={{ minHeight: "50px" }}>
                     {/* Alerta */}
                     <Collapse in={alerta}>
                         <Alert severity="error" onClose={handleCloseAlert}>
                             {alertaTexto}
                         </Alert>
                     </Collapse>
-                    <Button onClick={handleCloseDialog} color="secondary">Descartar</Button>
+                    <Button onClick={handleCloseEditDialog} color="secondary">Descartar</Button>
                     <Button onClick={handleSaveField} color="primary">Guardar</Button>
                 </DialogActions>
             </Dialog>
 
+            {/* Dialog eliminar campo */}
+            <Dialog open={openEliminarCampoDialog} onClose={handleEliminarCampoDialog}>
+                <DialogTitle>Eliminar Campo</DialogTitle>
+                <DialogContent>
+                    <Typography variant="body1">
+                        Usted está a punto de eliminar el campo "<Typography component="span" variant="body1" color="primary.main" sx={{ fontStyle: "italic" }}>{currentField && currentField.nombre}</Typography>", para confirmar la <strong><Typography component="span" variant="body1" color="error.main">eliminación</Typography></strong> ingrese nuevamente el nombre del campo en el cuadro de texto:
+                    </Typography>
 
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        label="Nombre del Campo a Eliminar"
+                        type="text"
+                        value={nombreIngresado}
+                        onChange={handleNombreIngresadoChange}
+                        fullWidth
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCerrarEliminarCampoDialog} color="primary" variant="outlined">
+                        Cancelar
+                    </Button>
+                    <Button onClick={() => handleEliminarCampo(currentField)} color="error" variant="contained">
+                        Eliminar
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
+            {/* Dialog agregar sección */}
+            <Dialog open={openSectionDialog} onClose={handleCloseSectionDialog}>
+                <DialogTitle>Agregar Sección</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        label="Nombre de la Sección"
+                        variant="outlined"
+                        fullWidth
+                        margin="normal"
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseSectionDialog}>Cancelar</Button>
+                    <Button onClick={handleSaveSection}>Agregar</Button>
+                </DialogActions>
+            </Dialog>
         </>
     );
 }

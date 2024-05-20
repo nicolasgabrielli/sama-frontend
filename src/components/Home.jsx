@@ -14,7 +14,7 @@ function HomeComponent() {
         <>
             <Navbar seccionActual={seccionActual} useSectionMode={useSectionMode} secciones={secciones} seccionesRutas={seccionesRutas}/>
             <Container >
-                <Typography variant="h1" color={"primary.main"}>No se que poner xd</Typography>
+                
             </Container>
         </>
     );
