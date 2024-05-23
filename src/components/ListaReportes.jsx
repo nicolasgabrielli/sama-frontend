@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Container, Typography, Paper, Button, Grid, Box } from "@mui/material";
+import { Container, Typography, Paper, Button, Grid, Box, Dialog, DialogContent, DialogActions, MenuItem, Select, IconButton, InputLabel, FormControl, TextField } from "@mui/material";
+import CloseIcon from '@mui/icons-material/Close';
 import Navbar from "./Navbar";
 
 import InformacionEmpresa from "./InformacionEmpresa";
@@ -15,12 +16,115 @@ function ListaReportes() {
     const [listaReportes, setReportes] = useState([]);
     const [infoEmpresa, setInfoEmpresa] = useState({});
     const { idEmpresa } = useParams();
+    const [openEliminarReporte, setOpenEliminarReporte] = useState(false);
+    const [reporteAEliminar, setReporteAEliminar] = useState(null);
+    const [openCrearReporte, setOpenCrearReporte] = useState(false);
+    const [openUtilizarPreconfiguracion, setOpenUtilizarPreconfiguracion] = useState(false);
+    const [openSinPreconfiguraciones, setOpenSinPreconfiguraciones] = useState(false);
+    const [preconfiguracionSeleccionadaId, setPreconfiguracionSeleccionadaId] = useState(null);
+    const [preconfiguraciones, setPreconfiguraciones] = useState([]);
+    const [categorias, setCategorias] = useState([]);
+    const [nombreReporte, setNombreReporte] = useState("");
+    const [anioReporte, setAnioReporte] = useState(null);
+
+    const handleOpenCrearReporte = () => {
+        setOpenCrearReporte(true);
+        setCategorias([]);
+    };
+
+    const handleCloseCrearReporte = () => {
+        setOpenCrearReporte(false);
+        setCategorias([]);
+    };
+
+    const handleNombreReporteChange = (event) => {
+        setNombreReporte(event.target.value);
+    };
+
+    const handleOpenUtilizarPreconfiguracion = () => {
+        setOpenUtilizarPreconfiguracion(true);
+        handleCloseCrearReporte();
+    };
+
+    const handleCloseUtilizarPreconfiguracion = () => {
+        setOpenUtilizarPreconfiguracion(false);
+    };
+
+    const handlePreconfiguracionSeleccionadaChange = (event) => {
+        setPreconfiguracionSeleccionadaId(event.target.value);
+    };
+
+    const handleOpenEliminarReporte = (reporteId) => {
+        const reporte = listaReportes.find(reporte => reporte.id === reporteId);
+        setReporteAEliminar(reporte);
+        setOpenEliminarReporte(true);
+    };
+
+    // Función para crear un reporte con una preconfiguración / preset
+    const handleUtilizarPreconfiguracion = () => {
+        // El preset seleccionado está en preconfiguracionSeleccionadaId
+        // El nombre del reporte está en nombreReporte
+        reporteService.getPreset(preconfiguracionSeleccionadaId)
+            .then(response => response.data)
+            .then(data => {
+                const categorias = data.categorias;
+                const reporte = {
+                    titulo: nombreReporte,
+                    anio: anioReporte,
+                    categorias: categorias
+                };
+                setOpenUtilizarPreconfiguracion(false);
+                setNombreReporte("");
+                setAnioReporte(null);
+                reporteService.crearReporte(idEmpresa, reporte);
+            })
+            .catch(error => console.error('Error al obtener la preconfiguración:', error));
+    };
+
+
+    // Función para crear un reporte sin preconfiguración / preset
+    const handleCrearReporteSinPreconfiguracion = () => {
+        // El nombre del reporte está en nombreReporte
+        const reporte = {
+            titulo: nombreReporte,
+            anio: anioReporte,
+            categorias: [{
+                nombre: "Nueva Categoría 1",
+                secciones: []
+            }]
+        }
+        setOpenSinPreconfiguraciones(false);
+        setNombreReporte("");
+        setAnioReporte(null);
+        reporteService.crearReporte(idEmpresa, reporte);
+    };
+
+    // Función para eliminar el reporte
+    const handleEliminarReporte = (idReporte) => {
+        reporteService.deleteReporte(idReporte);
+        setOpenEliminarReporte(false);
+    };
+
+    const handleOpenSinPreconfiguraciones = () => {
+        setOpenSinPreconfiguraciones(true);
+        handleCloseUtilizarPreconfiguracion();
+        handleCloseCrearReporte();
+    };
+
+    const handleCloseSinPreconfiguraciones = () => {
+        setOpenSinPreconfiguraciones(false);
+    };
 
     useEffect(() => {
         reporteService.getListaReportes(idEmpresa)
             .then(response => response.data)
             .then(data => setReportes(data))
             .catch(error => console.error('Error al obtener la lista de reportes:', error));
+
+        reporteService.getPresets()
+            .then(response => response.data)
+            .then(data => setPreconfiguraciones(data))
+            .catch(error => console.error('Error al obtener la lista de preconfiguraciones:', error));
 
         empresaService.getEmpresa(idEmpresa)
             .then(response => response.data)
@@ -61,16 +165,17 @@ function ListaReportes() {
                                             <Typography variant="body2">Estado: {reporte.estado}</Typography>
                                         </Grid>
                                         <Grid item xs={8} container justifyContent="flex-end" spacing={1}>
-                                            <Button variant="outlined" color="error" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}>
+                                            <Button variant="outlined" color="error" value={reporte.id} onClick={() => handleOpenEliminarReporte(reporte.id)} sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}>
                                                 Eliminar Reporte
                                             </Button>
                                             <Button variant="outlined" color="cuaternary" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}>
                                                 Descargar Reporte
                                             </Button>
-                                            <Button variant="outlined" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}>
-                                                Abrir Reporte
-                                            </Button>
-
+                                            <Link to={`${reporte.id}`}>
+                                                <Button variant="outlined" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}>
+                                                    Abrir Reporte
+                                                </Button>
+                                            </Link>
                                         </Grid>
                                     </Grid>
                                 </Box>
@@ -82,11 +187,204 @@ function ListaReportes() {
 
             <Box bgcolor="#fff" sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, boxShadow: "0px -4px 6px rgba(0, 0, 0, 0.1)" }}>
                 <Box sx={{ display: "flex", justifyContent: "center", mt: 2, mb: 2 }}>
-                    <Button variant="contained" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1, fontSize: "1.2rem" }}>
+                    <Button variant="contained" onClick={handleOpenCrearReporte} sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1, fontSize: "1.2rem" }}>
                         Crear Reporte
                     </Button>
                 </Box>
             </Box>
+
+            {/* Diálogo de confirmación de eliminación */}
+            <Dialog open={openEliminarReporte} onClose={() => setOpenEliminarReporte(false)}>
+                <DialogContent>
+                    <Grid container>
+                        <Grid item xs={12}>
+                            <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Eliminar Reporte</Typography>
+                        </Grid>
+                        <Grid item xs={12} container justifyContent="center" sx={{ mt: 2 }}>
+                            <Typography variant="body1">
+                                {reporteAEliminar ? `¿Está seguro que desea eliminar el reporte "${reporteAEliminar.titulo} ${reporteAEliminar.anio}"?` : "¿Está seguro que desea eliminar el reporte?"}
+                            </Typography>
+                        </Grid>
+                    </Grid>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={reporteAEliminar ? () => handleEliminarReporte(reporteAEliminar.id) : () => setOpenEliminarReporte(false)}
+                        color="error" variant="contained">
+                        Eliminar
+                    </Button>
+                    <Button onClick={() => setOpenEliminarReporte(false)} color="primary" variant="outlined">
+                        Cancelar
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Diálogo de creación de reporte */}
+            <Dialog open={openCrearReporte} onClose={handleCloseCrearReporte}>
+                <DialogContent>
+                    <Grid container spacing={2}>
+                        <Grid item xs={6}>
+                            <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Crear Reporte</Typography>
+                        </Grid>
+                        <Grid item xs={6} container justifyContent="flex-end" sx={{ mb: 1 }}>
+                            <IconButton onClick={handleCloseCrearReporte} disableRipple><CloseIcon /></IconButton>
+                        </Grid>
+                        <Grid item xs={12} container justifyContent={"center"}>
+                            <Typography variant="body1" borderColor={"secondary"}>
+                                ¿Desea utilizar una preconfiguración para el reporte?
+                            </Typography>
+                        </Grid>
+                        <Grid item xs={12} container alignItems={"center"} justifyContent={"center"}>
+                            <Button variant="outlined" color="cuaternary" onClick={handleOpenUtilizarPreconfiguracion} sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 2 }}>
+                                Sí
+                            </Button>
+                            <Button variant="outlined" color="error" onClick={handleOpenSinPreconfiguraciones} sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic" }}>
+                                No
+                            </Button>
+                        </Grid>
+                    </Grid>
+                </DialogContent>
+                <DialogActions>
+                    <Grid container>
+                        <Grid item xs={4} container justifyContent="flex-start">
+                            <Typography variant="body1" color="primary" sx={{ ml: 2, fontStyle: "italic", fontWeight: "bold" }}>
+                                {infoEmpresa.nombre}
+                            </Typography>
+                        </Grid>
+                    </Grid>
+                </DialogActions>
+            </Dialog>
+
+            {/* Diálogo de utilización de Preconfiguración */}
+            <Dialog open={openUtilizarPreconfiguracion} onClose={handleCloseUtilizarPreconfiguracion}>
+                <DialogContent>
+                    <Grid container spacing={2} sx={{ mt: -3 }}>
+                        <Grid item xs={8}>
+                            <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Preconfiguración</Typography>
+                        </Grid>
+                        <Grid item xs={4} container justifyContent="flex-end" sx={{ mb: 2 }}>
+                            <IconButton onClick={handleCloseUtilizarPreconfiguracion} disableRipple><CloseIcon /></IconButton>
+                        </Grid>
+                        <Grid item xs={12} container>
+                            <Typography variant="body1">
+                                Introduzca el nombre del reporte:
+                            </Typography>
+                        </Grid>
+                        <Grid item xs={12} container justifyContent={"center"} sx={{ mb: 2 }}>
+                            <TextField
+                                label="Nombre del Reporte"
+                                variant="outlined"
+                                fullWidth
+                                value={nombreReporte}
+                                onChange={handleNombreReporteChange}
+                            />
+                        </Grid>
+                        <Grid item xs={12} container>
+                            <Typography variant="body1">
+                                Introduzca el año del reporte:
+                            </Typography>
+                        </Grid>
+                        <Grid item xs={12} container justifyContent="center" sx={{ mb: 2 }}>
+                            <TextField
+                                label="Año del Reporte"
+                                variant="outlined"
+                                fullWidth
+                                value={anioReporte}
+                                onChange={(event) => setAnioReporte(event.target.value)}
+                            />
+                        </Grid>
+                        <Grid item xs={12} container >
+                            <Typography variant="body1">
+                                Seleccione una preconfiguración para el reporte:
+                            </Typography>
+                        </Grid>
+                        <Grid item xs={12} container justifyContent="center" sx={{ mb: 2 }}>
+                            <FormControl fullWidth>
+                                <InputLabel>Preconfiguración</InputLabel>
+                                <Select
+                                    label="Preconfiguración"
+                                    value={preconfiguracionSeleccionadaId}
+                                    onChange={handlePreconfiguracionSeleccionadaChange}
+                                    fullWidth
+                                >
+                                    {Array.isArray(preconfiguraciones) && preconfiguraciones.map((preconfiguracion) => (
+                                        <MenuItem value={preconfiguracion.id}>{preconfiguracion.titulo}</MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </Grid>
+                    </Grid>
+                </DialogContent>
+                <DialogActions>
+                    <Grid container>
+                        <Grid item xs={4} container justifyContent="flex-start">
+                            <Typography variant="body1" color="primary" sx={{ ml: 2, fontStyle: "italic", fontWeight: "bold" }}>
+                                {infoEmpresa.nombre}
+                            </Typography>
+                        </Grid>
+                        <Grid item xs={8} container justifyContent="flex-end">
+                            <Button onClick={handleUtilizarPreconfiguracion} color="primary" variant="contained" sx={{ textTransform: "none", fontStyle: "italic", fontSize: "1rem" }}>
+                                Crear Reporte
+                            </Button>
+                        </Grid>
+                    </Grid>
+                </DialogActions>
+            </Dialog>
+
+            {/* Diálogo sin Preconfiguraciones */}
+            <Dialog open={openSinPreconfiguraciones} onClose={handleCloseSinPreconfiguraciones}>
+                <DialogContent>
+                    <Grid container spacing={2} sx={{ mt: -3 }}>
+                        <Grid item xs={8}>
+                            <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Crear Reporte</Typography>
+                        </Grid>
+                        <Grid item xs={4} container justifyContent="flex-end" sx={{ mb: 2 }}>
+                            <IconButton onClick={handleCloseSinPreconfiguraciones} disableRipple><CloseIcon /></IconButton>
+                        </Grid>
+                        <Grid item xs={12} container>
+                            <Typography variant="body1">
+                                Introduzca el nombre del reporte:
+                            </Typography>
+                        </Grid>
+                        <Grid item xs={12} container justifyContent={"center"} sx={{ mb: 2 }}>
+                            <TextField
+                                label="Nombre del Reporte"
+                                variant="outlined"
+                                fullWidth
+                                value={nombreReporte}
+                                onChange={handleNombreReporteChange}
+                            />
+                        </Grid>
+                        <Grid item xs={12} container>
+                            <Typography variant="body1">
+                                Introduzca el año del reporte:
+                            </Typography>
+                        </Grid>
+                        <Grid item xs={12} container justifyContent="center" sx={{ mb: 2 }}>
+                            <TextField
+                                label="Año del Reporte"
+                                variant="outlined"
+                                fullWidth
+                                value={anioReporte}
+                                onChange={(event) => setAnioReporte(event.target.value)}
+                            />
+                        </Grid>
+                    </Grid>
+                </DialogContent>
+                <DialogActions>
+                    <Grid container>
+                        <Grid item xs={4} container justifyContent="flex-start">
+                            <Typography variant="body1" color="primary" sx={{ ml: 2, fontStyle: "italic", fontWeight: "bold" }}>
+                                {infoEmpresa.nombre}
+                            </Typography>
+                        </Grid>
+                        <Grid item xs={8} container justifyContent="flex-end">
+                            <Button color="primary" variant="contained" onClick={handleCrearReporteSinPreconfiguracion} sx={{ textTransform: "none", fontStyle: "italic", fontSize: "1rem" }}>
+                                Crear Reporte
+                            </Button>
+                        </Grid>
+                    </Grid>
+                </DialogActions>
+            </Dialog>
         </>
     );
 }

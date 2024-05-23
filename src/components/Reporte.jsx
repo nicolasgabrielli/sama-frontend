@@ -1,104 +1,69 @@
-import React, { useState } from "react";
-import { Container, Typography, Paper, Button, Grid, Box, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Select, MenuItem, FormControl, InputLabel, Alert, Collapse } from "@mui/material";
-import NavbarReporte from "./NavbarReporte";
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { Container, Typography, Paper, Button, Grid, Box, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Select, MenuItem, FormControl, InputLabel, Alert, Collapse, IconButton } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
-
-const secciones = ["Perfil Entidad", "Modelo de Negocio", "Gestión de Proveedores", "Gobierno Corporativo", "Estrategia", "Indicadores", "Hechos Relevantes", "Personas"];
-const seccionesRutas = [];
-const seccionActual = "Perfil Entidad";
-const useSectionMode = true;
-
-const listaSecciones = [
-    {
-        nombre: "Misión, Visión, Propósito y Valores",
-        campos: [
-            {
-                nombre: "Misión",
-                valor: "Ser la mejor empresa en el ramo de la construcción",
-                tipoDeDato: "string",
-                subcampos: []
-            },
-            {
-                nombre: "Visión",
-                valor: "Ser la empresa líder en el ramo de la construcción",
-                tipoDeDato: "string",
-                subcampos: []
-            },
-            {
-                nombre: "Propósito",
-                valor: "Construir edificaciones de calidad",
-                tipoDeDato: "string",
-                subcampos: []
-            },
-            {
-                nombre: "Valores",
-                valor: true,
-                tipoDeDato: "boolean",
-                subcampos: [
-                    {
-                        nombre: "Honestidad",
-                        valor: "Ser honestos en todo lo que hacemos",
-                        tipoDeDato: "string"
-                    },
-                    {
-                        nombre: "Responsabilidad",
-                        valor: "Ser responsables en todo lo que hacemos",
-                        tipoDeDato: "string"
-                    },
-                    {
-                        nombre: "Compromiso",
-                        valor: "Ser comprometidos en todo lo que hacemos",
-                        tipoDeDato: "string"
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        nombre: "Información Histórica",
-        campos: [
-            {
-                nombre: "Año de Fundación",
-                valor: "2000",
-                tipoDeDato: "number",
-                subcampos: []
-            },
-            {
-                nombre: "Cantidad de Empleados",
-                valor: "100",
-                tipoDeDato: "number",
-                subcampos: []
-            }
-        ]
-    }
-];
-
-const porcentajeAutorizado = 0.33;
+import NavbarReporte from "./NavbarReporte";
+import reporteService from "../services/ReporteService";
 
 function Reporte() {
+    const { idReporte } = useParams();
+    const [reporte, setReporte] = useState(null);
+    const [categoriaActualIndex, setCategoriaActualIndex] = useState(0);
+    const [seccionActualIndex, setSeccionActualIndex] = useState(0);
+    const [categorias, setCategorias] = useState([]);
+    const [secciones, setSecciones] = useState([]);
+
+    useEffect(() => {
+        reporteService.getReporte(idReporte)
+            .then(response => response.data)
+            .then(data => {
+                setReporte(data);
+                const categoriasObtenidas = data.categorias || [];
+                setCategorias(categoriasObtenidas.map(categoria => categoria.nombre));
+                if (categoriasObtenidas.length > 0) {
+                    setSecciones(categoriasObtenidas[0].secciones || []);
+                }
+            })
+            .catch(error => console.error('Error al obtener el reporte:', error));
+    }, [idReporte]);
+
+    const handleCategoriaChange = (index) => {
+        setCategoriaActualIndex(index);
+        setSecciones(reporte.categorias[index].secciones || []);
+    };
+
     const [openDialog, setOpenDialog] = useState(false);
     const [openSectionDialog, setOpenSectionDialog] = useState(false);
-    const [currentField, setCurrentField] = useState(null);
+    const [openSectionEditDialog, setOpenSectionEditDialog] = useState(false);
+    const [openCategoryEditDialog, setOpenCategoryEditDialog] = useState(false);
+    const [nombreCategoria, setNombreCategoria] = useState("");
     const [editedField, setEditedField] = useState(null);
+    const [currentField, setCurrentField] = useState(null);
     const [alerta, setAlerta] = useState(false);
     const [alertaTexto, setAlertaTexto] = useState("");
     const [isAdding, setIsAdding] = useState(false);
     const [currentSection, setCurrentSection] = useState(null);
-    const [editedSection, setEditedSection] = useState(null);
+    const [editedSection, setEditedSection] = useState({ titulo: "", campos: [] });
     const [openEliminarCampoDialog, setOpenEliminarCampoDialog] = useState(false);
     const [nombreIngresado, setNombreIngresado] = useState("");
-
+    const [openEliminarCategoriaDialog, setOpenEliminarCategoriaDialog] = useState(false);
+    const [openEliminarSeccionDialog, setOpenEliminarSeccionDialog] = useState(false);
+    const [campoActualIndex, setCampoActualIndex] = useState(0);
 
     const handleNombreIngresadoChange = (event) => {
         setNombreIngresado(event.target.value);
     };
 
-    const handleOpenEditDialog = (campo, section = null) => {
+    const handleOpenEditDialog = (campo, section = null, indexSeccion) => {
         setCurrentField(campo);
-        setEditedField({ ...campo });
+        setEditedField({
+            ...campo,
+            subCampos: campo ? JSON.parse(JSON.stringify(campo.subCampos || [])) : [] // Clonar correctamente los subcampos
+        });
         setIsAdding(!campo);
         setCurrentSection(section);
+        setSeccionActualIndex(indexSeccion);
         setOpenDialog(true);
     };
 
@@ -109,8 +74,9 @@ function Reporte() {
         setCurrentSection(null);
     };
 
-    const handleEliminarCampoDialog = (campo) => {
-        setCurrentField(campo);
+    const handleEliminarCampoDialog = (campoIndex, indexSeccion) => {
+        setCampoActualIndex(campoIndex);
+        setSeccionActualIndex(indexSeccion);
         setOpenEliminarCampoDialog(true);
     };
 
@@ -118,13 +84,14 @@ function Reporte() {
         setOpenEliminarCampoDialog(false);
     };
 
-    const handleOpenSectionDialog = () => {
-        setOpenSectionDialog(true);
-        setEditedSection({ nombre: "" });
+    const handleOpenSectionEditDialog = (seccionIndex) => {
+        setOpenSectionEditDialog(true);
+        setSeccionActualIndex(seccionIndex)
+        setEditedSection({ titulo: secciones[seccionIndex].titulo });
     };
 
-    const handleCloseSectionDialog = () => {
-        setOpenSectionDialog(false);
+    const handleCloseSectionEditDialog = () => {
+        setOpenSectionEditDialog(false);
         setEditedSection(null);
     };
 
@@ -137,33 +104,65 @@ function Reporte() {
         setAlerta(false);
     };
 
-    const handleEliminarCampo = (campo, seccion) => {
-
-        if (nombreIngresado.toLowerCase() === campo.nombre.toLowerCase()) {
-            // Eliminar el campo
-
-        } else {
-            handleOpenAlert("El nombre ingresado no coincide con el campo a eliminar.");
+    const handleEliminarCategoria = async () => {
+        let newContenido = {
+            indexCategoria: categoriaActualIndex
         }
-        
-
-        // Aquí se eliminaría el campo usando axios.
-        // La variable que tiene el campo a eliminar es campo.
-
-        // Ojalá se puediera refrescar la página después de eliminar el campo.
-        setOpenDialog(false);
+        await reporteService.deleteContenido(idReporte, newContenido);
+        window.location.reload();
+        setOpenEliminarCategoriaDialog(false);
     };
 
-    const handleSaveField = () => {
-        // Aquí se guardaría el campo editado usando axios.
-        // La variable que tiene el campo editado es editedField, contiene la información del campo y los subcampos.
+    const handleOpenEliminarSeccion = (indexSeccion) => {
+        setSeccionActualIndex(indexSeccion);
+        setOpenEliminarSeccionDialog(true);
+    };
 
-        // Validación de que los campos estén completos
+    const handleEliminarSeccion = async () => {
+        let newContenido = {
+            indexCategoria: categoriaActualIndex,
+            indexSeccion: seccionActualIndex
+        }
+        await reporteService.deleteContenido(idReporte, newContenido);
+        window.location.reload();
+        setOpenEliminarSeccionDialog(false);
+    };
+
+    const handleEliminarCampo = () => {
+        if (campoActualIndex !== -1) {
+            let newReporte = {
+                indexCategoria: categoriaActualIndex,
+                nuevoTituloCategoria: "",
+                indexSeccion: seccionActualIndex,
+                nuevoTituloSeccion: "",
+                indexCampo: campoActualIndex,
+                nuevoCampo: {}
+            }
+            reporteService.deleteContenido(newReporte, idReporte);
+            setSecciones(secciones.map((seccion, index) => {
+                if (index === seccionActualIndex) {
+                    return {
+                        ...seccion,
+                        campos: seccion.campos.filter((c, i) => i !== campoActualIndex)
+                    };
+                }
+                return seccion;
+            }));
+        }
+        else {
+            console.log("error al eliminar campo");
+        }
+        setOpenEliminarCampoDialog(false);
+    };
+
+    // Función para guardar el campo editado o agregado
+    const handleSaveField = () => {
+        // La variable que tiene el campo editado es editedField, contiene la información del campo y los subCampos.
 
         // Validación Campo
         const campo = editedField;
-        if (campo.valor === "" || campo.valor === null || campo.valor === undefined) {
-            handleOpenAlert("Por favor, complete el valor del campo.");
+        if (campo.contenido === "" || campo.contenido === null || campo.contenido === undefined) {
+            handleOpenAlert("Por favor, complete el contenido del campo.");
             return;
         }
         if (campo.nombre === "" || campo.nombre === null || campo.nombre === undefined) {
@@ -172,92 +171,234 @@ function Reporte() {
         }
 
         // Validación Subcampos
-        const subcampos = campo.subcampos;
-        if (subcampos.length > 0) {
-            for (let i = 0; i < subcampos.length; i++) {
-                if (subcampos[i].valor === "" || subcampos[i].valor === null || subcampos[i].valor === undefined) {
-                    handleOpenAlert("Por favor, complete todos los valores de los subcampos.");
+        if (campo.subCampos != null && campo.subCampos.length > 0) {
+            const subCampos = campo.subCampos;
+            for (let i = 0; i < subCampos.length; i++) {
+                if (subCampos[i].contenido === "" || subCampos[i].contenido === null || subCampos[i].contenido === undefined) {
+                    handleOpenAlert("Por favor, complete todos los valores de los subCampos.");
                     return;
                 }
-                if (subcampos[i].nombre === "" || subcampos[i].nombre === null || subcampos[i].nombre === undefined) {
-                    handleOpenAlert("Por favor, complete todos los nombres de los subcampos.");
+                if (subCampos[i].nombre === "" || subCampos[i].nombre === null || subCampos[i].nombre === undefined) {
+                    handleOpenAlert("Por favor, complete todos los nombres de los subCampos.");
                     return;
                 }
             }
         }
-
+        let campoIndex = 0;
+        let seccionIndex = seccionActualIndex;
         if (isAdding) {
-            // Aquí se guardaría el campo nuevo usando axios.
+            campoIndex = secciones[seccionActualIndex].campos.length;
+            let newReporte = {
+                indexCategoria: categoriaActualIndex,
+                nuevoTituloCategoria: categorias[categoriaActualIndex],
+                indexSeccion: seccionIndex,
+                nuevoTituloSeccion: secciones[seccionIndex].titulo,
+                indexCampo: campoIndex,
+                nuevoCampo: editedField
+            }
+            setSecciones(secciones.map((seccion, index) => {
+                if (index === seccionIndex) {
+                    return {
+                        ...seccion,
+                        campos: [...seccion.campos, editedField]
+                    };
+                }
+                return seccion;
+            }));
+            reporteService.actualizarReporte(newReporte, idReporte);
         }
         else {
-            // Aquí se guardaría el campo editado usando axios.
+            campoIndex = secciones[seccionIndex].campos.findIndex(c => c === currentField);
+            if (campoIndex !== -1) {
+                let newReporte = {
+                    indexCategoria: categoriaActualIndex,
+                    nuevoTituloCategoria: categorias[categoriaActualIndex],
+                    indexSeccion: seccionIndex,
+                    nuevoTituloSeccion: secciones[seccionIndex].titulo,
+                    indexCampo: campoIndex,
+                    nuevoCampo: editedField
+                }
+                setSecciones(secciones.map((seccion, index) => {
+                    if (index === seccionIndex) {
+                        return {
+                            ...seccion,
+                            campos: seccion.campos.map((campo, index) => {
+                                if (index === campoIndex) {
+                                    return editedField;
+                                }
+                                return campo;
+                            })
+                        };
+                    }
+                    return seccion;
+                }));
+                reporteService.actualizarReporte(newReporte, idReporte);
+            }
+            else {
+                console.log("error al guardar campo");
+            }
         }
 
-        // Ojalá se puediera refrescar la página después de guardar el campo.
-        console.log(editedField);
         setOpenDialog(false);
     };
 
-    const handleSaveSection = () => {
-        // Aquí se guardaría la sección editada usando axios.
-        // La variable que tiene la sección editada es editedSection, contiene la información de la sección y los campos.
-
+    const handleSaveSection = async (agregar) => {
         // Validación de que los campos estén completos
         const seccion = editedSection;
-        if (seccion.nombre === "" || seccion.nombre === null || seccion.nombre === undefined) {
+        if (seccion.titulo === "" || seccion.titulo === null || seccion.titulo === undefined) {
             handleOpenAlert("Por favor, complete el nombre de la sección.");
             return;
         }
 
-        // Aquí se guardaría la sección editada usando axios.
+        let indexSeccion = seccionActualIndex;
         // Ojalá se puediera refrescar la página después de guardar la sección.
-        console.log(editedSection);
-        setOpenSectionDialog(false);
+        if (agregar){
+            indexSeccion = secciones.length;
+        }
+        const newReporte = {
+            indexCategoria: categoriaActualIndex,
+            nuevoTituloCategoria: categorias[categoriaActualIndex],
+            indexSeccion: indexSeccion,
+            nuevoTituloSeccion: seccion.titulo,
+            indexCampo: null,
+            nuevoCampo: {}
+        }
+        setSecciones(secciones.map((seccion, index) => {
+            if (index === seccionActualIndex) {
+                return {
+                    ...seccion,
+                    titulo: seccion.titulo
+                };
+            }
+            return seccion;
+        }));
+        try {
+            await reporteService.actualizarReporte(newReporte, idReporte);
+            window.location.reload();
+        } catch (error) {
+            console.error('Error al guardar la sección:', error);
+        }
+        setOpenSectionEditDialog(false);
+    };
+
+    // Función para editar el nombre de la categoría
+    const handleEditCategory = async () => {
+        // Validación de que el nombre esté completo
+        if (nombreIngresado === "" || nombreIngresado === null || nombreIngresado === undefined) {
+            handleOpenAlert("Por favor, complete el nombre de la categoría.");
+            return;
+        }
+
+        // Ojalá se puediera refrescar la página después de guardar la categoría.
+        const newReporte = {
+            indexCategoria: categoriaActualIndex,
+            nuevoTituloCategoria: nombreIngresado
+        }
+        setCategorias(categorias.map((categoria, index) => {
+            if (index === categoriaActualIndex) {
+                return nombreIngresado;
+            }
+            return categoria;
+        }));
+        try {
+            await reporteService.actualizarReporte(newReporte, idReporte);
+        } catch (error) {
+            console.error('Error al guardar la categoría:', error);
+        }
+        setNombreIngresado("");
+        setOpenCategoryEditDialog(false);
     };
 
     const handleFieldChange = (event) => {
         const { name, value } = event.target;
-        setEditedField({ ...editedField, [name]: value });
+        if (name.startsWith('subCampos')) {
+            const subcampoIndex = parseInt(name.split('-')[2]);
+            const newSubCampos = [...editedField.subCampos];
+            newSubCampos[subcampoIndex][name.split('-')[1]] = value;
+            setEditedField({ ...editedField, subCampos: newSubCampos });
+        } else {
+            setEditedField({ ...editedField, [name]: value });
+        }
     };
 
     const handleAddSubcampo = () => {
-        const newSubcampo = { nombre: "", valor: "", tipoDeDato: "string" };
+        const newSubcampo = { nombre: "", contenido: "", tipo: "Texto" };
         setEditedField({
             ...editedField,
-            subcampos: [...(editedField.subcampos || []), newSubcampo]
+            subCampos: [...(editedField.subCampos || []), newSubcampo]
         });
     };
 
     const handleDeleteSubcampo = (index) => {
-        const newSubcampos = [...editedField.subcampos];
+        const newSubcampos = [...editedField.subCampos];
         newSubcampos.splice(index, 1);
-        setEditedField({ ...editedField, subcampos: newSubcampos });
+        setEditedField({ ...editedField, subCampos: newSubcampos });
     }
 
     return (
         <>
-            <NavbarReporte useSectionMode={useSectionMode} secciones={secciones} seccionesRutas={seccionesRutas} seccionActual={seccionActual} />
+            <NavbarReporte
+                useSectionMode={true}
+                secciones={categorias}
+                seccionActualIndex={categoriaActualIndex}
+                onSeccionChange={handleCategoriaChange}
+            />
             <Container maxWidth="xl" sx={{ display: 'flex', flexDirection: 'column', minWidth: '80vw' }}>
                 <Paper sx={{ mt: 2, p: 2, flexGrow: 1 }}>
                     <Grid container justifyContent="space-between" alignItems="center">
-                        <Grid item>
+                        <Grid item xs={8}>
                             <Typography variant="h4" color={"primary.main"} fontWeight={"bold"}>
-                                {seccionActual}
+                                {categorias[categoriaActualIndex]}
                             </Typography>
                         </Grid>
-                        <Grid item>
-                            {/* Porcentaje de autorización */}
-                            <Typography variant="h5" color={"red"} sx={{ fontFamily: "Segoe UI", fontWeight: "bold", fontStyle: "italic" }}>
-                                {/*{porcentajeAutorizado * 100}% Autorizado */}
-                            </Typography>
+                        <Grid item xs={4} container justifyContent="flex-end">
+                            <Button
+                                variant="outlined"
+                                color="error"
+                                sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", mr: 1 }}
+                                onClick={() => setOpenEliminarCategoriaDialog(true)}
+                            >
+                                Eliminar Categoría
+                            </Button>
+                            <Button
+                                variant="outlined"
+                                color="primary"
+                                sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem" }}
+                                onClick={() => setOpenCategoryEditDialog(true)}
+                            >
+                                Editar Categoría
+                            </Button>
                         </Grid>
                     </Grid>
                 </Paper>
-                {listaSecciones.map((seccion, index) => (
-                    <Paper sx={{ mt: 2, p: 2, flexGrow: 1 }} key={index}>
-                        <Typography variant="h5" color={"primary.main"} fontWeight={"bold"} sx={{ mb: 2 }}>
-                            {seccion.nombre}
-                        </Typography>
+                {secciones.map((seccion, indexSeccion) => (
+                    <Paper sx={{ mt: 2, p: 2, flexGrow: 1 }} key={indexSeccion}>
+                        <Grid container>
+                            <Grid item xs={8}>
+                                <Typography variant="h4" color={"primary.main"} fontWeight={"bold"}>
+                                    {seccion.titulo}
+                                </Typography>
+                            </Grid>
+                            <Grid item xs={4} container justifyContent="flex-end">
+                                <Button
+                                    variant="outlined"
+                                    color="error"
+                                    sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", mr: 1 }}
+                                    onClick={() => handleOpenEliminarSeccion(indexSeccion)}
+                                >
+                                    Eliminar Sección
+                                </Button>
+                                <Button
+                                    variant="outlined"
+                                    color="primary"
+                                    sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem" }}
+                                    onClick={() => handleOpenSectionEditDialog(indexSeccion)}
+                                >
+                                    Editar Sección
+                                </Button>
+                            </Grid>
+                        </Grid>
+
                         {seccion.campos.map((campo, index) => (
                             <Box sx={{ pl: 2, pr: 2, mb: 2 }} key={index}>
                                 <Grid container alignItems="center" justifyContent="space-between" borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, py: 1 }}>
@@ -270,15 +411,15 @@ function Reporte() {
                                         <Typography variant="h5" color={"#000000"} sx={{
                                             fontFamily: "Segoe UI",
                                             fontStyle: "italic",
-                                            color: campo.tipoDeDato === "boolean" ? (campo.valor ? "green" : "red") : undefined
+                                            color: campo.tipo === "Booleano" ? (campo.contenido ? "green" : "red") : undefined
                                         }}>
                                             {(() => {
-                                                if (campo.tipoDeDato === "string") {
-                                                    return campo.valor;
-                                                } else if (campo.tipoDeDato === "number") {
-                                                    return campo.valor;
-                                                } else if (campo.tipoDeDato === "boolean") {
-                                                    return campo.valor ? "Sí" : "No";
+                                                if (campo.tipo === "Texto") {
+                                                    return campo.contenido;
+                                                } else if (campo.tipo === "Numerico") {
+                                                    return campo.contenido;
+                                                } else if (campo.tipo === "Booleano") {
+                                                    return campo.contenido ? "Sí" : "No";
                                                 }
                                             })()}
                                         </Typography>
@@ -287,8 +428,8 @@ function Reporte() {
                                         <Button
                                             variant="outlined"
                                             color="error"
-                                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", mr: 1}}
-                                            onClick={() => handleEliminarCampoDialog(campo)}
+                                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", mr: 1 }}
+                                            onClick={() => handleEliminarCampoDialog(index, indexSeccion)}
                                         >
                                             Eliminar Campo
                                         </Button>
@@ -296,25 +437,37 @@ function Reporte() {
                                             variant="outlined"
                                             color="primary"
                                             sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem" }}
-                                            onClick={() => handleOpenEditDialog(campo, seccion)}
+                                            onClick={() => handleOpenEditDialog(campo, seccion, indexSeccion)}
                                         >
                                             Editar Campo
                                         </Button>
                                     </Grid>
                                 </Grid>
-                                {(campo.subcampos.length >= 1) && (
+                                {(campo.subCampos && (campo.subCampos.length > 0)) && (
                                     <Grid item xs={12}>
                                         <Box sx={{ pl: 4, pr: 4 }}>
-                                            {campo.subcampos.map((subcampo, index) => (
+                                            {campo.subCampos.map((subCampos, index) => (
                                                 <Grid container alignItems="center" justifyContent="space-between" borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, mb: 1, py: 1 }} key={index}>
                                                     <Grid item xs={6}>
                                                         <Typography variant="h6" color={"#000000"} sx={{ fontFamily: "Segoe UI", fontWeight: "normal" }}>
-                                                            {subcampo.nombre}
+                                                            {subCampos.nombre}
                                                         </Typography>
                                                     </Grid>
                                                     <Grid item xs={6} container>
-                                                        <Typography variant="h6" color={"#000000"} sx={{ fontFamily: "Segoe UI", fontWeight: "normal", fontStyle: "italic" }}>
-                                                            {subcampo.valor}
+                                                        <Typography variant="h6" color={"#000000"} sx={{
+                                                            fontFamily: "Segoe UI",
+                                                            fontStyle: "italic",
+                                                            color: subCampos.tipo === "Booleano" ? (subCampos.contenido ? "green" : "red") : undefined
+                                                        }}>
+                                                            {(() => {
+                                                                if (subCampos.tipo === "Texto") {
+                                                                    return subCampos.contenido;
+                                                                } else if (subCampos.tipo === "Numerico") {
+                                                                    return subCampos.contenido;
+                                                                } else if (subCampos.tipo === "Booleano") {
+                                                                    return subCampos.contenido ? "Sí" : "No";
+                                                                }
+                                                            })()}
                                                         </Typography>
                                                     </Grid>
                                                 </Grid>
@@ -335,14 +488,21 @@ function Reporte() {
                                     fontSize: "1rem",
                                     mt: 2,
                                 }}
-                                onClick={() => handleOpenEditDialog(null, seccion)}
+                                onClick={() => handleOpenEditDialog(null, seccion, indexSeccion)}
                             >
                                 Agregar Campo
                             </Button>
                         </Grid>
                     </Paper>
                 ))}
-                <Button variant="contained" color="primary" onClick={handleOpenSectionDialog} sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1.5rem", my: 2 }}>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    sx={{
+                        textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1.5rem", my: 2
+                    }}
+                    onClick={() => setOpenSectionDialog(true)}
+                >
                     Agregar Sección
                 </Button>
             </Container>
@@ -389,37 +549,37 @@ function Reporte() {
                                         <InputLabel>Tipo de Dato</InputLabel>
                                         <Select
                                             label="Tipo de Dato"
-                                            name="tipoDeDato"
-                                            value={editedField.tipoDeDato}
+                                            name="tipo"
+                                            value={editedField.tipo}
                                             onChange={(event) => {
                                                 const newCampo = { ...editedField };
-                                                if (newCampo.tipoDeDato === "boolean") {
-                                                    newCampo.valor = "";
+                                                if (newCampo.tipo === "Booleano") {
+                                                    newCampo.contenido = "";
                                                 }
-                                                if ((newCampo.tipoDeDato === "string" || newCampo.tipoDeDato === "number") && event.target.value === "boolean") {
-                                                    newCampo.valor = true;
+                                                if ((newCampo.tipo === "Texto" || newCampo.tipo === "Numerico") && event.target.value === "Booleano") {
+                                                    newCampo.contenido = true;
                                                 }
-                                                newCampo.tipoDeDato = event.target.value;
-                                                setEditedField({ ...editedField, tipoDeDato: event.target.value, valor: newCampo.valor });
+                                                newCampo.tipo = event.target.value;
+                                                setEditedField({ ...editedField, tipo: event.target.value, contenido: newCampo.contenido });
                                             }}
                                         >
-                                            <MenuItem value="string">Texto</MenuItem>
-                                            <MenuItem value="number">Número</MenuItem>
-                                            <MenuItem value="boolean">Booleano</MenuItem>
+                                            <MenuItem value="Texto">Texto</MenuItem>
+                                            <MenuItem value="Numerico">Número</MenuItem>
+                                            <MenuItem value="Booleano">Booleano</MenuItem>
                                         </Select>
                                     </FormControl>
                                 </Grid>
                                 <Grid item xs={12}>
-                                    {editedField.tipoDeDato === "boolean" ? (
+                                    {editedField.tipo === "Booleano" ? (
                                         <FormControl fullWidth margin="normal">
                                             <InputLabel>Valor</InputLabel>
                                             <Select
                                                 label="Valor"
-                                                name="valor"
+                                                name="contenido"
                                                 variant="outlined"
                                                 fullWidth
                                                 margin="normal"
-                                                value={editedField.valor}
+                                                value={editedField.contenido}
                                                 onChange={handleFieldChange}
                                             >
                                                 <MenuItem value={true}>Sí</MenuItem>
@@ -429,18 +589,16 @@ function Reporte() {
                                     ) : (
                                         <TextField
                                             label="Valor"
-                                            name="valor"
+                                            name="contenido"
                                             variant="outlined"
                                             fullWidth
                                             margin="normal"
-                                            value={editedField.valor}
+                                            value={editedField.contenido}
                                             onChange={handleFieldChange}
                                         />
                                     )}
                                 </Grid>
-
                                 {/* Subcampos */}
-
                                 <Grid item xs={12}>
                                     <Typography
                                         variant="h6"
@@ -449,20 +607,20 @@ function Reporte() {
                                     >
                                         Subcampos
                                     </Typography>
-                                    {(editedField.subcampos != null) && editedField.subcampos.map((subcampo, index) => (
+                                    {(editedField.subCampos != null) && editedField.subCampos.map((subCampos, index) => (
                                         <Grid container key={index} sx={{ mb: 1, p: 2 }} borderBottom={1} borderColor={"secondary.main"}>
                                             <Grid item xs={12}>
                                                 <TextField
                                                     label="Nombre del Subcampo"
-                                                    name={`subcampo-nombre-${index}`}
+                                                    name={`subCampos-nombre-${index}`}
                                                     variant="outlined"
                                                     fullWidth
                                                     margin="normal"
-                                                    value={subcampo.nombre}
+                                                    value={subCampos.nombre}
                                                     onChange={(event) => {
-                                                        const newSubcampos = [...editedField.subcampos];
+                                                        const newSubcampos = [...editedField.subCampos];
                                                         newSubcampos[index].nombre = event.target.value;
-                                                        setEditedField({ ...editedField, subcampos: newSubcampos });
+                                                        setEditedField({ ...editedField, subCampos: newSubcampos });
                                                     }}
                                                 />
                                             </Grid>
@@ -471,38 +629,38 @@ function Reporte() {
                                                     <InputLabel>Tipo de Dato</InputLabel>
                                                     <Select
                                                         label="Tipo de Dato"
-                                                        name={`subcampo-tipoDeDato-${index}`}
-                                                        value={subcampo.tipoDeDato}
+                                                        name={`subCampos-tipo-${index}`}
+                                                        value={subCampos.tipo}
                                                         onChange={(event) => {
-                                                            const newSubcampos = [...editedField.subcampos];
-                                                            if (newSubcampos[index].tipoDeDato === "boolean") {
-                                                                newSubcampos[index].valor = "";
+                                                            const newSubcampos = [...editedField.subCampos];
+                                                            if (newSubcampos[index].tipo === "Booleano") {
+                                                                newSubcampos[index].contenido = "";
                                                             }
-                                                            newSubcampos[index].tipoDeDato = event.target.value;
-                                                            setEditedField({ ...editedField, subcampos: newSubcampos });
+                                                            newSubcampos[index].tipo = event.target.value;
+                                                            setEditedField({ ...editedField, subCampos: newSubcampos });
                                                         }}
                                                     >
-                                                        <MenuItem value="string">Texto</MenuItem>
-                                                        <MenuItem value="number">Número</MenuItem>
-                                                        <MenuItem value="boolean">Booleano</MenuItem>
+                                                        <MenuItem value="Texto">Texto</MenuItem>
+                                                        <MenuItem value="Numerico">Número</MenuItem>
+                                                        <MenuItem value="Booleano">Booleano</MenuItem>
                                                     </Select>
                                                 </FormControl>
                                             </Grid>
                                             <Grid item xs={12}>
-                                                {subcampo.tipoDeDato === "boolean" ? (
+                                                {subCampos.tipo === "Booleano" ? (
                                                     <FormControl fullWidth margin="normal">
                                                         <InputLabel>Valor del Subcampo</InputLabel>
                                                         <Select
                                                             label="Valor del Subcampo"
-                                                            name={`subcampo-valor-${index}`}
+                                                            name={`subCampos-contenido-${index}`}
                                                             variant="outlined"
                                                             fullWidth
                                                             margin="normal"
-                                                            value={subcampo.valor}
+                                                            value={subCampos.contenido}
                                                             onChange={(event) => {
-                                                                const newSubcampos = [...editedField.subcampos];
-                                                                newSubcampos[index].valor = event.target.value;
-                                                                setEditedField({ ...editedField, subcampos: newSubcampos });
+                                                                const newSubcampos = [...editedField.subCampos];
+                                                                newSubcampos[index].contenido = event.target.value;
+                                                                setEditedField({ ...editedField, subCampos: newSubcampos });
                                                             }}
                                                         >
                                                             <MenuItem value={true}>Sí</MenuItem>
@@ -512,15 +670,15 @@ function Reporte() {
                                                 ) : (
                                                     <TextField
                                                         label="Valor del Subcampo"
-                                                        name={`subcampo-valor-${index}`}
+                                                        name={`subCampos-contenido-${index}`}
                                                         variant="outlined"
                                                         fullWidth
                                                         margin="normal"
-                                                        value={subcampo.valor}
+                                                        value={subCampos.contenido}
                                                         onChange={(event) => {
-                                                            const newSubcampos = [...editedField.subcampos];
-                                                            newSubcampos[index].valor = event.target.value;
-                                                            setEditedField({ ...editedField, subcampos: newSubcampos });
+                                                            const newSubcampos = [...editedField.subCampos];
+                                                            newSubcampos[index].contenido = event.target.value;
+                                                            setEditedField({ ...editedField, subCampos: newSubcampos });
                                                         }}
                                                     />
                                                 )}
@@ -556,48 +714,175 @@ function Reporte() {
                 </DialogActions>
             </Dialog>
 
-            {/* Dialog eliminar campo */}
-            <Dialog open={openEliminarCampoDialog} onClose={handleEliminarCampoDialog}>
-                <DialogTitle>Eliminar Campo</DialogTitle>
+            {/* Diálogo para editar el nombre de la sección */}
+            <Dialog open={openSectionEditDialog} onClose={() => setOpenSectionEditDialog(false)} maxWidth="md" fullWidth>
                 <DialogContent>
-                    <Typography variant="body1">
-                        Usted está a punto de eliminar el campo "<Typography component="span" variant="body1" color="primary.main" sx={{ fontStyle: "italic" }}>{currentField && currentField.nombre}</Typography>", para confirmar la <strong><Typography component="span" variant="body1" color="error.main">eliminación</Typography></strong> ingrese nuevamente el nombre del campo en el cuadro de texto:
-                    </Typography>
-
-                    <TextField
-                        autoFocus
-                        margin="dense"
-                        label="Nombre del Campo a Eliminar"
-                        type="text"
-                        value={nombreIngresado}
-                        onChange={handleNombreIngresadoChange}
-                        fullWidth
-                    />
+                    <Grid container spacing={2}>
+                        <Grid item xs={8}>
+                            <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Editar Sección</Typography>
+                        </Grid>
+                        <Grid item xs={4} container justifyContent="flex-end" sx={{ mb: 2 }}>
+                            <IconButton onClick={() => setOpenSectionEditDialog(false)} disableRipple><CloseIcon /></IconButton>
+                        </Grid>
+                        <Grid item xs={12} container>
+                            <Typography variant="body1">Introduzca el nombre de la sección:</Typography>
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                label="Nombre de la Sección"
+                                variant="outlined"
+                                fullWidth
+                                value={editedSection.titulo}
+                                onChange={(event) => setEditedSection({ ...editedSection, titulo: event.target.value })}
+                            />
+                        </Grid>
+                    </Grid>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleCerrarEliminarCampoDialog} color="primary" variant="outlined">
+                    <Grid container>
+                        <Grid item xs={12} container justifyContent="flex-end">
+                            <Button color="secondary" variant="text" onClick={() => setOpenSectionEditDialog(false)} >
+                                Descartar
+                            </Button>
+                            <Button color="primary" variant="text" onClick={() => handleSaveSection(false)} >
+                                Guardar
+                            </Button>
+                        </Grid>
+                    </Grid>
+                </DialogActions>
+            </Dialog>
+
+            {/* Diálogo para editar el nombre de la categoría */}
+            <Dialog open={openCategoryEditDialog} onClose={() => setOpenCategoryEditDialog(false)} maxWidth="md" fullWidth>
+                <DialogContent>
+                    <Grid container spacing={2}>
+                        <Grid item xs={8}>
+                            <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Editar Categoría</Typography>
+                        </Grid>
+                        <Grid item xs={4} container justifyContent="flex-end" sx={{ mb: 2 }}>
+                            <IconButton onClick={() => setOpenCategoryEditDialog(false)} disableRipple><CloseIcon /></IconButton>
+                        </Grid>
+                        <Grid item xs={12} container>
+                            <Typography variant="body1">Introduzca el nombre de la categoría:</Typography>
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                label="Nombre de la Categoría"
+                                variant="outlined"
+                                fullWidth
+                                value={nombreIngresado}
+                                onChange={(event) => setNombreIngresado(event.target.value)}
+                            />
+                        </Grid>
+                    </Grid>
+                </DialogContent>
+                <DialogActions>
+                    <Grid container>
+                        <Grid item xs={12} container justifyContent="flex-end">
+                            <Button color="secondary" variant="text" onClick={() => setOpenCategoryEditDialog(false)} >
+                                Descartar
+                            </Button>
+                            <Button color="primary" variant="text" onClick={() => handleEditCategory()} >
+                                Guardar
+                            </Button>
+                        </Grid>
+                    </Grid>
+                </DialogActions>
+            </Dialog>
+
+            {/* Diálogo para eliminar categoría */}
+            <Dialog open={openEliminarCategoriaDialog} onClose={() => setOpenEliminarCategoriaDialog(false)} maxWidth="md" fullWidth>
+                <DialogTitle>
+                    <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Eliminar Campo</Typography>
+                </DialogTitle>
+                <DialogContent>
+                    <Typography variant="body1">¿Está seguro de que desea eliminar la categoría "{categorias[categoriaActualIndex]}"?</Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button color="secondary" variant="text" onClick={() => setOpenEliminarCategoriaDialog(false)} >
                         Cancelar
                     </Button>
-                    <Button onClick={() => handleEliminarCampo(currentField)} color="error" variant="contained">
+                    <Button color="error" variant="text" onClick={() => handleEliminarCategoria()} >
                         Eliminar
                     </Button>
                 </DialogActions>
             </Dialog>
 
-            {/* Dialog agregar sección */}
-            <Dialog open={openSectionDialog} onClose={handleCloseSectionDialog}>
-                <DialogTitle>Agregar Sección</DialogTitle>
+            {/* Diálogo para eliminar sección */}
+            <Dialog open={openEliminarSeccionDialog} onClose={() => setOpenEliminarSeccionDialog(false)} maxWidth="md" fullWidth>
+                <DialogTitle>
+                    <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Eliminar Sección</Typography>
+                </DialogTitle>
                 <DialogContent>
-                    <TextField
-                        label="Nombre de la Sección"
-                        variant="outlined"
-                        fullWidth
-                        margin="normal"
-                    />
+                    <Typography variant="body1">¿Está seguro de que desea eliminar la sección "{secciones.length > 0 ? secciones[seccionActualIndex].titulo : ''}"?</Typography>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleCloseSectionDialog}>Cancelar</Button>
-                    <Button onClick={handleSaveSection}>Agregar</Button>
+                    <Button color="secondary" variant="text" onClick={() => {
+                        setOpenEliminarSeccionDialog(false)
+                    }}>
+                        Cancelar
+                    </Button>
+                    <Button color="error" variant="text" onClick={() => handleEliminarSeccion()} >
+                        Eliminar
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Diálogo para agregar sección */}
+            <Dialog open={openSectionDialog} onClose={() => setOpenSectionDialog(false)} maxWidth="md" fullWidth>
+                <DialogContent>
+                    <Grid container spacing={2}>
+                        <Grid item xs={8}>
+                            <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Agregar Sección</Typography>
+                        </Grid>
+                        <Grid item xs={4} container justifyContent="flex-end" sx={{ mb: 2 }}>
+                            <IconButton onClick={() => setOpenSectionDialog(false)} disableRipple><CloseIcon /></IconButton>
+                        </Grid>
+                        <Grid item xs={12} container>
+                            <Typography variant="body1">Introduzca el nombre de la sección:</Typography>
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                label="Nombre de la Sección"
+                                variant="outlined"
+                                fullWidth
+                                value={editedSection.titulo}
+                                onChange={(event) => setEditedSection({ ...editedSection, titulo: event.target.value })}
+                            />
+                        </Grid>
+                    </Grid>
+                </DialogContent>
+                <DialogActions>
+                    <Grid container>
+                        <Grid item xs={12} container justifyContent="flex-end">
+                            <Button color="secondary" variant="text" onClick={() => setOpenSectionDialog(false)} >
+                                Cancelar
+                            </Button>
+                            <Button color="primary" variant="text" onClick={() => handleSaveSection(true)} >
+                                Agregar
+                            </Button>
+                        </Grid>
+                    </Grid>
+                </DialogActions>
+            </Dialog>
+
+            {/* Diálogo para eliminar campo */}
+            <Dialog open={openEliminarCampoDialog} onClose={handleCerrarEliminarCampoDialog} maxWidth="md" fullWidth>
+                <DialogTitle>
+                    <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Eliminar Campo</Typography>
+                </DialogTitle>
+                <DialogContent>
+                    <Typography variant="body1">
+                        ¿Está seguro de que desea eliminar el campo "{secciones[seccionActualIndex] ? secciones[seccionActualIndex].nombre : ''}"?
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button color="secondary" variant="text" onClick={handleCerrarEliminarCampoDialog} >
+                        Cancelar
+                    </Button>
+                    <Button color="error" variant="text" onClick={() => handleEliminarCampo()} >
+                        Eliminar
+                    </Button>
                 </DialogActions>
             </Dialog>
         </>
