@@ -131,11 +131,13 @@ function Reporte() {
     const handleEliminarCampo = () => {
         if (campoActualIndex !== -1) {
             let newReporte = {
-                indexCategoria: categoriaActualIndex,
+                coordenadas: {
+                    indexCategoria: categoriaActualIndex,
+                    indexSeccion: seccionActualIndex,
+                    indexCampo: campoActualIndex,
+                },
                 nuevoTituloCategoria: "",
-                indexSeccion: seccionActualIndex,
                 nuevoTituloSeccion: "",
-                indexCampo: campoActualIndex,
                 nuevoCampo: {}
             }
             reporteService.deleteContenido(newReporte, idReporte);
@@ -189,11 +191,13 @@ function Reporte() {
         if (isAdding) {
             campoIndex = secciones[seccionActualIndex].campos.length;
             let newReporte = {
-                indexCategoria: categoriaActualIndex,
+                coordenadas: {
+                    indexCategoria: categoriaActualIndex,
+                    indexSeccion: seccionIndex,
+                    indexCampo: campoIndex
+                },
                 nuevoTituloCategoria: categorias[categoriaActualIndex],
-                indexSeccion: seccionIndex,
                 nuevoTituloSeccion: secciones[seccionIndex].titulo,
-                indexCampo: campoIndex,
                 nuevoCampo: editedField
             }
             setSecciones(secciones.map((seccion, index) => {
@@ -211,11 +215,13 @@ function Reporte() {
             campoIndex = secciones[seccionIndex].campos.findIndex(c => c === currentField);
             if (campoIndex !== -1) {
                 let newReporte = {
-                    indexCategoria: categoriaActualIndex,
+                    coordenadas: {
+                        indexCategoria: categoriaActualIndex,
+                        indexSeccion: seccionIndex,
+                        indexCampo: campoIndex,
+                    },
                     nuevoTituloCategoria: categorias[categoriaActualIndex],
-                    indexSeccion: seccionIndex,
                     nuevoTituloSeccion: secciones[seccionIndex].titulo,
-                    indexCampo: campoIndex,
                     nuevoCampo: editedField
                 }
                 setSecciones(secciones.map((seccion, index) => {
@@ -256,11 +262,14 @@ function Reporte() {
             indexSeccion = secciones.length;
         }
         const newReporte = {
-            indexCategoria: categoriaActualIndex,
+            coordenadas: {
+                indexCategoria: categoriaActualIndex,
+                indexSeccion: indexSeccion,
+                indexCampo: null
+
+            },
             nuevoTituloCategoria: categorias[categoriaActualIndex],
-            indexSeccion: indexSeccion,
             nuevoTituloSeccion: seccion.titulo,
-            indexCampo: null,
             nuevoCampo: {}
         }
         setSecciones(secciones.map((seccion, index) => {
@@ -291,7 +300,9 @@ function Reporte() {
 
         // Ojalá se puediera refrescar la página después de guardar la categoría.
         const newReporte = {
-            indexCategoria: categoriaActualIndex,
+            coordenadas: {
+                indexCategoria: categoriaActualIndex
+            },
             nuevoTituloCategoria: nombreIngresado
         }
         setCategorias(categorias.map((categoria, index) => {
