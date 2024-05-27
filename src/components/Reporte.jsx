@@ -20,7 +20,7 @@ function Reporte() {
             .then(data => {
                 setReporte(data);
                 const categoriasObtenidas = data.categorias || [];
-                setCategorias(categoriasObtenidas.map(categoria => categoria.nombre));
+                setCategorias(categoriasObtenidas.map(categoria => categoria.titulo));
                 if (categoriasObtenidas.length > 0) {
                     setSecciones(categoriasObtenidas[0].secciones || []);
                 }
@@ -37,7 +37,7 @@ function Reporte() {
     const [openSectionDialog, setOpenSectionDialog] = useState(false);
     const [openSectionEditDialog, setOpenSectionEditDialog] = useState(false);
     const [openCategoryEditDialog, setOpenCategoryEditDialog] = useState(false);
-    const [nombreCategoria, setNombreCategoria] = useState("");
+    const [tituloCategoria, setTituloCategoria] = useState("");
     const [editedField, setEditedField] = useState(null);
     const [currentField, setCurrentField] = useState(null);
     const [alerta, setAlerta] = useState(false);
@@ -46,13 +46,13 @@ function Reporte() {
     const [currentSection, setCurrentSection] = useState(null);
     const [editedSection, setEditedSection] = useState({ titulo: "", campos: [] });
     const [openEliminarCampoDialog, setOpenEliminarCampoDialog] = useState(false);
-    const [nombreIngresado, setNombreIngresado] = useState("");
+    const [tituloIngresado, setTituloIngresado] = useState("");
     const [openEliminarCategoriaDialog, setOpenEliminarCategoriaDialog] = useState(false);
     const [openEliminarSeccionDialog, setOpenEliminarSeccionDialog] = useState(false);
     const [campoActualIndex, setCampoActualIndex] = useState(0);
 
-    const handleNombreIngresadoChange = (event) => {
-        setNombreIngresado(event.target.value);
+    const handleTituloIngresadoChange = (event) => {
+        setTituloIngresado(event.target.value);
     };
 
     const handleOpenEditDialog = (campo, section = null, indexSeccion) => {
@@ -167,8 +167,8 @@ function Reporte() {
             handleOpenAlert("Por favor, complete el contenido del campo.");
             return;
         }
-        if (campo.nombre === "" || campo.nombre === null || campo.nombre === undefined) {
-            handleOpenAlert("Por favor, complete el nombre del campo.");
+        if (campo.titulo === "" || campo.titulo === null || campo.titulo === undefined) {
+            handleOpenAlert("Por favor, complete el titulo del campo.");
             return;
         }
 
@@ -180,8 +180,8 @@ function Reporte() {
                     handleOpenAlert("Por favor, complete todos los valores de los subCampos.");
                     return;
                 }
-                if (subCampos[i].nombre === "" || subCampos[i].nombre === null || subCampos[i].nombre === undefined) {
-                    handleOpenAlert("Por favor, complete todos los nombres de los subCampos.");
+                if (subCampos[i].titulo === "" || subCampos[i].titulo === null || subCampos[i].titulo === undefined) {
+                    handleOpenAlert("Por favor, complete todos los titulos de los subCampos.");
                     return;
                 }
             }
@@ -252,7 +252,7 @@ function Reporte() {
         // Validación de que los campos estén completos
         const seccion = editedSection;
         if (seccion.titulo === "" || seccion.titulo === null || seccion.titulo === undefined) {
-            handleOpenAlert("Por favor, complete el nombre de la sección.");
+            handleOpenAlert("Por favor, complete el titulo de la sección.");
             return;
         }
 
@@ -290,11 +290,11 @@ function Reporte() {
         setOpenSectionEditDialog(false);
     };
 
-    // Función para editar el nombre de la categoría
+    // Función para editar el titulo de la categoría
     const handleEditCategory = async () => {
-        // Validación de que el nombre esté completo
-        if (nombreIngresado === "" || nombreIngresado === null || nombreIngresado === undefined) {
-            handleOpenAlert("Por favor, complete el nombre de la categoría.");
+        // Validación de que el titulo esté completo
+        if (tituloIngresado === "" || tituloIngresado === null || tituloIngresado === undefined) {
+            handleOpenAlert("Por favor, complete el titulo de la categoría.");
             return;
         }
 
@@ -303,11 +303,11 @@ function Reporte() {
             coordenadas: {
                 indexCategoria: categoriaActualIndex
             },
-            nuevoTituloCategoria: nombreIngresado
+            nuevoTituloCategoria: tituloIngresado
         }
         setCategorias(categorias.map((categoria, index) => {
             if (index === categoriaActualIndex) {
-                return nombreIngresado;
+                return tituloIngresado;
             }
             return categoria;
         }));
@@ -316,7 +316,7 @@ function Reporte() {
         } catch (error) {
             console.error('Error al guardar la categoría:', error);
         }
-        setNombreIngresado("");
+        setTituloIngresado("");
         setOpenCategoryEditDialog(false);
     };
 
@@ -333,7 +333,7 @@ function Reporte() {
     };
 
     const handleAddSubcampo = () => {
-        const newSubcampo = { nombre: "", contenido: "", tipo: "Texto" };
+        const newSubcampo = { titulo: "", contenido: "", tipo: "Texto" };
         setEditedField({
             ...editedField,
             subCampos: [...(editedField.subCampos || []), newSubcampo]
@@ -415,7 +415,7 @@ function Reporte() {
                                 <Grid container alignItems="center" justifyContent="space-between" borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, py: 1 }}>
                                     <Grid item xs={4}>
                                         <Typography variant="h5" color={"#000000"} sx={{ fontFamily: "Segoe UI" }}>
-                                            {campo.nombre}
+                                            {campo.titulo}
                                         </Typography>
                                     </Grid>
                                     <Grid item xs={4} container>
@@ -461,7 +461,7 @@ function Reporte() {
                                                 <Grid container alignItems="center" justifyContent="space-between" borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, mb: 1, py: 1 }} key={index}>
                                                     <Grid item xs={6}>
                                                         <Typography variant="h6" color={"#000000"} sx={{ fontFamily: "Segoe UI", fontWeight: "normal" }}>
-                                                            {subCampos.nombre}
+                                                            {subCampos.titulo}
                                                         </Typography>
                                                     </Grid>
                                                     <Grid item xs={6} container>
@@ -546,12 +546,12 @@ function Reporte() {
                             <Grid container sx={{ p: 2 }}>
                                 <Grid item xs={12}>
                                     <TextField
-                                        label="Nombre del Campo"
-                                        name="nombre"
+                                        label="Título del Campo"
+                                        name="titulo"
                                         variant="outlined"
                                         fullWidth
                                         margin="normal"
-                                        value={editedField.nombre}
+                                        value={editedField.titulo}
                                         onChange={handleFieldChange}
                                     />
                                 </Grid>
@@ -622,15 +622,15 @@ function Reporte() {
                                         <Grid container key={index} sx={{ mb: 1, p: 2 }} borderBottom={1} borderColor={"secondary.main"}>
                                             <Grid item xs={12}>
                                                 <TextField
-                                                    label="Nombre del Subcampo"
-                                                    name={`subCampos-nombre-${index}`}
+                                                    label="Título del Subcampo"
+                                                    name={`subCampos-titulo-${index}`}
                                                     variant="outlined"
                                                     fullWidth
                                                     margin="normal"
-                                                    value={subCampos.nombre}
+                                                    value={subCampos.titulo}
                                                     onChange={(event) => {
                                                         const newSubcampos = [...editedField.subCampos];
-                                                        newSubcampos[index].nombre = event.target.value;
+                                                        newSubcampos[index].titulo = event.target.value;
                                                         setEditedField({ ...editedField, subCampos: newSubcampos });
                                                     }}
                                                 />
@@ -725,7 +725,7 @@ function Reporte() {
                 </DialogActions>
             </Dialog>
 
-            {/* Diálogo para editar el nombre de la sección */}
+            {/* Diálogo para editar el titulo de la sección */}
             <Dialog open={openSectionEditDialog} onClose={() => setOpenSectionEditDialog(false)} maxWidth="md" fullWidth>
                 <DialogContent>
                     <Grid container spacing={2}>
@@ -736,11 +736,11 @@ function Reporte() {
                             <IconButton onClick={() => setOpenSectionEditDialog(false)} disableRipple><CloseIcon /></IconButton>
                         </Grid>
                         <Grid item xs={12} container>
-                            <Typography variant="body1">Introduzca el nombre de la sección:</Typography>
+                            <Typography variant="body1">Introduzca el título de la sección:</Typography>
                         </Grid>
                         <Grid item xs={12}>
                             <TextField
-                                label="Nombre de la Sección"
+                                label="Título de la Sección"
                                 variant="outlined"
                                 fullWidth
                                 value={editedSection.titulo}
@@ -763,7 +763,7 @@ function Reporte() {
                 </DialogActions>
             </Dialog>
 
-            {/* Diálogo para editar el nombre de la categoría */}
+            {/* Diálogo para editar el titulo de la categoría */}
             <Dialog open={openCategoryEditDialog} onClose={() => setOpenCategoryEditDialog(false)} maxWidth="md" fullWidth>
                 <DialogContent>
                     <Grid container spacing={2}>
@@ -774,15 +774,15 @@ function Reporte() {
                             <IconButton onClick={() => setOpenCategoryEditDialog(false)} disableRipple><CloseIcon /></IconButton>
                         </Grid>
                         <Grid item xs={12} container>
-                            <Typography variant="body1">Introduzca el nombre de la categoría:</Typography>
+                            <Typography variant="body1">Introduzca el título de la categoría:</Typography>
                         </Grid>
                         <Grid item xs={12}>
                             <TextField
-                                label="Nombre de la Categoría"
+                                label="Título de la Categoría"
                                 variant="outlined"
                                 fullWidth
-                                value={nombreIngresado}
-                                onChange={(event) => setNombreIngresado(event.target.value)}
+                                value={tituloIngresado}
+                                onChange={(event) => setTituloIngresado(event.target.value)}
                             />
                         </Grid>
                     </Grid>
@@ -850,11 +850,11 @@ function Reporte() {
                             <IconButton onClick={() => setOpenSectionDialog(false)} disableRipple><CloseIcon /></IconButton>
                         </Grid>
                         <Grid item xs={12} container>
-                            <Typography variant="body1">Introduzca el nombre de la sección:</Typography>
+                            <Typography variant="body1">Introduzca el título de la sección:</Typography>
                         </Grid>
                         <Grid item xs={12}>
                             <TextField
-                                label="Nombre de la Sección"
+                                label="Título de la Sección"
                                 variant="outlined"
                                 fullWidth
                                 value={editedSection.titulo}
@@ -884,7 +884,7 @@ function Reporte() {
                 </DialogTitle>
                 <DialogContent>
                     <Typography variant="body1">
-                        ¿Está seguro de que desea eliminar el campo "{secciones[seccionActualIndex] ? secciones[seccionActualIndex].nombre : ''}"?
+                        ¿Está seguro de que desea eliminar el campo "{secciones[seccionActualIndex] ? secciones[seccionActualIndex].titulo : ''}"?
                     </Typography>
                 </DialogContent>
                 <DialogActions>

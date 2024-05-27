@@ -11,7 +11,7 @@ function NavbarReporte({ useSectionMode, secciones, seccionActualIndex, onSeccio
     const [openCollapse, setOpenCollapse] = useState(true);
     const [tabValue, setTabValue] = useState(seccionActualIndex);
     const [openDialog, setOpenDialog] = useState(false);
-    const [nombreCategoria, setNombreCategoria] = useState("");
+    const [tituloCategoria, setTituloCategoria] = useState("");
     const { idReporte } = useParams();
 
     useEffect(() => {
@@ -31,20 +31,20 @@ function NavbarReporte({ useSectionMode, secciones, seccionActualIndex, onSeccio
         onSeccionChange(newValue);
     };
 
-    const handleNombreCategoriaChange = (event) => {
-        setNombreCategoria(event.target.value);
+    const handleTituloCategoriaChange = (event) => {
+        setTituloCategoria(event.target.value);
     };
 
     const handleAgregarCategoria = () => {
         const newCategoria = {
             indexCategoria: secciones.length,
-            nuevoTituloCategoria: nombreCategoria,
+            nuevoTituloCategoria: tituloCategoria,
             indexSeccion: null,
             nuevoTituloSeccion: "",
             indexCampo: null,
             nuevoCampo: {}
         };
-        secciones.push(nombreCategoria);
+        secciones.push(tituloCategoria);
         reporteService.actualizarReporte(newCategoria, idReporte);
         setOpenDialog(false);
     }
@@ -122,15 +122,15 @@ function NavbarReporte({ useSectionMode, secciones, seccionActualIndex, onSeccio
                             <IconButton onClick={() => setOpenDialog(false)} disableRipple><CloseIcon /></IconButton>
                         </Grid>
                         <Grid item xs={12} container>
-                            <Typography variant="h7">Introduzca el nombre de la categoría:</Typography>
+                            <Typography variant="h7">Introduzca el título de la categoría:</Typography>
                         </Grid>
                         <Grid item xs={12}>
                             <TextField
-                                label="Nombre de la Categoría"
+                                label="Título de la Categoría"
                                 variant="outlined"
                                 fullWidth
-                                value={nombreCategoria}
-                                onChange={handleNombreCategoriaChange}
+                                value={tituloCategoria}
+                                onChange={handleTituloCategoriaChange}
                             />
                         </Grid>
                     </Grid>

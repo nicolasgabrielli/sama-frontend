@@ -24,7 +24,7 @@ function ListaReportes() {
     const [preconfiguracionSeleccionadaId, setPreconfiguracionSeleccionadaId] = useState(null);
     const [preconfiguraciones, setPreconfiguraciones] = useState([]);
     const [categorias, setCategorias] = useState([]);
-    const [nombreReporte, setNombreReporte] = useState("");
+    const [tituloReporte, setTituloReporte] = useState("");
     const [anioReporte, setAnioReporte] = useState(null);
 
     const handleOpenCrearReporte = () => {
@@ -37,8 +37,8 @@ function ListaReportes() {
         setCategorias([]);
     };
 
-    const handleNombreReporteChange = (event) => {
-        setNombreReporte(event.target.value);
+    const handleTituloReporteChange = (event) => {
+        setTituloReporte(event.target.value);
     };
 
     const handleOpenUtilizarPreconfiguracion = () => {
@@ -63,18 +63,18 @@ function ListaReportes() {
     // Función para crear un reporte con una preconfiguración / preset
     const handleUtilizarPreconfiguracion = () => {
         // El preset seleccionado está en preconfiguracionSeleccionadaId
-        // El nombre del reporte está en nombreReporte
+        // El titulo del reporte está en tituloReporte
         reporteService.getPreset(preconfiguracionSeleccionadaId)
             .then(response => response.data)
             .then(data => {
                 const categorias = data.categorias;
                 const reporte = {
-                    titulo: nombreReporte,
+                    titulo: tituloReporte,
                     anio: anioReporte,
                     categorias: categorias
                 };
                 setOpenUtilizarPreconfiguracion(false);
-                setNombreReporte("");
+                setTituloReporte("");
                 setAnioReporte(null);
                 reporteService.crearReporte(idEmpresa, reporte);
             })
@@ -84,17 +84,17 @@ function ListaReportes() {
 
     // Función para crear un reporte sin preconfiguración / preset
     const handleCrearReporteSinPreconfiguracion = () => {
-        // El nombre del reporte está en nombreReporte
+        // El titulo del reporte está en tituloReporte
         const reporte = {
-            titulo: nombreReporte,
+            titulo: tituloReporte,
             anio: anioReporte,
             categorias: [{
-                nombre: "Nueva Categoría 1",
+                titulo: "Nueva Categoría 1",
                 secciones: []
             }]
         }
         setOpenSinPreconfiguraciones(false);
-        setNombreReporte("");
+        setTituloReporte("");
         setAnioReporte(null);
         reporteService.crearReporte(idEmpresa, reporte);
     };
@@ -266,16 +266,16 @@ function ListaReportes() {
                         </Grid>
                         <Grid item xs={12} container>
                             <Typography variant="body1">
-                                Introduzca el nombre del reporte:
+                                Introduzca el título del reporte:
                             </Typography>
                         </Grid>
                         <Grid item xs={12} container justifyContent={"center"} sx={{ mb: 2 }}>
                             <TextField
-                                label="Nombre del Reporte"
+                                label="Titulo del Reporte"
                                 variant="outlined"
                                 fullWidth
-                                value={nombreReporte}
-                                onChange={handleNombreReporteChange}
+                                value={tituloReporte}
+                                onChange={handleTituloReporteChange}
                             />
                         </Grid>
                         <Grid item xs={12} container>
@@ -342,16 +342,16 @@ function ListaReportes() {
                         </Grid>
                         <Grid item xs={12} container>
                             <Typography variant="body1">
-                                Introduzca el nombre del reporte:
+                                Introduzca el título del reporte:
                             </Typography>
                         </Grid>
                         <Grid item xs={12} container justifyContent={"center"} sx={{ mb: 2 }}>
                             <TextField
-                                label="Nombre del Reporte"
+                                label="Titulo del Reporte"
                                 variant="outlined"
                                 fullWidth
-                                value={nombreReporte}
-                                onChange={handleNombreReporteChange}
+                                value={tituloReporte}
+                                onChange={handleTituloReporteChange}
                             />
                         </Grid>
                         <Grid item xs={12} container>
