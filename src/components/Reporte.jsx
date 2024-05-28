@@ -12,8 +12,8 @@ function Reporte() {
     const [tituloReporte, setTituloReporte] = useState("");
     const [categoriaActualIndex, setCategoriaActualIndex] = useState(0);
     const [seccionActualIndex, setSeccionActualIndex] = useState(0);
-    const [categorias, setCategorias] = useState([]); // Se necesita que esto sea una lista de Categorias como tal y no solo los títulos, para poder actualizar el estado correctamente
-    const [secciones, setSecciones] = useState([]); // Se necesita que esto sea una lista de Secciones como tal y no solo los títulos, para poder actualizar el estado correctamente
+    const [categorias, setCategorias] = useState([]); // Se necesita que esto sea una lista de Categorias (o crear una lista de categorias) como tal y no solo los títulos, para poder actualizar el estado correctamente
+    const [secciones, setSecciones] = useState([]);
 
     useEffect(() => {
         reporteService.obtenerReporte(idReporte)
@@ -280,7 +280,7 @@ function Reporte() {
         }));
         try {
             await reporteService.actualizarReporte(newReporte, idReporte);
-            window.location.reload();
+            window.location.reload(); //REVISAR
         } catch (error) {
             console.error('Error al guardar la sección:', error);
         }
