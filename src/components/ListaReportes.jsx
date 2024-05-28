@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { Container, Typography, Paper, Button, Grid, Box, Dialog, DialogContent, DialogActions, MenuItem, Select, IconButton, InputLabel, FormControl, TextField } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
+import { Box, Button, Container, Dialog, DialogActions, DialogContent, FormControl, Grid, IconButton, InputLabel, MenuItem, Paper, Select, TextField, Typography } from "@mui/material";
+import React, { useEffect, useState } from "react";
 import Navbar from "./Navbar";
 
-import InformacionEmpresa from "./InformacionEmpresa";
-import reporteService from "../services/ReporteService";
+import { Link, useParams } from "react-router-dom";
 import empresaService from "../services/EmpresaService";
-import { useParams, Link } from "react-router-dom";
+import reporteService from "../services/ReporteService";
+import InformacionEmpresa from "./InformacionEmpresa";
 
 function ListaReportes() {
     const useSectionMode = false;
@@ -64,7 +64,7 @@ function ListaReportes() {
     const handleUtilizarPreconfiguracion = () => {
         // El preset seleccionado está en preconfiguracionSeleccionadaId
         // El titulo del reporte está en tituloReporte
-        reporteService.getPreset(preconfiguracionSeleccionadaId)
+        reporteService.obtenerPreset(preconfiguracionSeleccionadaId)
             .then(response => response.data)
             .then(data => {
                 const categorias = data.categorias;
@@ -101,7 +101,7 @@ function ListaReportes() {
 
     // Función para eliminar el reporte
     const handleEliminarReporte = (idReporte) => {
-        reporteService.deleteReporte(idReporte);
+        reporteService.eliminarReporte(idReporte);
         setOpenEliminarReporte(false);
     };
 
@@ -116,12 +116,12 @@ function ListaReportes() {
     };
 
     useEffect(() => {
-        reporteService.getListaReportes(idEmpresa)
+        reporteService.obtenerListaReportes(idEmpresa)
             .then(response => response.data)
             .then(data => setReportes(data))
             .catch(error => console.error('Error al obtener la lista de reportes:', error));
 
-        reporteService.getPresets()
+        reporteService.obtenerPresets()
             .then(response => response.data)
             .then(data => setPreconfiguraciones(data))
             .catch(error => console.error('Error al obtener la lista de preconfiguraciones:', error));

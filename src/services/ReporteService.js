@@ -2,11 +2,11 @@ import axios from 'axios';
 const API_URL = 'http://localhost:8081/api/reporte/';
 
 class ReporteService {
-    getListaReportes(idEmpresa) {
+    obtenerListaReportes(idEmpresa) {
         return axios.get(API_URL + "por-empresa/" + idEmpresa);
     }
 
-    getReporte(id) {
+    obtenerReporte(id) {
         return axios.get(API_URL + "por-id/" + id);
     }
 
@@ -18,24 +18,35 @@ class ReporteService {
         return axios.put(API_URL + "actualizar/" + idReporte, reporte);
     }
 
-    deleteReporte(id) {
+    eliminarReporte(id) {
         return axios.delete(API_URL +"eliminar/" + id);
     }
 
-    getPresets() {
+    obtenerPresets() {
         return axios.get(API_URL + "preset");
     }
 
-    getPreset(id) {
+    obtenerPreset(id) {
         return axios.get(API_URL + "preset/" + id);
     }
 
-    deleteContenido(idReporte, coordenadas) {
+    eliminarContenido(idReporte, coordenadas) {
         return axios.delete(API_URL + "eliminar-contenido/" + idReporte, {
             data: coordenadas
         });
     }
-    
+
+    obtenerCategorias(idReporte) {
+        return axios.get(API_URL + "categorias/" + idReporte);
+    }
+
+    obtenerSecciones(idReporte, coordenadas) {
+        return axios.get(API_URL + "secciones/" + idReporte, coordenadas);
+    }
+
+    obtenerCampos(idReporte, coordenadas) {
+        return axios.get(API_URL + "campos/" + idReporte, coordenadas);
+    }
 }
 
 const reporteService = new ReporteService();

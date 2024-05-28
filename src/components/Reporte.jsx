@@ -12,11 +12,11 @@ function Reporte() {
     const [tituloReporte, setTituloReporte] = useState("");
     const [categoriaActualIndex, setCategoriaActualIndex] = useState(0);
     const [seccionActualIndex, setSeccionActualIndex] = useState(0);
-    const [categorias, setCategorias] = useState([]);
-    const [secciones, setSecciones] = useState([]);
+    const [categorias, setCategorias] = useState([]); // Se necesita que esto sea una lista de Categorias como tal y no solo los títulos, para poder actualizar el estado correctamente
+    const [secciones, setSecciones] = useState([]); // Se necesita que esto sea una lista de Secciones como tal y no solo los títulos, para poder actualizar el estado correctamente
 
     useEffect(() => {
-        reporteService.getReporte(idReporte)
+        reporteService.obtenerReporte(idReporte)
             .then(response => response.data)
             .then(data => {
                 setReporte(data);
@@ -110,7 +110,7 @@ function Reporte() {
         let coordenadas = {
             indexCategoria: categoriaActualIndex
         }
-        await reporteService.deleteContenido(idReporte, coordenadas);
+        await reporteService.eliminarContenido(idReporte, coordenadas);
         window.location.reload(); // REVISAR
         setOpenEliminarCategoriaDialog(false);
     };
@@ -125,7 +125,7 @@ function Reporte() {
             indexCategoria: categoriaActualIndex,
             indexSeccion: seccionActualIndex
         }
-        await reporteService.deleteContenido(idReporte, coordenadas);
+        await reporteService.eliminarContenido(idReporte, coordenadas);
         window.location.reload(); // REVISAR
         setOpenEliminarSeccionDialog(false);
     };
@@ -137,7 +137,7 @@ function Reporte() {
                 indexSeccion: seccionActualIndex,
                 indexCampo: campoActualIndex,
             }
-            reporteService.deleteContenido(idReporte, coordenadas);
+            reporteService.eliminarContenido(idReporte, coordenadas);
             setSecciones(secciones.map((seccion, index) => {
                 if (index === seccionActualIndex) {
                     return {
@@ -348,8 +348,8 @@ function Reporte() {
             <NavbarReporte
                 useSectionMode={true}
                 categorias={categorias}
-                seccionActualIndex={categoriaActualIndex}
-                onSeccionChange={handleCategoriaChange}
+                campoActualIndex={categoriaActualIndex}
+                onCategoriaChange={handleCategoriaChange}
                 tituloReporte={tituloReporte}
             />
             <Container maxWidth="xl" sx={{ display: 'flex', flexDirection: 'column', minWidth: '80vw' }}>

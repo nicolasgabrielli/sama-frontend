@@ -6,16 +6,16 @@ import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import reporteService from "../services/ReporteService";
 
-function NavbarReporte({ useSectionMode, categorias, seccionActualIndex, onSeccionChange, tituloReporte }) {
+function NavbarReporte({ useSectionMode, categorias, categoriaActualIndex, onCategoriaChange, tituloReporte }) {
     const [openCollapse, setOpenCollapse] = useState(true);
-    const [tabValue, setTabValue] = useState(seccionActualIndex);
+    const [tabValue, setTabValue] = useState(categoriaActualIndex);
     const [openDialog, setOpenDialog] = useState(false);
     const [tituloCategoria, setTituloCategoria] = useState("");
     const { idReporte } = useParams();
 
     useEffect(() => {
-        setTabValue(seccionActualIndex);
-    }, [seccionActualIndex]);
+        setTabValue(categoriaActualIndex);
+    }, [categoriaActualIndex]);
 
     const handleOpenDialog = () => {
         setOpenDialog(true);
@@ -27,7 +27,7 @@ function NavbarReporte({ useSectionMode, categorias, seccionActualIndex, onSecci
 
     const handleChange = (event, newValue) => {
         setTabValue(newValue);
-        onSeccionChange(newValue);
+        onCategoriaChange(newValue);
     };
 
     const handleTituloCategoriaChange = (event) => {
