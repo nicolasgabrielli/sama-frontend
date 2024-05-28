@@ -1,14 +1,15 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { Container, Typography, Paper, Button, Grid, Box, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Select, MenuItem, FormControl, InputLabel, Alert, Collapse, IconButton } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
-import NavbarReporte from "./NavbarReporte";
+import { Alert, Box, Button, Collapse, Container, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid, IconButton, InputLabel, MenuItem, Paper, Select, TextField, Typography } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import reporteService from "../services/ReporteService";
+import NavbarReporte from "./NavbarReporte";
 
 function Reporte() {
     const { idReporte } = useParams();
     const [reporte, setReporte] = useState(null);
+    const [tituloReporte, setTituloReporte] = useState("");
     const [categoriaActualIndex, setCategoriaActualIndex] = useState(0);
     const [seccionActualIndex, setSeccionActualIndex] = useState(0);
     const [categorias, setCategorias] = useState([]);
@@ -19,6 +20,7 @@ function Reporte() {
             .then(response => response.data)
             .then(data => {
                 setReporte(data);
+                setTituloReporte(data.titulo);
                 const categoriasObtenidas = data.categorias || [];
                 setCategorias(categoriasObtenidas.map(categoria => categoria.titulo));
                 if (categoriasObtenidas.length > 0) {
@@ -105,11 +107,11 @@ function Reporte() {
     };
 
     const handleEliminarCategoria = async () => {
-        let newContenido = {
+        let coordenadas = {
             indexCategoria: categoriaActualIndex
         }
-        await reporteService.deleteContenido(idReporte, newContenido);
-        window.location.reload();
+        await reporteService.deleteContenido(idReporte, coordenadas);
+        window.location.reload(); // REVISAR
         setOpenEliminarCategoriaDialog(false);
     };
 
@@ -119,28 +121,23 @@ function Reporte() {
     };
 
     const handleEliminarSeccion = async () => {
-        let newContenido = {
+        let coordenadas = {
             indexCategoria: categoriaActualIndex,
             indexSeccion: seccionActualIndex
         }
-        await reporteService.deleteContenido(idReporte, newContenido);
-        window.location.reload();
+        await reporteService.deleteContenido(idReporte, coordenadas);
+        window.location.reload(); // REVISAR
         setOpenEliminarSeccionDialog(false);
     };
 
     const handleEliminarCampo = () => {
         if (campoActualIndex !== -1) {
-            let newReporte = {
-                coordenadas: {
-                    indexCategoria: categoriaActualIndex,
-                    indexSeccion: seccionActualIndex,
-                    indexCampo: campoActualIndex,
-                },
-                nuevoTituloCategoria: "",
-                nuevoTituloSeccion: "",
-                nuevoCampo: {}
+            let coordenadas = {
+                indexCategoria: categoriaActualIndex,
+                indexSeccion: seccionActualIndex,
+                indexCampo: campoActualIndex,
             }
-            reporteService.deleteContenido(newReporte, idReporte);
+            reporteService.deleteContenido(idReporte, coordenadas);
             setSecciones(secciones.map((seccion, index) => {
                 if (index === seccionActualIndex) {
                     return {
@@ -258,7 +255,7 @@ function Reporte() {
 
         let indexSeccion = seccionActualIndex;
         // Ojalá se puediera refrescar la página después de guardar la sección.
-        if (agregar){
+        if (agregar) {
             indexSeccion = secciones.length;
         }
         const newReporte = {
@@ -350,9 +347,10 @@ function Reporte() {
         <>
             <NavbarReporte
                 useSectionMode={true}
-                secciones={categorias}
+                categorias={categorias}
                 seccionActualIndex={categoriaActualIndex}
                 onSeccionChange={handleCategoriaChange}
+                tituloReporte={tituloReporte}
             />
             <Container maxWidth="xl" sx={{ display: 'flex', flexDirection: 'column', minWidth: '80vw' }}>
                 <Paper sx={{ mt: 2, p: 2, flexGrow: 1 }}>
@@ -414,7 +412,11 @@ function Reporte() {
                             <Box sx={{ pl: 2, pr: 2, mb: 2 }} key={index}>
                                 <Grid container alignItems="center" justifyContent="space-between" borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, py: 1 }}>
                                     <Grid item xs={4}>
-                                        <Typography variant="h5" color={"#000000"} sx={{ fontFamily: "Segoe UI" }}>
+                                        <Typography
+                                            variant="h5"
+                                            color="#000000"
+                                            sx={{ fontFamily: "Segoe UI", fontWeight: "bold" }}
+                                        >
                                             {campo.titulo}
                                         </Typography>
                                     </Grid>

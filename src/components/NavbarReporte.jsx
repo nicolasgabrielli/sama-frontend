@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { AppBar, Toolbar, Typography, Box, Collapse, Tabs, Tab, IconButton, Button, Dialog, Grid, TextField, DialogContent, DialogActions } from "@mui/material";
+import AddCircleOutlinedIcon from '@mui/icons-material/AddCircleOutlined';
 import CloseIcon from '@mui/icons-material/Close';
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import { Link } from "react-router-dom";
-import AddCircleOutlinedIcon from '@mui/icons-material/AddCircleOutlined';
+import { AppBar, Box, Button, Collapse, Dialog, DialogActions, DialogContent, Grid, IconButton, Tab, Tabs, TextField, Toolbar, Typography } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
 import reporteService from "../services/ReporteService";
-import { useParams } from "react-router-dom";
 
-function NavbarReporte({ useSectionMode, secciones, seccionActualIndex, onSeccionChange }) {
+function NavbarReporte({ useSectionMode, categorias, seccionActualIndex, onSeccionChange, tituloReporte }) {
     const [openCollapse, setOpenCollapse] = useState(true);
     const [tabValue, setTabValue] = useState(seccionActualIndex);
     const [openDialog, setOpenDialog] = useState(false);
@@ -37,14 +36,12 @@ function NavbarReporte({ useSectionMode, secciones, seccionActualIndex, onSeccio
 
     const handleAgregarCategoria = () => {
         const newCategoria = {
-            indexCategoria: secciones.length,
+            coordenadas: {
+                indexCategoria: categorias.length
+            },
             nuevoTituloCategoria: tituloCategoria,
-            indexSeccion: null,
-            nuevoTituloSeccion: "",
-            indexCampo: null,
-            nuevoCampo: {}
         };
-        secciones.push(tituloCategoria);
+        categorias.push(tituloCategoria);
         reporteService.actualizarReporte(newCategoria, idReporte);
         setOpenDialog(false);
     }
@@ -71,9 +68,11 @@ function NavbarReporte({ useSectionMode, secciones, seccionActualIndex, onSeccio
                     <Typography variant="h4" component="div" sx={{ mr: 2, fontFamily: "Copperplate Gothic", fontWeight: "bold" }}>
                         SAMA
                     </Typography>
-                    <Typography variant="h5" component="div" noWrap sx={{ display: { xs: "none", md: "flex" }, fontStyle: "italic" }}>
-                        Administrador GRC
-                    </Typography>
+                    <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "center" }}>
+                        <Typography variant="h5" component="div" noWrap sx={{ display: { xs: "none", md: "flex" }, fontStyle: "italic" }}>
+                            {tituloReporte}
+                        </Typography>
+                    </Box>
                 </Toolbar>
                 {useSectionMode && (
                     <Collapse in={openCollapse} timeout="auto" unmountOnExit>
@@ -90,7 +89,7 @@ function NavbarReporte({ useSectionMode, secciones, seccionActualIndex, onSeccio
                                     },
                                 }}
                             >
-                                {secciones && secciones.map((seccion, index) => (
+                                {categorias && categorias.map((seccion, index) => (
                                     <Tab
                                         key={index}
                                         label={seccion}

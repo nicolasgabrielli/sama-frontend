@@ -3,7 +3,7 @@ const API_URL = 'http://localhost:8081/api/reporte/';
 
 class ReporteService {
     getListaReportes(idEmpresa) {
-        return axios.get(API_URL + "por-empresa/" + idEmpresa); // Tuplas (año, idReporte)
+        return axios.get(API_URL + "por-empresa/" + idEmpresa);
     }
 
     getReporte(id) {
@@ -30,9 +30,12 @@ class ReporteService {
         return axios.get(API_URL + "preset/" + id);
     }
 
-    deleteContenido(idReporte, contenido) {
-        return axios.put(API_URL + "eliminar-contenido/" + idReporte, contenido);
+    deleteContenido(idReporte, coordenadas) {
+        return axios.delete(API_URL + "eliminar-contenido/" + idReporte, {
+            data: coordenadas
+        });
     }
+    
 }
 
 const reporteService = new ReporteService();
