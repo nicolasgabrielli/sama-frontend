@@ -6,7 +6,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import reporteService from "../services/ReporteService";
 
-function NavbarReporte({ useSectionMode, categorias, categoriaActualIndex, onCategoriaChange, tituloReporte }) {
+function NavbarReporte({ useSectionMode, categorias, categoriaActualIndex, onCategoriaChange, tituloReporte, refreshReporte }) {
     const [openCollapse, setOpenCollapse] = useState(true);
     const [tabValue, setTabValue] = useState(categoriaActualIndex);
     const [openDialog, setOpenDialog] = useState(false);
@@ -34,15 +34,16 @@ function NavbarReporte({ useSectionMode, categorias, categoriaActualIndex, onCat
         setTituloCategoria(event.target.value);
     };
 
-    const handleAgregarCategoria = () => {
+    const handleAgregarCategoria = async () => {
         const newCategoria = {
             coordenadas: {
                 indexCategoria: categorias.length
             },
             nuevoTituloCategoria: tituloCategoria,
         };
+        await reporteService.actualizarReporte(newCategoria, idReporte);
         categorias.push(tituloCategoria);
-        reporteService.actualizarReporte(newCategoria, idReporte);
+        refreshReporte();
         setOpenDialog(false);
     }
 

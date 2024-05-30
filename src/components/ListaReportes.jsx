@@ -26,6 +26,8 @@ function ListaReportes() {
     const [categorias, setCategorias] = useState([]);
     const [tituloReporte, setTituloReporte] = useState("");
     const [anioReporte, setAnioReporte] = useState(null);
+    const [tituloReporteError, setTituloReporteError] = useState(false);
+    const [anioReporteError, setAnioReporteError] = useState(false);
 
     const handleOpenCrearReporte = () => {
         setOpenCrearReporte(true);
@@ -35,6 +37,8 @@ function ListaReportes() {
     const handleCloseCrearReporte = () => {
         setOpenCrearReporte(false);
         setCategorias([]);
+        setAnioReporte(null);
+        setTituloReporte("");
     };
 
     const handleTituloReporteChange = (event) => {
@@ -48,10 +52,25 @@ function ListaReportes() {
 
     const handleCloseUtilizarPreconfiguracion = () => {
         setOpenUtilizarPreconfiguracion(false);
+        setAnioReporte(null);
+        setTituloReporte("");
+        setPreconfiguracionSeleccionadaId(null);
     };
 
     const handlePreconfiguracionSeleccionadaChange = (event) => {
         setPreconfiguracionSeleccionadaId(event.target.value);
+    };
+
+    const handleOpenSinPreconfiguraciones = () => {
+        setOpenSinPreconfiguraciones(true);
+        handleCloseUtilizarPreconfiguracion();
+        handleCloseCrearReporte();
+    };
+
+    const handleCloseSinPreconfiguraciones = () => {
+        setOpenSinPreconfiguraciones(false);
+        setAnioReporte(null);
+        setTituloReporte("");
     };
 
     const handleOpenEliminarReporte = (reporteId) => {
@@ -62,6 +81,11 @@ function ListaReportes() {
 
     // Función para crear un reporte con una preconfiguración / preset
     const handleUtilizarPreconfiguracion = () => {
+        if (!tituloReporte || !anioReporte) {
+            setTituloReporteError(!tituloReporte);
+            setAnioReporteError(!anioReporte);
+            return;
+        }    
         // El preset seleccionado está en preconfiguracionSeleccionadaId
         // El titulo del reporte está en tituloReporte
         reporteService.obtenerPreset(preconfiguracionSeleccionadaId)
@@ -81,9 +105,13 @@ function ListaReportes() {
             .catch(error => console.error('Error al obtener la preconfiguración:', error));
     };
 
-
     // Función para crear un reporte sin preconfiguración / preset
     const handleCrearReporteSinPreconfiguracion = () => {
+        if (!tituloReporte || !anioReporte) {
+            setTituloReporteError(!tituloReporte);
+            setAnioReporteError(!anioReporte);
+            return;
+        }    
         // El titulo del reporte está en tituloReporte
         const reporte = {
             titulo: tituloReporte,
@@ -103,16 +131,6 @@ function ListaReportes() {
     const handleEliminarReporte = (idReporte) => {
         reporteService.eliminarReporte(idReporte);
         setOpenEliminarReporte(false);
-    };
-
-    const handleOpenSinPreconfiguraciones = () => {
-        setOpenSinPreconfiguraciones(true);
-        handleCloseUtilizarPreconfiguracion();
-        handleCloseCrearReporte();
-    };
-
-    const handleCloseSinPreconfiguraciones = () => {
-        setOpenSinPreconfiguraciones(false);
     };
 
     useEffect(() => {
@@ -276,6 +294,8 @@ function ListaReportes() {
                                 fullWidth
                                 value={tituloReporte}
                                 onChange={handleTituloReporteChange}
+                                error={tituloReporteError}
+                                helperText={tituloReporteError ? "Este campo es obligatorio" : ""}
                             />
                         </Grid>
                         <Grid item xs={12} container>
@@ -290,6 +310,8 @@ function ListaReportes() {
                                 fullWidth
                                 value={anioReporte}
                                 onChange={(event) => setAnioReporte(event.target.value)}
+                                error={anioReporteError}
+                                helperText={anioReporteError ? "Este campo es obligatorio" : ""}
                             />
                         </Grid>
                         <Grid item xs={12} container >
@@ -322,7 +344,13 @@ function ListaReportes() {
                             </Typography>
                         </Grid>
                         <Grid item xs={8} container justifyContent="flex-end">
-                            <Button onClick={handleUtilizarPreconfiguracion} color="primary" variant="contained" sx={{ textTransform: "none", fontStyle: "italic", fontSize: "1rem" }}>
+                            <Button 
+                                onClick={handleUtilizarPreconfiguracion}
+                                color="primary" 
+                                variant="contained" 
+                                sx={{ textTransform: "none", fontStyle: "italic", fontSize: "1rem" }}
+                                disabled={!tituloReporte || !anioReporte || !preconfiguracionSeleccionadaId}
+                            >
                                 Crear Reporte
                             </Button>
                         </Grid>
@@ -352,6 +380,8 @@ function ListaReportes() {
                                 fullWidth
                                 value={tituloReporte}
                                 onChange={handleTituloReporteChange}
+                                error={tituloReporteError}
+                                helperText={tituloReporteError ? "Este campo es obligatorio" : ""}
                             />
                         </Grid>
                         <Grid item xs={12} container>
@@ -366,6 +396,8 @@ function ListaReportes() {
                                 fullWidth
                                 value={anioReporte}
                                 onChange={(event) => setAnioReporte(event.target.value)}
+                                error={anioReporteError}
+                                helperText={anioReporteError ? "Este campo es obligatorio" : ""}
                             />
                         </Grid>
                     </Grid>
@@ -378,7 +410,13 @@ function ListaReportes() {
                             </Typography>
                         </Grid>
                         <Grid item xs={8} container justifyContent="flex-end">
-                            <Button color="primary" variant="contained" onClick={handleCrearReporteSinPreconfiguracion} sx={{ textTransform: "none", fontStyle: "italic", fontSize: "1rem" }}>
+                            <Button
+                                color="primary" 
+                                variant="contained" 
+                                onClick={handleCrearReporteSinPreconfiguracion} 
+                                sx={{ textTransform: "none", fontStyle: "italic", fontSize: "1rem" }}
+                                disabled={!tituloReporte || !anioReporte}
+                            >
                                 Crear Reporte
                             </Button>
                         </Grid>

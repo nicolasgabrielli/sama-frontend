@@ -2,7 +2,7 @@ import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import { Alert, Box, Checkbox, FormControlLabel, Button, Collapse, Container, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid, IconButton, InputLabel, MenuItem, Paper, Select, TextField, Typography } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import reporteService from "../services/ReporteService";
 import NavbarReporte from "./NavbarReporte";
 import NavbarEvidencia from './NavbarEvidencia';
@@ -32,21 +32,34 @@ function Reporte() {
     }, [idReporte]);
 
     const handleCategoriaChange = (index) => {
-        setCategoriaActualIndex(index);
         setSecciones(reporte.categorias[index].secciones || []);
+        setCategoriaActualIndex(index);
+    };
+
+    const refreshReporte = () => {
+        reporteService.obtenerReporte(idReporte)
+            .then(response => response.data)
+            .then(data => {
+                setReporte(data);
+                setTituloReporte(data.titulo);
+                const categoriasObtenidas = data.categorias || [];
+                setCategorias(categoriasObtenidas.map(categoria => categoria.titulo));
+                if (categoriasObtenidas.length > 0) {
+                    setSecciones(categoriasObtenidas[categoriaActualIndex].secciones || []);
+                }
+            })
+            .catch(error => console.error('Error al obtener el reporte:', error));
     };
 
     const [openDialog, setOpenDialog] = useState(false);
     const [openSectionDialog, setOpenSectionDialog] = useState(false);
     const [openSectionEditDialog, setOpenSectionEditDialog] = useState(false);
     const [openCategoryEditDialog, setOpenCategoryEditDialog] = useState(false);
-    const [tituloCategoria, setTituloCategoria] = useState("");
     const [editedField, setEditedField] = useState(null);
     const [currentField, setCurrentField] = useState(null);
     const [alerta, setAlerta] = useState(false);
     const [alertaTexto, setAlertaTexto] = useState("");
     const [isAdding, setIsAdding] = useState(false);
-    const [currentSection, setCurrentSection] = useState(null);
     const [editedSection, setEditedSection] = useState({ titulo: "", campos: [] });
     const [openEliminarCampoDialog, setOpenEliminarCampoDialog] = useState(false);
     const [tituloIngresado, setTituloIngresado] = useState("");
@@ -78,10 +91,6 @@ function Reporte() {
         evidencia.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
         evidencia.tipo.toLowerCase().includes(searchTerm.toLowerCase())
     );
-
-    const handleTituloIngresadoChange = (event) => {
-        setTituloIngresado(event.target.value);
-    };
 
     const handleOpenEditDialog = (campo, section = null, indexSeccion) => {
         setCurrentField(campo);
@@ -137,7 +146,9 @@ function Reporte() {
             indexCategoria: categoriaActualIndex
         }
         await reporteService.eliminarContenido(idReporte, coordenadas);
-        window.location.reload(); // REVISAR
+        setCategorias(categorias.filter((categoria, index) => index !== categoriaActualIndex));
+        setCategoriaActualIndex(0);
+        refreshReporte();
         setOpenEliminarCategoriaDialog(false);
     };
 
@@ -152,7 +163,7 @@ function Reporte() {
             indexSeccion: seccionActualIndex
         }
         await reporteService.eliminarContenido(idReporte, coordenadas);
-        window.location.reload(); // REVISAR
+        refreshReporte();
         setOpenEliminarSeccionDialog(false);
     };
 
@@ -306,11 +317,12 @@ function Reporte() {
         }));
         try {
             await reporteService.actualizarReporte(newReporte, idReporte);
-            window.location.reload(); //REVISAR
+            refreshReporte();
         } catch (error) {
             console.error('Error al guardar la sección:', error);
         }
         setOpenSectionEditDialog(false);
+        setOpenSectionDialog(false);
     };
 
     // Función para editar el titulo de la categoría
@@ -377,6 +389,7 @@ function Reporte() {
                 categoriaActualIndex={categoriaActualIndex}
                 onCategoriaChange={handleCategoriaChange}
                 tituloReporte={tituloReporte}
+                refreshReporte={refreshReporte}
             />
             <Container maxWidth="xl" sx={{ display: 'flex', flexDirection: 'column', minWidth: '80vw', pb: '100px' }}>
                 <Paper sx={{ mt: 2, p: 2, flexGrow: 1 }}>
@@ -807,7 +820,7 @@ function Reporte() {
             </Dialog>
 
             {/* Diálogo para editar el titulo de la sección */}
-            <Dialog open={openSectionEditDialog} onClose={() => setOpenSectionEditDialog(false)} maxWidth="md" fullWidth>
+            <Dialog open={openSectionEditDialog} onClose={handleCloseSectionEditDialog()} maxWidth="md" fullWidth>
                 <DialogContent>
                     <Grid container spacing={2}>
                         <Grid item xs={8}>
@@ -833,7 +846,7 @@ function Reporte() {
                 <DialogActions>
                     <Grid container>
                         <Grid item xs={12} container justifyContent="flex-end">
-                            <Button color="secondary" variant="text" onClick={() => setOpenSectionEditDialog(false)} >
+                            <Button color="secondary" variant="text" onClick={handleCloseSectionEditDialog()} >
                                 Descartar
                             </Button>
                             <Button color="primary" variant="text" onClick={() => handleSaveSection(false)} >
