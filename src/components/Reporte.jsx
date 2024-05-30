@@ -1,10 +1,11 @@
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
-import { Alert, Box, Button, Collapse, Container, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid, IconButton, InputLabel, MenuItem, Paper, Select, TextField, Typography } from "@mui/material";
+import { Alert, Box, Checkbox, FormControlLabel, Button, Collapse, Container, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid, IconButton, InputLabel, MenuItem, Paper, Select, TextField, Typography } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import reporteService from "../services/ReporteService";
 import NavbarReporte from "./NavbarReporte";
+import NavbarEvidencia from './NavbarEvidencia';
 
 function Reporte() {
     const { idReporte } = useParams();
@@ -52,6 +53,31 @@ function Reporte() {
     const [openEliminarCategoriaDialog, setOpenEliminarCategoriaDialog] = useState(false);
     const [openEliminarSeccionDialog, setOpenEliminarSeccionDialog] = useState(false);
     const [campoActualIndex, setCampoActualIndex] = useState(0);
+    const [evidencia, setEvidencia] = useState([{ nombre: "Evidencia 1", tipo: "Archivo.pdf" }, { nombre: "Evidencia 2", tipo: "https://pagina.com/" }, { nombre: "Evidencia 3", tipo: "Archivo.xsls" }]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedEvidencias, setSelectedEvidencias] = useState([]);
+
+    const handleSearchChange = (event) => {
+        setSearchTerm(event.target.value);
+    };
+
+    const handleCheckboxChange = (event, index) => {
+        const updatedSelectedEvidencias = [...selectedEvidencias];
+        if (event.target.checked) {
+            updatedSelectedEvidencias.push(index);
+        } else {
+            const checkboxIndex = updatedSelectedEvidencias.indexOf(index);
+            if (checkboxIndex > -1) {
+                updatedSelectedEvidencias.splice(checkboxIndex, 1);
+            }
+        }
+        setSelectedEvidencias(updatedSelectedEvidencias);
+    };
+
+    const filteredEvidencia = evidencia.filter((evidencia) =>
+        evidencia.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        evidencia.tipo.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     const handleTituloIngresadoChange = (event) => {
         setTituloIngresado(event.target.value);
@@ -348,11 +374,11 @@ function Reporte() {
             <NavbarReporte
                 useSectionMode={true}
                 categorias={categorias}
-                campoActualIndex={categoriaActualIndex}
+                categoriaActualIndex={categoriaActualIndex}
                 onCategoriaChange={handleCategoriaChange}
                 tituloReporte={tituloReporte}
             />
-            <Container maxWidth="xl" sx={{ display: 'flex', flexDirection: 'column', minWidth: '80vw' }}>
+            <Container maxWidth="xl" sx={{ display: 'flex', flexDirection: 'column', minWidth: '80vw', pb: '100px' }}>
                 <Paper sx={{ mt: 2, p: 2, flexGrow: 1 }}>
                     <Grid container justifyContent="space-between" alignItems="center">
                         <Grid item xs={8}>
@@ -470,6 +496,7 @@ function Reporte() {
                                                         <Typography variant="h6" color={"#000000"} sx={{
                                                             fontFamily: "Segoe UI",
                                                             fontStyle: "italic",
+                                                            fontWeight: "normal",
                                                             color: subCampos.tipo === "Booleano" ? (subCampos.contenido ? "green" : "red") : undefined
                                                         }}>
                                                             {(() => {
@@ -518,205 +545,257 @@ function Reporte() {
                 >
                     Agregar Sección
                 </Button>
+                <NavbarEvidencia />
             </Container>
 
-            {/* Diálogo para editar campos */}
-            <Dialog open={openDialog} onClose={handleCloseEditDialog} maxWidth="md" fullWidth>
+            {/* Diálogo de edición de campo */}
+            <Dialog open={openDialog} onClose={handleCloseEditDialog} maxWidth="lg" fullWidth>
                 <DialogContent>
-                    {/* Título */}
-                    {isAdding ? (
-                        <Typography
-                            variant="h5"
-                            color="primary"
-                            fontWeight="bold"
-                        >
-                            Agregar Campo
-                        </Typography>
-                    ) : (
-                        <Typography
-                            variant="h5"
-                            color="primary"
-                            fontWeight="bold"
-                        >
-                            Editar Campo
-                        </Typography>
-                    )}
-
-                    {/* Campo */}
-                    {editedField && (
-                        <>
-                            <Grid container sx={{ p: 2 }}>
-                                <Grid item xs={12}>
-                                    <TextField
-                                        label="Título del Campo"
-                                        name="titulo"
-                                        variant="outlined"
-                                        fullWidth
-                                        margin="normal"
-                                        value={editedField.titulo}
-                                        onChange={handleFieldChange}
-                                    />
-                                </Grid>
-                                <Grid item xs={12}>
-                                    <FormControl fullWidth margin="normal">
-                                        <InputLabel>Tipo de Dato</InputLabel>
-                                        <Select
-                                            label="Tipo de Dato"
-                                            name="tipo"
-                                            value={editedField.tipo}
-                                            onChange={(event) => {
-                                                const newCampo = { ...editedField };
-                                                if (newCampo.tipo === "Booleano") {
-                                                    newCampo.contenido = "";
-                                                }
-                                                if ((newCampo.tipo === "Texto" || newCampo.tipo === "Numerico") && event.target.value === "Booleano") {
-                                                    newCampo.contenido = true;
-                                                }
-                                                newCampo.tipo = event.target.value;
-                                                setEditedField({ ...editedField, tipo: event.target.value, contenido: newCampo.contenido });
-                                            }}
-                                        >
-                                            <MenuItem value="Texto">Texto</MenuItem>
-                                            <MenuItem value="Numerico">Número</MenuItem>
-                                            <MenuItem value="Booleano">Booleano</MenuItem>
-                                        </Select>
-                                    </FormControl>
-                                </Grid>
-                                <Grid item xs={12}>
-                                    {editedField.tipo === "Booleano" ? (
-                                        <FormControl fullWidth margin="normal">
-                                            <InputLabel>Valor</InputLabel>
-                                            <Select
-                                                label="Valor"
-                                                name="contenido"
+                    <Grid container>
+                        <Grid item xs={6} container direction="column" sx={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                            {/* Campo */}
+                            {editedField && (
+                                <>
+                                    <Grid container>
+                                        <Typography variant="h5" color="primary" fontWeight="bold">
+                                            {isAdding ? "Agregar Campo" : "Editar Campo"}
+                                        </Typography>
+                                        <Grid item xs={12}>
+                                            <TextField
+                                                label="Título del Campo"
+                                                name="titulo"
                                                 variant="outlined"
                                                 fullWidth
                                                 margin="normal"
-                                                value={editedField.contenido}
+                                                value={editedField.titulo}
                                                 onChange={handleFieldChange}
-                                            >
-                                                <MenuItem value={true}>Sí</MenuItem>
-                                                <MenuItem value={false}>No</MenuItem>
-                                            </Select>
-                                        </FormControl>
-                                    ) : (
-                                        <TextField
-                                            label="Valor"
-                                            name="contenido"
-                                            variant="outlined"
-                                            fullWidth
-                                            margin="normal"
-                                            value={editedField.contenido}
-                                            onChange={handleFieldChange}
-                                        />
-                                    )}
-                                </Grid>
-                                {/* Subcampos */}
-                                <Grid item xs={12}>
-                                    <Typography
-                                        variant="h6"
-                                        sx={{ mt: 2 }}
-                                        color="primary.main"
-                                    >
-                                        Subcampos
-                                    </Typography>
-                                    {(editedField.subCampos != null) && editedField.subCampos.map((subCampos, index) => (
-                                        <Grid container key={index} sx={{ mb: 1, p: 2 }} borderBottom={1} borderColor={"secondary.main"}>
-                                            <Grid item xs={12}>
-                                                <TextField
-                                                    label="Título del Subcampo"
-                                                    name={`subCampos-titulo-${index}`}
-                                                    variant="outlined"
-                                                    fullWidth
-                                                    margin="normal"
-                                                    value={subCampos.titulo}
+                                                sx={{ width: "99%" }}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <FormControl fullWidth margin="normal">
+                                                <InputLabel>Tipo de Dato</InputLabel>
+                                                <Select
+                                                    label="Tipo de Dato"
+                                                    name="tipo"
+                                                    value={editedField.tipo}
+                                                    sx={{ width: "99%" }}
                                                     onChange={(event) => {
-                                                        const newSubcampos = [...editedField.subCampos];
-                                                        newSubcampos[index].titulo = event.target.value;
-                                                        setEditedField({ ...editedField, subCampos: newSubcampos });
+                                                        const newCampo = { ...editedField };
+                                                        if (newCampo.tipo === "Booleano") {
+                                                            newCampo.contenido = "";
+                                                        }
+                                                        if ((newCampo.tipo === "Texto" || newCampo.tipo === "Numerico") && event.target.value === "Booleano") {
+                                                            newCampo.contenido = true;
+                                                        }
+                                                        newCampo.tipo = event.target.value;
+                                                        setEditedField({ ...editedField, tipo: event.target.value, contenido: newCampo.contenido });
                                                     }}
-                                                />
-                                            </Grid>
-                                            <Grid item xs={12}>
+                                                >
+                                                    <MenuItem value="Texto">Texto</MenuItem>
+                                                    <MenuItem value="Numerico">Número</MenuItem>
+                                                    <MenuItem value="Booleano">Booleano</MenuItem>
+                                                </Select>
+                                            </FormControl>
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            {editedField.tipo === "Booleano" ? (
                                                 <FormControl fullWidth margin="normal">
-                                                    <InputLabel>Tipo de Dato</InputLabel>
+                                                    <InputLabel>Valor</InputLabel>
                                                     <Select
-                                                        label="Tipo de Dato"
-                                                        name={`subCampos-tipo-${index}`}
-                                                        value={subCampos.tipo}
-                                                        onChange={(event) => {
-                                                            const newSubcampos = [...editedField.subCampos];
-                                                            if (newSubcampos[index].tipo === "Booleano") {
-                                                                newSubcampos[index].contenido = "";
-                                                            }
-                                                            newSubcampos[index].tipo = event.target.value;
-                                                            setEditedField({ ...editedField, subCampos: newSubcampos });
-                                                        }}
-                                                    >
-                                                        <MenuItem value="Texto">Texto</MenuItem>
-                                                        <MenuItem value="Numerico">Número</MenuItem>
-                                                        <MenuItem value="Booleano">Booleano</MenuItem>
-                                                    </Select>
-                                                </FormControl>
-                                            </Grid>
-                                            <Grid item xs={12}>
-                                                {subCampos.tipo === "Booleano" ? (
-                                                    <FormControl fullWidth margin="normal">
-                                                        <InputLabel>Valor del Subcampo</InputLabel>
-                                                        <Select
-                                                            label="Valor del Subcampo"
-                                                            name={`subCampos-contenido-${index}`}
-                                                            variant="outlined"
-                                                            fullWidth
-                                                            margin="normal"
-                                                            value={subCampos.contenido}
-                                                            onChange={(event) => {
-                                                                const newSubcampos = [...editedField.subCampos];
-                                                                newSubcampos[index].contenido = event.target.value;
-                                                                setEditedField({ ...editedField, subCampos: newSubcampos });
-                                                            }}
-                                                        >
-                                                            <MenuItem value={true}>Sí</MenuItem>
-                                                            <MenuItem value={false}>No</MenuItem>
-                                                        </Select>
-                                                    </FormControl>
-                                                ) : (
-                                                    <TextField
-                                                        label="Valor del Subcampo"
-                                                        name={`subCampos-contenido-${index}`}
+                                                        label="Valor"
+                                                        name="contenido"
                                                         variant="outlined"
                                                         fullWidth
                                                         margin="normal"
-                                                        value={subCampos.contenido}
-                                                        onChange={(event) => {
-                                                            const newSubcampos = [...editedField.subCampos];
-                                                            newSubcampos[index].contenido = event.target.value;
-                                                            setEditedField({ ...editedField, subCampos: newSubcampos });
-                                                        }}
-                                                    />
-                                                )}
-                                            </Grid>
-                                            <Grid container justifyContent="center">
-                                                <Button color="error" onClick={() => handleDeleteSubcampo(index)}>
-                                                    <CloseIcon />
-                                                    Eliminar Subcampo
-                                                </Button>
-                                            </Grid>
+                                                        value={editedField.contenido}
+                                                        onChange={handleFieldChange}
+                                                        sx={{ width: "99%" }}
+                                                    >
+                                                        <MenuItem value={true}>Sí</MenuItem>
+                                                        <MenuItem value={false}>No</MenuItem>
+                                                    </Select>
+                                                </FormControl>
+                                            ) : (
+                                                <TextField
+                                                    label="Valor"
+                                                    name="contenido"
+                                                    variant="outlined"
+                                                    fullWidth
+                                                    margin="normal"
+                                                    sx={{ width: "99%" }}
+                                                    value={editedField.contenido}
+                                                    onChange={handleFieldChange}
+                                                />
+                                            )}
                                         </Grid>
+                                        {/* Subcampos */}
+                                        <Grid item xs={12}>
+                                            <Typography
+                                                variant="h6"
+                                                sx={{ mt: 2 }}
+                                                color="primary.main"
+                                            >
+                                                Subcampos
+                                            </Typography>
+                                            {(editedField.subCampos != null) && editedField.subCampos.map((subCampo, index) => (
+                                                <Grid container key={index} sx={{ mb: 1, p: 2 }} borderBottom={1} borderColor={"secondary.main"}>
+                                                    <Grid item xs={12}>
+                                                        <TextField
+                                                            label="Título del Subcampo"
+                                                            name={`subCampos-titulo-${index}`}
+                                                            variant="outlined"
+                                                            fullWidth
+                                                            margin="normal"
+                                                            value={subCampo.titulo}
+                                                            onChange={(event) => {
+                                                                const newSubcampos = [...editedField.subCampos];
+                                                                newSubcampos[index].titulo = event.target.value;
+                                                                setEditedField({ ...editedField, subCampos: newSubcampos });
+                                                            }}
+                                                        />
+                                                    </Grid>
+                                                    <Grid item xs={12}>
+                                                        <FormControl fullWidth margin="normal">
+                                                            <InputLabel>Tipo de Dato</InputLabel>
+                                                            <Select
+                                                                label="Tipo de Dato"
+                                                                name={`subCampos-tipo-${index}`}
+                                                                value={subCampo.tipo}
+                                                                onChange={(event) => {
+                                                                    const newSubcampos = [...editedField.subCampos];
+                                                                    if (newSubcampos[index].tipo === "Booleano") {
+                                                                        newSubcampos[index].contenido = "";
+                                                                    }
+                                                                    newSubcampos[index].tipo = event.target.value;
+                                                                    setEditedField({ ...editedField, subCampos: newSubcampos });
+                                                                }}
+                                                            >
+                                                                <MenuItem value="Texto">Texto</MenuItem>
+                                                                <MenuItem value="Numerico">Número</MenuItem>
+                                                                <MenuItem value="Booleano">Booleano</MenuItem>
+                                                            </Select>
+                                                        </FormControl>
+                                                    </Grid>
+                                                    <Grid item xs={12}>
+                                                        {subCampo.tipo === "Booleano" ? (
+                                                            <FormControl fullWidth margin="normal">
+                                                                <InputLabel>Valor del Subcampo</InputLabel>
+                                                                <Select
+                                                                    label="Valor del Subcampo"
+                                                                    name={`subCampos-contenido-${index}`}
+                                                                    variant="outlined"
+                                                                    fullWidth
+                                                                    margin="normal"
+                                                                    value={subCampo.contenido}
+                                                                    onChange={(event) => {
+                                                                        const newSubcampos = [...editedField.subCampos];
+                                                                        newSubcampos[index].contenido = event.target.value;
+                                                                        setEditedField({ ...editedField, subCampos: newSubcampos });
+                                                                    }}
+                                                                >
+                                                                    <MenuItem value={true}>Sí</MenuItem>
+                                                                    <MenuItem value={false}>No</MenuItem>
+                                                                </Select>
+                                                            </FormControl>
+                                                        ) : (
+                                                            <TextField
+                                                                label="Valor del Subcampo"
+                                                                name={`subCampos-contenido-${index}`}
+                                                                variant="outlined"
+                                                                fullWidth
+                                                                margin="normal"
+                                                                value={subCampo.contenido}
+                                                                onChange={(event) => {
+                                                                    const newSubcampos = [...editedField.subCampos];
+                                                                    newSubcampos[index].contenido = event.target.value;
+                                                                    setEditedField({ ...editedField, subCampos: newSubcampos });
+                                                                }}
+                                                            />
+                                                        )}
+                                                    </Grid>
+                                                    <Grid container justifyContent="center">
+                                                        <Button color="error" onClick={() => handleDeleteSubcampo(index)}>
+                                                            <CloseIcon />
+                                                            Eliminar Subcampo
+                                                        </Button>
+                                                    </Grid>
+                                                </Grid>
+                                            ))}
+                                        </Grid>
+                                        <Grid item xs={12} container justifyContent="center">
+                                            <Button color="cuaternary" variant="text" onClick={() => handleAddSubcampo()}>
+                                                <AddIcon />
+                                                Agregar Subcampo
+                                            </Button>
+                                        </Grid>
+                                    </Grid>
+                                </>
+                            )}
+                        </Grid>
+                        <Grid item xs={6} container direction="column" sx={{ maxHeight: '70vh', overflowY: 'auto', px: 2 }}>
+                            <Typography variant="h5" color="primary" fontWeight="bold">
+                                Evidencia
+                            </Typography>
+                            <TextField
+                                label="Buscar Evidencias"
+                                variant="outlined"
+                                fullWidth
+                                margin="normal"
+                                value={searchTerm}
+                                onChange={handleSearchChange}
+                            />
+                            {filteredEvidencia && (
+                                <>
+                                    {filteredEvidencia.map((evidencia, index) => (
+                                        <Box key={index} sx={{ mt: 2, width: '100%' }}>
+                                            <Grid container alignItems="center" borderBottom={2} borderColor={"secondary.main"} sx={{ py: 1 }}>
+                                                <Grid item xs={3}>
+                                                    <Typography
+                                                        variant="body1"
+                                                        color="#000000"
+                                                        sx={{ fontFamily: "Segoe UI", fontWeight: "bold" }}
+                                                    >
+                                                        {evidencia.nombre}
+                                                    </Typography>
+                                                </Grid>
+                                                <Grid item xs={3}>
+                                                    <Button
+                                                        variant="text"
+                                                        sx={{
+                                                            fontFamily: "Segoe UI",
+                                                            fontStyle: "italic",
+                                                            fontSize: "1rem",
+                                                            textTransform: "none",
+                                                            fontWeight: "bold",
+                                                            color: "primary.main",
+                                                            p: 0,
+                                                        }}
+                                                    >
+                                                        {evidencia.tipo}
+                                                    </Button>
+                                                </Grid>
+                                                <Grid item xs={6} container justifyContent="flex-end">
+                                                    <FormControlLabel
+                                                        control={
+                                                            <Checkbox
+                                                                checked={selectedEvidencias.includes(index)}
+                                                                onChange={(event) => handleCheckboxChange(event, index)}
+                                                                name={`selectedEvidencia-${index}`}
+                                                            />
+                                                        }
+                                                        label="Seleccionar"
+                                                    />
+                                                </Grid>
+                                            </Grid>
+                                        </Box>
                                     ))}
-                                </Grid>
-                                <Grid item xs={12} container justifyContent="center">
-                                    <Button color="cuaternary" variant="text" onClick={() => handleAddSubcampo()}>
-                                        <AddIcon />
-                                        Agregar Subcampo
-                                    </Button>
-                                </Grid>
-                            </Grid>
-                        </>
-                    )}
+                                </>
+                            )}
+                        </Grid>
+                    </Grid>
                 </DialogContent>
-                <DialogActions sx={{ minHeight: "50px" }}>
-                    {/* Alerta */}
+                <DialogActions sx={{ position: 'sticky', bottom: 0, backgroundColor: 'white', zIndex: 1000 }}>
                     <Collapse in={alerta}>
                         <Alert severity="error" onClose={handleCloseAlert}>
                             {alertaTexto}

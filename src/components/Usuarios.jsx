@@ -98,7 +98,7 @@ function Usuarios() {
     return (
         <>
             <Navbar seccionActual={seccionActual} useSectionMode={useSectionMode} secciones={secciones} seccionesRutas={seccionesRutas} />
-            <Container>
+            <Container sx={{ pb: '100px' }}>
                 <Paper sx={{ mt: 2, p: 2 }}>
                     <Typography variant="h4" color={"primary.main"} fontWeight={"bold"} sx={{ mb: 2 }}>Usuarios</Typography>
                     {/* Campo de búsqueda */}
@@ -151,7 +151,7 @@ function Usuarios() {
                     })}
                 </Paper>
             </Container>
-            <Box bgcolor="#fff" sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, boxShadow: "0px -4px 6px rgba(0, 0, 0, 0.1)" }}>
+            <Box bgcolor="#fff" sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, boxShadow: "0px -4px 6px rgba(0, 0, 0, 0.1)", height: '80px' }}>
                 <Box sx={{ display: "flex", justifyContent: "center", mt: 2, mb: 2 }}>
                     <Link to="/usuarios/crear" style={{ textDecoration: 'none' }}>
                         <Button variant="contained" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1, fontSize: "1.2rem" }}>

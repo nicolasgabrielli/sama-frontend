@@ -136,7 +136,7 @@ function ListaReportes() {
         <>
             <Navbar useSectionMode={useSectionMode} secciones={secciones} seccionesRutas={seccionesRutas} seccionActual={seccionActual} />
 
-            <Container>
+            <Container sx={{ pb: "100px" }}>
                 <Grid container spacing={2}>
                     {/*Informacion empresa*/}
                     <InformacionEmpresa infoEmpresa={infoEmpresa} />
@@ -185,7 +185,7 @@ function ListaReportes() {
                 </Grid>
             </Container>
 
-            <Box bgcolor="#fff" sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, boxShadow: "0px -4px 6px rgba(0, 0, 0, 0.1)" }}>
+            <Box bgcolor="#fff" sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, boxShadow: "0px -4px 6px rgba(0, 0, 0, 0.1)", height: '80px' }}>
                 <Box sx={{ display: "flex", justifyContent: "center", mt: 2, mb: 2 }}>
                     <Button variant="contained" onClick={handleOpenCrearReporte} sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1, fontSize: "1.2rem" }}>
                         Crear Reporte
