@@ -15,6 +15,7 @@ function NavbarReporte({ useSectionMode, categorias, categoriaActualIndex, onCat
 
     useEffect(() => {
         setTabValue(categoriaActualIndex);
+        refreshReporte();
     }, [categoriaActualIndex]);
 
     const handleOpenDialog = () => {

@@ -13,7 +13,7 @@ function Reporte() {
     const [tituloReporte, setTituloReporte] = useState("");
     const [categoriaActualIndex, setCategoriaActualIndex] = useState(0);
     const [seccionActualIndex, setSeccionActualIndex] = useState(0);
-    const [categorias, setCategorias] = useState([]); // Se necesita que esto sea una lista de Categorias (o crear una lista de categorias) como tal y no solo los títulos, para poder actualizar el estado correctamente
+    const [categorias, setCategorias] = useState([]);
     const [secciones, setSecciones] = useState([]);
 
     useEffect(() => {
@@ -55,12 +55,12 @@ function Reporte() {
     const [openSectionDialog, setOpenSectionDialog] = useState(false);
     const [openSectionEditDialog, setOpenSectionEditDialog] = useState(false);
     const [openCategoryEditDialog, setOpenCategoryEditDialog] = useState(false);
-    const [editedField, setEditedField] = useState(null);
-    const [currentField, setCurrentField] = useState(null);
+    const [editedField, setEditedField] = useState({ titulo: "", contenido: "", tipo: "Texto", subCampos: [] });
+    const [currentField, setCurrentField] = useState({ titulo: "", contenido: "", tipo: "Texto", subCampos: [] });
     const [alerta, setAlerta] = useState(false);
     const [alertaTexto, setAlertaTexto] = useState("");
     const [isAdding, setIsAdding] = useState(false);
-    const [editedSection, setEditedSection] = useState({ titulo: "", campos: [] });
+    const [editedSection, setEditedSection] = useState({ titulo: "" });
     const [openEliminarCampoDialog, setOpenEliminarCampoDialog] = useState(false);
     const [tituloIngresado, setTituloIngresado] = useState("");
     const [openEliminarCategoriaDialog, setOpenEliminarCategoriaDialog] = useState(false);
@@ -99,7 +99,6 @@ function Reporte() {
             subCampos: campo ? JSON.parse(JSON.stringify(campo.subCampos || [])) : [] // Clonar correctamente los subcampos
         });
         setIsAdding(!campo);
-        setCurrentSection(section);
         setSeccionActualIndex(indexSeccion);
         setOpenDialog(true);
     };
@@ -108,7 +107,6 @@ function Reporte() {
         setOpenDialog(false);
         setEditedField(null);
         setIsAdding(false);
-        setCurrentSection(null);
     };
 
     const handleEliminarCampoDialog = (campoIndex, indexSeccion) => {
@@ -129,7 +127,7 @@ function Reporte() {
 
     const handleCloseSectionEditDialog = () => {
         setOpenSectionEditDialog(false);
-        setEditedSection(null);
+        setEditedSection({ titulo: "" });
     };
 
     const handleOpenAlert = (texto) => {
@@ -820,7 +818,7 @@ function Reporte() {
             </Dialog>
 
             {/* Diálogo para editar el titulo de la sección */}
-            <Dialog open={openSectionEditDialog} onClose={handleCloseSectionEditDialog()} maxWidth="md" fullWidth>
+            <Dialog open={openSectionEditDialog} onClose={() => handleCloseSectionEditDialog()} maxWidth="md" fullWidth>
                 <DialogContent>
                     <Grid container spacing={2}>
                         <Grid item xs={8}>
@@ -846,7 +844,7 @@ function Reporte() {
                 <DialogActions>
                     <Grid container>
                         <Grid item xs={12} container justifyContent="flex-end">
-                            <Button color="secondary" variant="text" onClick={handleCloseSectionEditDialog()} >
+                            <Button color="secondary" variant="text" onClick={() => handleCloseSectionEditDialog()} >
                                 Descartar
                             </Button>
                             <Button color="primary" variant="text" onClick={() => handleSaveSection(false)} >
