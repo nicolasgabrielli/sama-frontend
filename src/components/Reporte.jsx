@@ -1,4 +1,5 @@
-import AddIcon from '@mui/icons-material/Add';
+import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
+import RemoveCircleOutlineOutlinedIcon from '@mui/icons-material/RemoveCircleOutlineOutlined';
 import CloseIcon from '@mui/icons-material/Close';
 import { Alert, Box, Checkbox, FormControlLabel, Button, Collapse, Container, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid, IconButton, InputLabel, MenuItem, Paper, Select, TextField, Typography } from "@mui/material";
 import React, { useEffect, useState } from "react";
@@ -11,6 +12,7 @@ function Reporte() {
     const { idReporte } = useParams();
     const [reporte, setReporte] = useState(null);
     const [tituloReporte, setTituloReporte] = useState("");
+    const [anioReporte, setAnioReporte] = useState("");
     const [categoriaActualIndex, setCategoriaActualIndex] = useState(0);
     const [seccionActualIndex, setSeccionActualIndex] = useState(0);
     const [categorias, setCategorias] = useState([]);
@@ -42,6 +44,7 @@ function Reporte() {
             .then(data => {
                 setReporte(data);
                 setTituloReporte(data.titulo);
+                setAnioReporte(data.anio);
                 const categoriasObtenidas = data.categorias || [];
                 setCategorias(categoriasObtenidas.map(categoria => categoria.titulo));
                 if (categoriasObtenidas.length > 0) {
@@ -66,31 +69,121 @@ function Reporte() {
     const [openEliminarCategoriaDialog, setOpenEliminarCategoriaDialog] = useState(false);
     const [openEliminarSeccionDialog, setOpenEliminarSeccionDialog] = useState(false);
     const [campoActualIndex, setCampoActualIndex] = useState(0);
-    const [evidencia, setEvidencia] = useState([{ nombre: "Evidencia 1", tipo: "Archivo.pdf" }, { nombre: "Evidencia 2", tipo: "https://pagina.com/" }, { nombre: "Evidencia 3", tipo: "Archivo.xsls" }]);
-    const [searchTerm, setSearchTerm] = useState('');
+    const [evidencias, setEvidencias] = useState([
+        { nombre: "Evidencia 1", tipo: "Archivo.pdf" }, 
+        { nombre: "Evidencia 2", tipo: "https://pagina.com/" }, 
+        { nombre: "Evidencia 3", tipo: "Archivo.xsls" },
+        { nombre: "Evidencia 4", tipo: "Archivo.docx" },
+        { nombre: "Evidencia 5", tipo: "https://pagina.com/" },
+        { nombre: "Evidencia 6", tipo: "Archivo.pdf" },
+        { nombre: "Evidencia 7", tipo: "https://pagina.com/" },
+        { nombre: "Evidencia 8", tipo: "Archivo.xsls" },
+        { nombre: "Evidencia 9", tipo: "Archivo.docx" },
+        { nombre: "Evidencia 10", tipo: "https://pagina.com/" },
+        { nombre: "Evidencia 11", tipo: "Archivo.pdf" },
+        { nombre: "Evidencia 12", tipo: "https://pagina.com/" },
+        { nombre: "Evidencia 13", tipo: "Archivo.xsls" },
+        { nombre: "Evidencia 14", tipo: "Archivo.docx" },
+        { nombre: "Evidencia 15", tipo: "https://pagina.com/" },
+        { nombre: "Evidencia 16", tipo: "Archivo.pdf" },
+        { nombre: "Evidencia 17", tipo: "https://pagina.com/" },
+        { nombre: "Evidencia 18", tipo: "Archivo.xsls" },
+        { nombre: "Evidencia 19", tipo: "Archivo.docx" },
+        { nombre: "Evidencia 20", tipo: "https://pagina.com/" },
+    ]);
+    const [filteredEvidencia, setFilteredEvidencia] = useState([]);
+    const [searchTerm, setSearchTerm] = useState("");
     const [selectedEvidencias, setSelectedEvidencias] = useState([]);
 
     const handleSearchChange = (event) => {
         setSearchTerm(event.target.value);
+        refreshFilteredEvidencia(event.target.value, selectedEvidencias);
     };
 
-    const handleCheckboxChange = (event, index) => {
-        const updatedSelectedEvidencias = [...selectedEvidencias];
-        if (event.target.checked) {
-            updatedSelectedEvidencias.push(index);
-        } else {
-            const checkboxIndex = updatedSelectedEvidencias.indexOf(index);
-            if (checkboxIndex > -1) {
-                updatedSelectedEvidencias.splice(checkboxIndex, 1);
-            }
+    const handleAgregarEvidenciaAlCampo = (evidencia) => {
+        if (!selectedEvidencias.includes(evidencia)) {
+            selectedEvidencias.push(evidencia);
         }
-        setSelectedEvidencias(updatedSelectedEvidencias);
+        refreshFilteredEvidencia(searchTerm, selectedEvidencias);
+        // Ordenar por orden alfabético y numérico
+        selectedEvidencias.sort((a, b) => {
+            // Función de comparación personalizada
+            const regex = /\d+/; // Expresión regular para encontrar números
+    
+            // Extraer los números de los nombres de las evidencias
+            const numA = parseInt(a.nombre.match(regex)?.[0]) || 0;
+            const numB = parseInt(b.nombre.match(regex)?.[0]) || 0;
+    
+            // Comparar los números como cadenas para tener en cuenta la longitud
+            const strNumA = numA.toString();
+            const strNumB = numB.toString();
+    
+            if (strNumA.length !== strNumB.length) {
+                return strNumA.length - strNumB.length; // Ordenar por longitud ascendente
+            } else {
+                return strNumA.localeCompare(strNumB); // Ordenar como cadenas
+            }
+        });
     };
 
-    const filteredEvidencia = evidencia.filter((evidencia) =>
-        evidencia.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        evidencia.tipo.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const handleRemoverEvidenciaDelCampo = (evidencia) => {
+        if (selectedEvidencias.includes(evidencia)) {
+            selectedEvidencias.splice(selectedEvidencias.indexOf(evidencia), 1);
+        }
+        refreshFilteredEvidencia(searchTerm, selectedEvidencias);
+        // Ordenar por orden alfabético y numérico
+        selectedEvidencias.sort((a, b) => {
+            // Función de comparación personalizada
+            const regex = /\d+/; // Expresión regular para encontrar números
+    
+            // Extraer los números de los nombres de las evidencias
+            const numA = parseInt(a.nombre.match(regex)?.[0]) || 0;
+            const numB = parseInt(b.nombre.match(regex)?.[0]) || 0;
+    
+            // Comparar los números como cadenas para tener en cuenta la longitud
+            const strNumA = numA.toString();
+            const strNumB = numB.toString();
+    
+            if (strNumA.length !== strNumB.length) {
+                return strNumA.length - strNumB.length; // Ordenar por longitud ascendente
+            } else {
+                return strNumA.localeCompare(strNumB); // Ordenar como cadenas
+            }
+        });
+        
+    };
+
+    const refreshFilteredEvidencia = (searchTermParam = searchTerm, selectedEvidenciasParam = selectedEvidencias) => {
+        // Se filtran las evidencias que no están seleccionadas
+        const filtered = evidencias.filter(evidencia =>
+            (evidencia.nombre.toLowerCase().includes(searchTermParam.toLowerCase()) ||
+                evidencia.tipo.toLowerCase().includes(searchTermParam.toLowerCase()) || searchTermParam === "") &&
+            !selectedEvidenciasParam.includes(evidencia)
+        );
+    
+        // Ordenar por orden alfabético y numérico
+        filtered.sort((a, b) => {
+            // Función de comparación personalizada
+            const regex = /\d+/; // Expresión regular para encontrar números
+    
+            // Extraer los números de los nombres de las evidencias
+            const numA = parseInt(a.nombre.match(regex)?.[0]) || 0;
+            const numB = parseInt(b.nombre.match(regex)?.[0]) || 0;
+    
+            // Comparar los números como cadenas para tener en cuenta la longitud
+            const strNumA = numA.toString();
+            const strNumB = numB.toString();
+    
+            if (strNumA.length !== strNumB.length) {
+                return strNumA.length - strNumB.length; // Ordenar por longitud ascendente
+            } else {
+                return strNumA.localeCompare(strNumB); // Ordenar como cadenas
+            }
+        });
+    
+        setFilteredEvidencia(filtered);
+    };
+    
 
     const handleOpenEditDialog = (campo, section = null, indexSeccion) => {
         setCurrentField(campo);
@@ -99,6 +192,7 @@ function Reporte() {
             subCampos: campo ? JSON.parse(JSON.stringify(campo.subCampos || [])) : [] // Clonar correctamente los subcampos
         });
         setIsAdding(!campo);
+        refreshFilteredEvidencia();
         setSeccionActualIndex(indexSeccion);
         setOpenDialog(true);
     };
@@ -107,6 +201,9 @@ function Reporte() {
         setOpenDialog(false);
         setEditedField(null);
         setIsAdding(false);
+        setSelectedEvidencias([]);
+        setFilteredEvidencia([]);
+        setSearchTerm("");
     };
 
     const handleEliminarCampoDialog = (campoIndex, indexSeccion) => {
@@ -387,6 +484,7 @@ function Reporte() {
                 categoriaActualIndex={categoriaActualIndex}
                 onCategoriaChange={handleCategoriaChange}
                 tituloReporte={tituloReporte}
+                anioReporte={anioReporte}
                 refreshReporte={refreshReporte}
             />
             <Container maxWidth="xl" sx={{ display: 'flex', flexDirection: 'column', minWidth: '80vw', pb: '100px' }}>
@@ -556,14 +654,16 @@ function Reporte() {
                 >
                     Agregar Sección
                 </Button>
-                <NavbarEvidencia />
+                <NavbarEvidencia
+                    evidencias={evidencias}
+                />
             </Container>
 
             {/* Diálogo de edición de campo */}
             <Dialog open={openDialog} onClose={handleCloseEditDialog} maxWidth="lg" fullWidth>
                 <DialogContent>
                     <Grid container>
-                        <Grid item xs={6} container direction="column" sx={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                        <Grid item xs={6} container direction="column" sx={{ height: '70vh', overflowY: 'auto' }}>
                             {/* Campo */}
                             {editedField && (
                                 <>
@@ -735,8 +835,11 @@ function Reporte() {
                                             ))}
                                         </Grid>
                                         <Grid item xs={12} container justifyContent="center">
-                                            <Button color="cuaternary" variant="text" onClick={() => handleAddSubcampo()}>
-                                                <AddIcon />
+                                            <Button color="cuaternary"
+                                                variant="text"
+                                                onClick={() => handleAddSubcampo()}
+                                                startIcon={<AddCircleOutlineOutlinedIcon />}
+                                            >
                                                 Agregar Subcampo
                                             </Button>
                                         </Grid>
@@ -744,65 +847,125 @@ function Reporte() {
                                 </>
                             )}
                         </Grid>
-                        <Grid item xs={6} container direction="column" sx={{ maxHeight: '70vh', overflowY: 'auto', px: 2 }}>
-                            <Typography variant="h5" color="primary" fontWeight="bold">
-                                Evidencia
-                            </Typography>
-                            <TextField
-                                label="Buscar Evidencias"
-                                variant="outlined"
-                                fullWidth
-                                margin="normal"
-                                value={searchTerm}
-                                onChange={handleSearchChange}
-                            />
-                            {filteredEvidencia && (
-                                <>
-                                    {filteredEvidencia.map((evidencia, index) => (
-                                        <Box key={index} sx={{ mt: 2, width: '100%' }}>
-                                            <Grid container alignItems="center" borderBottom={2} borderColor={"secondary.main"} sx={{ py: 1 }}>
-                                                <Grid item xs={3}>
-                                                    <Typography
-                                                        variant="body1"
-                                                        color="#000000"
-                                                        sx={{ fontFamily: "Segoe UI", fontWeight: "bold" }}
-                                                    >
-                                                        {evidencia.nombre}
-                                                    </Typography>
+                        <Grid item xs={6} container direction="column" sx={{ px: 2, height: "70vh" }}>
+                            <Grid item xs={6} sx={{ overflowY: 'auto', px: 2 }}>
+                                <Grid item xs={12}>
+                                    <Typography variant="h5" color="primary" fontWeight="bold">
+                                        Gestión de Evidencia
+                                    </Typography>
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <Typography variant="h6" color="primary" sx={{ mt: 2 }}>
+                                        Evidencias del Reporte
+                                    </Typography>
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <TextField
+                                        label="Buscar Evidencias"
+                                        variant="outlined"
+                                        fullWidth
+                                        margin="normal"
+                                        value={searchTerm}
+                                        onChange={handleSearchChange}
+                                    />
+                                </Grid>
+                                {filteredEvidencia && (
+                                    <>
+                                        {filteredEvidencia.map((evidencia, index) => (
+                                            <Box key={index} sx={{ mt: 2, width: '100%' }}>
+                                                <Grid container borderBottom={2} borderColor={"secondary.main"} sx={{ py: 1 }}>
+                                                    <Grid item xs={3}>
+                                                        <Typography
+                                                            variant="body1"
+                                                            color="#000000"
+                                                            sx={{ fontFamily: "Segoe UI", fontWeight: "bold" }}
+                                                        >
+                                                            {evidencia.nombre}
+                                                        </Typography>
+                                                    </Grid>
+                                                    <Grid item xs={3}>
+                                                        <Button
+                                                            variant="text"
+                                                            sx={{
+                                                                fontFamily: "Segoe UI",
+                                                                fontStyle: "italic",
+                                                                fontSize: "1rem",
+                                                                textTransform: "none",
+                                                                fontWeight: "bold",
+                                                                color: "primary.main",
+                                                                p: 0,
+                                                            }}
+                                                        >
+                                                            {evidencia.tipo}
+                                                        </Button>
+                                                    </Grid>
+                                                    <Grid item xs={6} container justifyContent="flex-end">
+                                                        <Button
+                                                            color="cuaternary"
+                                                            variant="text"
+                                                            startIcon={<AddCircleOutlineOutlinedIcon />}
+                                                            onClick={() => handleAgregarEvidenciaAlCampo(evidencia)}
+                                                        >
+                                                            Agregar al Campo
+                                                        </Button>
+                                                    </Grid>
                                                 </Grid>
-                                                <Grid item xs={3}>
-                                                    <Button
-                                                        variant="text"
-                                                        sx={{
-                                                            fontFamily: "Segoe UI",
-                                                            fontStyle: "italic",
-                                                            fontSize: "1rem",
-                                                            textTransform: "none",
-                                                            fontWeight: "bold",
-                                                            color: "primary.main",
-                                                            p: 0,
-                                                        }}
-                                                    >
-                                                        {evidencia.tipo}
-                                                    </Button>
+                                            </Box>
+                                        ))}
+                                    </>
+                                )}
+                            </Grid>
+                            <Grid item xs={6} sx={{ overflowY: 'auto', px: 2 }}>
+                                <Typography variant="h6" color="primary" sx={{ mt: 2 }}>
+                                    Evidencias del Campo
+                                </Typography>
+                                {selectedEvidencias && (
+                                    <>
+                                        {selectedEvidencias.map((evidencia, index) => (
+                                            <Box key={index} sx={{ mt: 2, width: '100%' }}>
+                                                <Grid container borderBottom={2} borderColor={"secondary.main"} sx={{ py: 1 }}>
+                                                    <Grid item xs={3}>
+                                                        <Typography
+                                                            variant="body1"
+                                                            color="#000000"
+                                                            sx={{ fontFamily: "Segoe UI", fontWeight: "bold" }}
+                                                        >
+                                                            {evidencia.nombre}
+                                                        </Typography>
+                                                    </Grid>
+                                                    <Grid item xs={3}>
+                                                        <Button
+                                                            variant="text"
+                                                            sx={{
+                                                                fontFamily: "Segoe UI",
+                                                                fontStyle: "italic",
+                                                                fontSize: "1rem",
+                                                                textDecoration: "underline !important",
+                                                                textTransform: "none",
+                                                                fontWeight: "bold",
+                                                                color: "primary.main",
+                                                                p: 0,
+                                                            }}
+                                                        >
+                                                            {evidencia.tipo}
+                                                        </Button>
+                                                    </Grid>
+                                                    <Grid item xs={6} container justifyContent="flex-end">
+                                                        <Button
+                                                            color="error"
+                                                            variant="text"
+                                                            startIcon={<RemoveCircleOutlineOutlinedIcon />}
+                                                            onClick={() => handleRemoverEvidenciaDelCampo(evidencia)}
+                                                        >
+                                                            Remover del Campo
+                                                        </Button>
+                                                    </Grid>
                                                 </Grid>
-                                                <Grid item xs={6} container justifyContent="flex-end">
-                                                    <FormControlLabel
-                                                        control={
-                                                            <Checkbox
-                                                                checked={selectedEvidencias.includes(index)}
-                                                                onChange={(event) => handleCheckboxChange(event, index)}
-                                                                name={`selectedEvidencia-${index}`}
-                                                            />
-                                                        }
-                                                        label="Seleccionar"
-                                                    />
-                                                </Grid>
-                                            </Grid>
-                                        </Box>
-                                    ))}
-                                </>
-                            )}
+                                            </Box>
+                                        ))}
+                                    </>
+                                )}
+                            </Grid>
                         </Grid>
                     </Grid>
                 </DialogContent>

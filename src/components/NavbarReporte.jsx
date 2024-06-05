@@ -6,7 +6,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import reporteService from "../services/ReporteService";
 
-function NavbarReporte({ useSectionMode, categorias, categoriaActualIndex, onCategoriaChange, tituloReporte, refreshReporte }) {
+function NavbarReporte({ useSectionMode, categorias, categoriaActualIndex, onCategoriaChange, tituloReporte, anioReporte, refreshReporte }) {
     const [openCollapse, setOpenCollapse] = useState(true);
     const [tabValue, setTabValue] = useState(categoriaActualIndex);
     const [openDialog, setOpenDialog] = useState(false);
@@ -71,8 +71,8 @@ function NavbarReporte({ useSectionMode, categorias, categoriaActualIndex, onCat
                         SAMA
                     </Typography>
                     <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "center" }}>
-                        <Typography variant="h5" component="div" noWrap sx={{ display: { xs: "none", md: "flex" }, fontStyle: "italic" }}>
-                            {tituloReporte}
+                        <Typography variant="h5" component="div" noWrap sx={{ display: { xs: "none", md: "flex" }, fontStyle: "italic", p: 1 }}>
+                            Reporte {tituloReporte} - {anioReporte}
                         </Typography>
                     </Box>
                 </Toolbar>
