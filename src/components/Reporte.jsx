@@ -1080,7 +1080,7 @@ function Reporte() {
                     <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Eliminar Sección</Typography>
                 </DialogTitle>
                 <DialogContent>
-                    <Typography variant="body1">¿Está seguro de que desea eliminar la sección "{secciones.length > 0 ? secciones[seccionActualIndex].titulo : ''}"?</Typography>
+                    <Typography variant="body1">¿Está seguro de que desea eliminar la sección "{secciones.length > 0 ? (secciones[seccionActualIndex] ? secciones[seccionActualIndex].titulo : '') : ''}"?</Typography>
                 </DialogContent>
                 <DialogActions>
                     <Button color="secondary" variant="text" onClick={() => {
