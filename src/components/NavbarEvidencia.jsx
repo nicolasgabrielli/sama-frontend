@@ -4,6 +4,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import IconButton from '@mui/material/IconButton';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import React, { useEffect } from "react";
+import reporteService from "../services/ReporteService";
 
 function NavbarEvidencia({ evidencias, refreshEvidencias }) {
     const { idReporte } = useParams();
@@ -12,7 +13,7 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
     const [evidenciaActual, setEvidenciaActual] = React.useState(null);
     const [tipoEvidencia, setTipoEvidencia] = React.useState('archivo');
     const [paginaEvidencia, setPaginaEvidencia] = React.useState('');
-
+    const [nombreEvidencia, setNombreEvidencia] = React.useState('');
 
     const handleFileChange = (event) => {
         const file = event.target.files[0];
@@ -30,11 +31,58 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
         setPaginaEvidencia('');
     };
 
+    function formatUrl(address) {
+        // Elimina espacios en blanco al inicio y al final de la cadena
+        address = address.trim();
+      
+        if (!address.startsWith('http://') && !address.startsWith('https://')) {
+          address = 'https://' + address;
+        }
+      
+        if (!address.endsWith('/')) {
+          address = address + '/';
+        }
+      
+        return address;
+      }
+
     const handleAgregarEvidencia = async () => {
-        // Lógica para agregar evidencia
+        const formData = new FormData();
+        formData.append('nombre', nombreEvidencia);
+        formData.append('tipo', tipoEvidencia);
+        if (tipoEvidencia === 'archivo') {
+            formData.append('archivo', evidenciaActual);
+        } else {
+            formData.append('url', paginaEvidencia);
+        }
+        await reporteService.crearEvidencia(idReporte, formData);
+        refreshEvidencias();
         setOpenDialogAdjuntarEvidencia(false);
     };
 
+    const handleEliminarEvidencia = async (idEvidencia) => {
+        await reporteService.eliminarEvidencia(idEvidencia);
+        refreshEvidencias();
+    };
+
+    const accederEvidencia = async (evidencia) => {
+        try {
+            if (evidencia.tipo.toLowerCase() === 'archivo') {
+                let url = await reporteService.obtenerUrlS3(evidencia.id).then(response => response.data);
+                if (url) {
+                    window.open(url, '_blank');
+                } else {
+                    console.error('La URL obtenida del servicio S3 es nula o no válida.');
+                }
+            } else {
+                window.open(formatUrl(evidencia.url), '_blank');
+            }
+        } catch (error) {
+            console.error('Error al acceder a la evidencia:', error);
+        }
+    }
+    
+    
     return (
         <React.Fragment>
             <Box bgcolor="#fff" sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, boxShadow: "0px -4px 6px rgba(0, 0, 0, 0.1)", height: '80px' }}>
@@ -86,7 +134,7 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
                                             fontStyle: "italic",
                                             fontWeight: "bold"
                                         }}>
-                                            {evidencia.tipo}
+                                            {evidencia.tipo.toLowerCase() === 'archivo' ? evidencia.nombreOriginal : formatUrl(evidencia.url)}
                                         </Typography>
                                     </Grid>
                                     <Grid item xs={6} container justifyContent={"flex-end"}>
@@ -94,6 +142,7 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
                                             variant="outlined"
                                             color="error"
                                             sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", mr: 1 }}
+                                            onClick={() => handleEliminarEvidencia(evidencia.id)}
                                         >
                                             Eliminar
                                         </Button>
@@ -101,8 +150,9 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
                                             variant="outlined"
                                             color="cuaternary"
                                             sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem" }}
+                                            onClick={() => accederEvidencia(evidencia)}
                                         >
-                                            Abrir
+                                            {evidencia.tipo.toLowerCase() === 'archivo' ? "Descargar" : "Abrir"}
                                         </Button>
                                     </Grid>
                                 </Grid>
@@ -139,6 +189,17 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
                         </Grid>
                     </Grid>
                     <Grid item xs={12} sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
+                        <Typography variant="h6">Escriba el nombre de la evidencia:</Typography>
+                    </Grid>
+                    <Grid item xs={12} sx={{ display: 'flex', alignItems: 'center', mt: 2, ml: 2 }}>
+                        <TextField
+                            label="Nombre de la Evidencia"
+                            variant="outlined"
+                            value={nombreEvidencia}
+                            onChange={(e) => setNombreEvidencia(e.target.value)}
+                        />
+                    </Grid>
+                    <Grid item xs={12} sx={{ display: 'flex', alignItems: 'center', ml: 2, mt: 2 }}>
                         <Typography variant="h6">Seleccione el tipo de evidencia:</Typography>
                     </Grid>
                     <Grid item xs={12} sx={{ display: 'flex', alignItems: 'center', mt: 2, ml: 2 }}>
@@ -186,7 +247,6 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
                                 <TextField
                                     label="Escribir URL"
                                     variant="outlined"
-                                    size="small"
                                     value={paginaEvidencia}
                                     onChange={(e) => setPaginaEvidencia(e.target.value)}
                                 />

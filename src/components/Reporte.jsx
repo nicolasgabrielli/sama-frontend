@@ -17,27 +17,8 @@ function Reporte() {
     const [seccionActualIndex, setSeccionActualIndex] = useState(0);
     const [categorias, setCategorias] = useState([]);
     const [secciones, setSecciones] = useState([]);
-
-    useEffect(() => {
-        reporteService.obtenerReporte(idReporte)
-            .then(response => response.data)
-            .then(data => {
-                setReporte(data);
-                setTituloReporte(data.titulo);
-                const categoriasObtenidas = data.categorias || [];
-                setCategorias(categoriasObtenidas.map(categoria => categoria.titulo));
-                if (categoriasObtenidas.length > 0) {
-                    setSecciones(categoriasObtenidas[0].secciones || []);
-                }
-            })
-            .catch(error => console.error('Error al obtener el reporte:', error));
-    }, [idReporte]);
-
-    const handleCategoriaChange = (index) => {
-        setSecciones(reporte.categorias[index].secciones || []);
-        setCategoriaActualIndex(index);
-    };
-
+    const [evidencias, setEvidencias] = useState([]);
+    
     const refreshReporte = () => {
         reporteService.obtenerReporte(idReporte)
             .then(response => response.data)
@@ -54,6 +35,26 @@ function Reporte() {
             .catch(error => console.error('Error al obtener el reporte:', error));
     };
 
+    const refreshEvidencia = () => {
+        reporteService.obtenerEvidencias(idReporte)
+            .then(response => response.data)
+            .then(data => {
+                setEvidencias(data);
+            })
+            .catch(error => console.error('Error al obtener las evidencias:', error));
+    };
+
+    useEffect(() => {
+        refreshReporte();
+        refreshEvidencia();
+    }, [idReporte]);
+
+    const handleCategoriaChange = (index) => {
+        setSecciones(reporte.categorias[index].secciones || []);
+        setCategoriaActualIndex(index);
+    };
+
+
     const [openDialog, setOpenDialog] = useState(false);
     const [openSectionDialog, setOpenSectionDialog] = useState(false);
     const [openSectionEditDialog, setOpenSectionEditDialog] = useState(false);
@@ -69,28 +70,6 @@ function Reporte() {
     const [openEliminarCategoriaDialog, setOpenEliminarCategoriaDialog] = useState(false);
     const [openEliminarSeccionDialog, setOpenEliminarSeccionDialog] = useState(false);
     const [campoActualIndex, setCampoActualIndex] = useState(0);
-    const [evidencias, setEvidencias] = useState([
-        { nombre: "Evidencia 1", tipo: "Archivo.pdf" }, 
-        { nombre: "Evidencia 2", tipo: "https://pagina.com/" }, 
-        { nombre: "Evidencia 3", tipo: "Archivo.xsls" },
-        { nombre: "Evidencia 4", tipo: "Archivo.docx" },
-        { nombre: "Evidencia 5", tipo: "https://pagina.com/" },
-        { nombre: "Evidencia 6", tipo: "Archivo.pdf" },
-        { nombre: "Evidencia 7", tipo: "https://pagina.com/" },
-        { nombre: "Evidencia 8", tipo: "Archivo.xsls" },
-        { nombre: "Evidencia 9", tipo: "Archivo.docx" },
-        { nombre: "Evidencia 10", tipo: "https://pagina.com/" },
-        { nombre: "Evidencia 11", tipo: "Archivo.pdf" },
-        { nombre: "Evidencia 12", tipo: "https://pagina.com/" },
-        { nombre: "Evidencia 13", tipo: "Archivo.xsls" },
-        { nombre: "Evidencia 14", tipo: "Archivo.docx" },
-        { nombre: "Evidencia 15", tipo: "https://pagina.com/" },
-        { nombre: "Evidencia 16", tipo: "Archivo.pdf" },
-        { nombre: "Evidencia 17", tipo: "https://pagina.com/" },
-        { nombre: "Evidencia 18", tipo: "Archivo.xsls" },
-        { nombre: "Evidencia 19", tipo: "Archivo.docx" },
-        { nombre: "Evidencia 20", tipo: "https://pagina.com/" },
-    ]);
     const [filteredEvidencia, setFilteredEvidencia] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedEvidencias, setSelectedEvidencias] = useState([]);
@@ -184,6 +163,37 @@ function Reporte() {
         setFilteredEvidencia(filtered);
     };
     
+    function formatUrl(address) {
+        // Elimina espacios en blanco al inicio y al final de la cadena
+        address = address.trim();
+      
+        if (!address.startsWith('http://') && !address.startsWith('https://')) {
+          address = 'https://' + address;
+        }
+      
+        if (!address.endsWith('/')) {
+          address = address + '/';
+        }
+      
+        return address;
+      }
+
+    const accederEvidencia = async (evidencia) => {
+        try {
+            if (evidencia.tipo.toLowerCase() === 'archivo') {
+                let url = await reporteService.obtenerUrlS3(evidencia.id).then(response => response.data);
+                if (url) {
+                    window.open(url, '_blank');
+                } else {
+                    console.error('La URL obtenida del servicio S3 es nula o no válida.');
+                }
+            } else {
+                window.open(formatUrl(evidencia.url), '_blank');
+            }
+        } catch (error) {
+            console.error('Error al acceder a la evidencia:', error);
+        }
+    }
 
     const handleOpenEditDialog = (campo, section = null, indexSeccion) => {
         setCurrentField(campo);
@@ -287,9 +297,7 @@ function Reporte() {
     };
 
     // Función para guardar el campo editado o agregado
-    const handleSaveField = () => {
-        // La variable que tiene el campo editado es editedField, contiene la información del campo y los subCampos.
-
+    const handleSaveField = async () => {
         // Validación Campo
         const campo = editedField;
         if (campo.contenido === "" || campo.contenido === null || campo.contenido === undefined) {
@@ -315,6 +323,15 @@ function Reporte() {
                 }
             }
         }
+    
+        let campoEditado = {
+            titulo: editedField.titulo,
+            contenido: editedField.contenido,
+            tipo: editedField.tipo,
+            subCampos: editedField.subCampos,
+            listaIdEvidencias: selectedEvidencias.map(evidencia => evidencia.id)   // Se envían solo los IDs de las evidencias
+        };
+
         let campoIndex = 0;
         let seccionIndex = seccionActualIndex;
         if (isAdding) {
@@ -327,18 +344,21 @@ function Reporte() {
                 },
                 nuevoTituloCategoria: categorias[categoriaActualIndex],
                 nuevoTituloSeccion: secciones[seccionIndex].titulo,
-                nuevoCampo: editedField
+                nuevoCampo: campoEditado
             }
             setSecciones(secciones.map((seccion, index) => {
                 if (index === seccionIndex) {
                     return {
                         ...seccion,
-                        campos: [...seccion.campos, editedField]
+                        campos: [...seccion.campos, campoEditado]
                     };
                 }
                 return seccion;
             }));
-            reporteService.actualizarReporte(newReporte, idReporte);
+            await reporteService.actualizarReporte(newReporte, idReporte);
+            refreshReporte();
+            refreshEvidencia();
+            refreshFilteredEvidencia();
         }
         else {
             campoIndex = secciones[seccionIndex].campos.findIndex(c => c === currentField);
@@ -351,7 +371,7 @@ function Reporte() {
                     },
                     nuevoTituloCategoria: categorias[categoriaActualIndex],
                     nuevoTituloSeccion: secciones[seccionIndex].titulo,
-                    nuevoCampo: editedField
+                    nuevoCampo: campoEditado
                 }
                 setSecciones(secciones.map((seccion, index) => {
                     if (index === seccionIndex) {
@@ -359,7 +379,7 @@ function Reporte() {
                             ...seccion,
                             campos: seccion.campos.map((campo, index) => {
                                 if (index === campoIndex) {
-                                    return editedField;
+                                    return campoEditado;
                                 }
                                 return campo;
                             })
@@ -367,7 +387,10 @@ function Reporte() {
                     }
                     return seccion;
                 }));
-                reporteService.actualizarReporte(newReporte, idReporte);
+                await reporteService.actualizarReporte(newReporte, idReporte);
+                refreshReporte();
+                refreshEvidencia();
+                refreshFilteredEvidencia();
             }
             else {
                 console.log("error al guardar campo");
@@ -656,6 +679,7 @@ function Reporte() {
                 </Button>
                 <NavbarEvidencia
                     evidencias={evidencias}
+                    refreshEvidencias={refreshEvidencia}
                 />
             </Container>
 
@@ -893,10 +917,12 @@ function Reporte() {
                                                                 textTransform: "none",
                                                                 fontWeight: "bold",
                                                                 color: "primary.main",
+                                                                ml: 2,
                                                                 p: 0,
                                                             }}
+                                                            onClick={() => accederEvidencia(evidencia)}
                                                         >
-                                                            {evidencia.tipo}
+                                                            {evidencia.tipo.toLowerCase() === "archivo" ? "Archivo" : "Página Web"}
                                                         </Button>
                                                     </Grid>
                                                     <Grid item xs={6} container justifyContent="flex-end">
@@ -940,14 +966,15 @@ function Reporte() {
                                                                 fontFamily: "Segoe UI",
                                                                 fontStyle: "italic",
                                                                 fontSize: "1rem",
-                                                                textDecoration: "underline !important",
                                                                 textTransform: "none",
                                                                 fontWeight: "bold",
                                                                 color: "primary.main",
+                                                                ml: 2,
                                                                 p: 0,
                                                             }}
+                                                            onClick={() => accederEvidencia(evidencia)}
                                                         >
-                                                            {evidencia.tipo}
+                                                            {evidencia.tipo.toLowerCase() === "archivo" ? "Archivo" : "Página Web"}
                                                         </Button>
                                                     </Grid>
                                                     <Grid item xs={6} container justifyContent="flex-end">

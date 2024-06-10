@@ -1,5 +1,6 @@
 import axios from 'axios';
 const API_URL = 'http://localhost:8081/api/reporte/';
+const API_URL2 = 'http://localhost:8081/api/';
 
 class ReporteService {
     obtenerListaReportes(idEmpresa) {
@@ -46,6 +47,22 @@ class ReporteService {
 
     obtenerCampos(idReporte, coordenadas) {
         return axios.get(API_URL + "campos/" + idReporte, coordenadas);
+    }
+
+    obtenerEvidencias(idReporte) {
+        return axios.get(API_URL2 + "evidencia/" + idReporte);
+    }
+
+    crearEvidencia(idReporte, evidencia) {
+        return axios.post(API_URL2 + "evidencia/" + idReporte, evidencia);
+    }
+
+    eliminarEvidencia(idEvidencia) {
+        return axios.delete(API_URL2 + "evidencia/" + idEvidencia);
+    }
+
+    obtenerUrlS3(idEvidencia) {
+        return axios.get(API_URL2 + "evidencia/url/" + idEvidencia);
     }
 }
 
