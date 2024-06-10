@@ -80,7 +80,7 @@ function Reporte() {
     };
 
     const handleAgregarEvidenciaAlCampo = (evidencia) => {
-        if (!selectedEvidencias.includes(evidencia)) {
+        if (!selectedEvidencias.some(selectedEvidencia => selectedEvidencia.id === evidencia.id)) {
             selectedEvidencias.push(evidencia);
         }
         refreshFilteredEvidencia(searchTerm, selectedEvidencias);
@@ -106,7 +106,7 @@ function Reporte() {
     };
 
     const handleRemoverEvidenciaDelCampo = (evidencia) => {
-        if (selectedEvidencias.includes(evidencia)) {
+        if (selectedEvidencias.some(selectedEvidencia => selectedEvidencia.id === evidencia.id)) {
             selectedEvidencias.splice(selectedEvidencias.indexOf(evidencia), 1);
         }
         refreshFilteredEvidencia(searchTerm, selectedEvidencias);
@@ -134,11 +134,16 @@ function Reporte() {
 
     const refreshFilteredEvidencia = (searchTermParam = searchTerm, selectedEvidenciasParam = selectedEvidencias) => {
         // Se filtran las evidencias que no están seleccionadas
-        const filtered = evidencias.filter(evidencia =>
-            (evidencia.nombre.toLowerCase().includes(searchTermParam.toLowerCase()) ||
-                evidencia.tipo.toLowerCase().includes(searchTermParam.toLowerCase()) || searchTermParam === "") &&
-            !selectedEvidenciasParam.includes(evidencia)
-        );
+        const filtered = evidencias.filter(evidencia => {
+            const searchTermMatch = evidencia.nombre.toLowerCase().includes(searchTermParam.toLowerCase()) ||
+                                    evidencia.tipo.toLowerCase().includes(searchTermParam.toLowerCase()) || 
+                                    searchTermParam === "";
+        
+            const notSelected = !selectedEvidenciasParam.some(selectedEvidencia => selectedEvidencia.id === evidencia.id);
+        
+            return searchTermMatch && notSelected;
+        });
+        
     
         // Ordenar por orden alfabético y numérico
         filtered.sort((a, b) => {
@@ -161,6 +166,17 @@ function Reporte() {
         });
     
         setFilteredEvidencia(filtered);
+    };
+
+    // Función para refrescar las evidencias que contiene el campo.
+    const refreshEvidenciaCampo = (campo) => {
+        if (campo) {
+            setSelectedEvidencias(campo.evidencias || []);
+            refreshFilteredEvidencia(searchTerm, campo.evidencias || []);
+        } else {
+            setSelectedEvidencias([]);
+            refreshFilteredEvidencia(searchTerm, []);
+        }
     };
     
     function formatUrl(address) {
@@ -202,7 +218,7 @@ function Reporte() {
             subCampos: campo ? JSON.parse(JSON.stringify(campo.subCampos || [])) : [] // Clonar correctamente los subcampos
         });
         setIsAdding(!campo);
-        refreshFilteredEvidencia();
+        refreshEvidenciaCampo(campo);
         setSeccionActualIndex(indexSeccion);
         setOpenDialog(true);
     };
@@ -211,9 +227,9 @@ function Reporte() {
         setOpenDialog(false);
         setEditedField(null);
         setIsAdding(false);
-        setSelectedEvidencias([]);
-        setFilteredEvidencia([]);
-        setSearchTerm("");
+        refreshReporte();
+        refreshEvidencia();
+        refreshFilteredEvidencia();
     };
 
     const handleEliminarCampoDialog = (campoIndex, indexSeccion) => {
@@ -329,7 +345,7 @@ function Reporte() {
             contenido: editedField.contenido,
             tipo: editedField.tipo,
             subCampos: editedField.subCampos,
-            listaIdEvidencias: selectedEvidencias.map(evidencia => evidencia.id)   // Se envían solo los IDs de las evidencias
+            evidencias: selectedEvidencias   // Se envían solo los IDs de las evidencias
         };
 
         let campoIndex = 0;
@@ -684,7 +700,7 @@ function Reporte() {
             </Container>
 
             {/* Diálogo de edición de campo */}
-            <Dialog open={openDialog} onClose={handleCloseEditDialog} maxWidth="lg" fullWidth>
+            <Dialog open={openDialog} onClose={() => handleCloseEditDialog()} maxWidth="lg" fullWidth>
                 <DialogContent>
                     <Grid container>
                         <Grid item xs={6} container direction="column" sx={{ height: '70vh', overflowY: 'auto' }}>
