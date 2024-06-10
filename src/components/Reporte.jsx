@@ -18,7 +18,7 @@ function Reporte() {
     const [categorias, setCategorias] = useState([]);
     const [secciones, setSecciones] = useState([]);
     const [evidencias, setEvidencias] = useState([]);
-    
+
     const refreshReporte = () => {
         reporteService.obtenerReporte(idReporte)
             .then(response => response.data)
@@ -88,15 +88,15 @@ function Reporte() {
         selectedEvidencias.sort((a, b) => {
             // Función de comparación personalizada
             const regex = /\d+/; // Expresión regular para encontrar números
-    
+
             // Extraer los números de los nombres de las evidencias
             const numA = parseInt(a.nombre.match(regex)?.[0]) || 0;
             const numB = parseInt(b.nombre.match(regex)?.[0]) || 0;
-    
+
             // Comparar los números como cadenas para tener en cuenta la longitud
             const strNumA = numA.toString();
             const strNumB = numB.toString();
-    
+
             if (strNumA.length !== strNumB.length) {
                 return strNumA.length - strNumB.length; // Ordenar por longitud ascendente
             } else {
@@ -114,57 +114,57 @@ function Reporte() {
         selectedEvidencias.sort((a, b) => {
             // Función de comparación personalizada
             const regex = /\d+/; // Expresión regular para encontrar números
-    
+
             // Extraer los números de los nombres de las evidencias
             const numA = parseInt(a.nombre.match(regex)?.[0]) || 0;
             const numB = parseInt(b.nombre.match(regex)?.[0]) || 0;
-    
+
             // Comparar los números como cadenas para tener en cuenta la longitud
             const strNumA = numA.toString();
             const strNumB = numB.toString();
-    
+
             if (strNumA.length !== strNumB.length) {
                 return strNumA.length - strNumB.length; // Ordenar por longitud ascendente
             } else {
                 return strNumA.localeCompare(strNumB); // Ordenar como cadenas
             }
         });
-        
+
     };
 
     const refreshFilteredEvidencia = (searchTermParam = searchTerm, selectedEvidenciasParam = selectedEvidencias) => {
         // Se filtran las evidencias que no están seleccionadas
         const filtered = evidencias.filter(evidencia => {
             const searchTermMatch = evidencia.nombre.toLowerCase().includes(searchTermParam.toLowerCase()) ||
-                                    evidencia.tipo.toLowerCase().includes(searchTermParam.toLowerCase()) || 
-                                    searchTermParam === "";
-        
+                evidencia.tipo.toLowerCase().includes(searchTermParam.toLowerCase()) ||
+                searchTermParam === "";
+
             const notSelected = !selectedEvidenciasParam.some(selectedEvidencia => selectedEvidencia.id === evidencia.id);
-        
+
             return searchTermMatch && notSelected;
         });
-        
-    
+
+
         // Ordenar por orden alfabético y numérico
         filtered.sort((a, b) => {
             // Función de comparación personalizada
             const regex = /\d+/; // Expresión regular para encontrar números
-    
+
             // Extraer los números de los nombres de las evidencias
             const numA = parseInt(a.nombre.match(regex)?.[0]) || 0;
             const numB = parseInt(b.nombre.match(regex)?.[0]) || 0;
-    
+
             // Comparar los números como cadenas para tener en cuenta la longitud
             const strNumA = numA.toString();
             const strNumB = numB.toString();
-    
+
             if (strNumA.length !== strNumB.length) {
                 return strNumA.length - strNumB.length; // Ordenar por longitud ascendente
             } else {
                 return strNumA.localeCompare(strNumB); // Ordenar como cadenas
             }
         });
-    
+
         setFilteredEvidencia(filtered);
     };
 
@@ -178,21 +178,21 @@ function Reporte() {
             refreshFilteredEvidencia(searchTerm, []);
         }
     };
-    
+
     function formatUrl(address) {
         // Elimina espacios en blanco al inicio y al final de la cadena
         address = address.trim();
-      
+
         if (!address.startsWith('http://') && !address.startsWith('https://')) {
-          address = 'https://' + address;
+            address = 'https://' + address;
         }
-      
+
         if (!address.endsWith('/')) {
-          address = address + '/';
+            address = address + '/';
         }
-      
+
         return address;
-      }
+    }
 
     const accederEvidencia = async (evidencia) => {
         try {
@@ -211,7 +211,7 @@ function Reporte() {
         }
     }
 
-    const handleOpenEditDialog = (campo, section = null, indexSeccion) => {
+    const handleOpenEditDialog = (campo, section = null, indexSeccion, indexCampo) => {
         setCurrentField(campo);
         setEditedField({
             ...campo,
@@ -220,6 +220,7 @@ function Reporte() {
         setIsAdding(!campo);
         refreshEvidenciaCampo(campo);
         setSeccionActualIndex(indexSeccion);
+        setCampoActualIndex(indexCampo);
         setOpenDialog(true);
     };
 
@@ -240,6 +241,7 @@ function Reporte() {
 
     const handleCerrarEliminarCampoDialog = () => {
         setOpenEliminarCampoDialog(false);
+        handleCloseEditDialog();
     };
 
     const handleOpenSectionEditDialog = (seccionIndex) => {
@@ -271,12 +273,17 @@ function Reporte() {
         setCategoriaActualIndex(0);
         refreshReporte();
         setOpenEliminarCategoriaDialog(false);
+        setOpenCategoryEditDialog(false);
     };
 
-    const handleOpenEliminarSeccion = (indexSeccion) => {
-        setSeccionActualIndex(indexSeccion);
+    const handleOpenEliminarSeccion = () => {
         setOpenEliminarSeccionDialog(true);
     };
+
+    const handleCloseEliminarSeccion = () => {
+        setOpenEliminarSeccionDialog(false);
+        handleCloseSectionEditDialog();
+    }
 
     const handleEliminarSeccion = async () => {
         let coordenadas = {
@@ -286,6 +293,7 @@ function Reporte() {
         await reporteService.eliminarContenido(idReporte, coordenadas);
         refreshReporte();
         setOpenEliminarSeccionDialog(false);
+        handleCloseEliminarSeccion();
     };
 
     const handleEliminarCampo = () => {
@@ -310,6 +318,8 @@ function Reporte() {
             console.log("error al eliminar campo");
         }
         setOpenEliminarCampoDialog(false);
+        handleCerrarEliminarCampoDialog();
+        handleCloseEditDialog();
     };
 
     // Función para guardar el campo editado o agregado
@@ -339,7 +349,7 @@ function Reporte() {
                 }
             }
         }
-    
+
         let campoEditado = {
             titulo: editedField.titulo,
             contenido: editedField.contenido,
@@ -537,16 +547,8 @@ function Reporte() {
                         <Grid item xs={4} container justifyContent="flex-end">
                             <Button
                                 variant="outlined"
-                                color="error"
-                                sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", mr: 1 }}
-                                onClick={() => setOpenEliminarCategoriaDialog(true)}
-                            >
-                                Eliminar Categoría
-                            </Button>
-                            <Button
-                                variant="outlined"
                                 color="primary"
-                                sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem" }}
+                                sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", width: "200px", mr: 2 }}
                                 onClick={() => setOpenCategoryEditDialog(true)}
                             >
                                 Editar Categoría
@@ -565,16 +567,8 @@ function Reporte() {
                             <Grid item xs={4} container justifyContent="flex-end">
                                 <Button
                                     variant="outlined"
-                                    color="error"
-                                    sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", mr: 1 }}
-                                    onClick={() => handleOpenEliminarSeccion(indexSeccion)}
-                                >
-                                    Eliminar Sección
-                                </Button>
-                                <Button
-                                    variant="outlined"
                                     color="primary"
-                                    sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem" }}
+                                    sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", mr: 2, width: "200px" }}
                                     onClick={() => handleOpenSectionEditDialog(indexSeccion)}
                                 >
                                     Editar Sección
@@ -614,17 +608,9 @@ function Reporte() {
                                     <Grid item xs={4} container justifyContent={"flex-end"}>
                                         <Button
                                             variant="outlined"
-                                            color="error"
-                                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", mr: 1 }}
-                                            onClick={() => handleEliminarCampoDialog(index, indexSeccion)}
-                                        >
-                                            Eliminar Campo
-                                        </Button>
-                                        <Button
-                                            variant="outlined"
                                             color="primary"
-                                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem" }}
-                                            onClick={() => handleOpenEditDialog(campo, seccion, indexSeccion)}
+                                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", width: "200px" }}
+                                            onClick={() => handleOpenEditDialog(campo, seccion, indexSeccion, index)}
                                         >
                                             Editar Campo
                                         </Button>
@@ -676,7 +662,7 @@ function Reporte() {
                                     fontSize: "1rem",
                                     mt: 2,
                                 }}
-                                onClick={() => handleOpenEditDialog(null, seccion, indexSeccion)}
+                                onClick={() => handleOpenEditDialog(null, seccion, indexSeccion, -1)}
                             >
                                 Agregar Campo
                             </Button>
@@ -700,7 +686,7 @@ function Reporte() {
             </Container>
 
             {/* Diálogo de edición de campo */}
-            <Dialog open={openDialog} onClose={() => handleCloseEditDialog()} maxWidth="lg" fullWidth>
+            <Dialog open={openDialog} maxWidth="lg" fullWidth>
                 <DialogContent>
                     <Grid container>
                         <Grid item xs={6} container direction="column" sx={{ height: '70vh', overflowY: 'auto' }}>
@@ -1018,8 +1004,11 @@ function Reporte() {
                             {alertaTexto}
                         </Alert>
                     </Collapse>
-                    <Button onClick={handleCloseEditDialog} color="secondary">Descartar</Button>
-                    <Button onClick={handleSaveField} color="primary">Guardar</Button>
+                    {isAdding ? null : (
+                        <Button onClick={() => handleEliminarCampoDialog(campoActualIndex, seccionActualIndex)} color="error">Eliminar</Button>
+                    )}
+                    <Button onClick={() => handleCloseEditDialog()} color="secondary">Descartar</Button>
+                    <Button onClick={() => handleSaveField()} color="primary">Guardar</Button>
                 </DialogActions>
             </Dialog>
 
@@ -1031,7 +1020,7 @@ function Reporte() {
                             <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Editar Sección</Typography>
                         </Grid>
                         <Grid item xs={4} container justifyContent="flex-end" sx={{ mb: 2 }}>
-                            <IconButton onClick={() => setOpenSectionEditDialog(false)} disableRipple><CloseIcon /></IconButton>
+                            <IconButton onClick={() => handleCloseSectionEditDialog()} disableRipple><CloseIcon /></IconButton>
                         </Grid>
                         <Grid item xs={12} container>
                             <Typography variant="body1">Introduzca el título de la sección:</Typography>
@@ -1050,6 +1039,9 @@ function Reporte() {
                 <DialogActions>
                     <Grid container>
                         <Grid item xs={12} container justifyContent="flex-end">
+                            <Button onClick={() => handleOpenEliminarSeccion()} color="error">
+                                Eliminar
+                            </Button>
                             <Button color="secondary" variant="text" onClick={() => handleCloseSectionEditDialog()} >
                                 Descartar
                             </Button>
@@ -1088,6 +1080,9 @@ function Reporte() {
                 <DialogActions>
                     <Grid container>
                         <Grid item xs={12} container justifyContent="flex-end">
+                            <Button color="error" onClick={() => setOpenEliminarCategoriaDialog(true)}>
+                                Eliminar
+                            </Button>
                             <Button color="secondary" variant="text" onClick={() => setOpenCategoryEditDialog(false)} >
                                 Descartar
                             </Button>
@@ -1102,7 +1097,7 @@ function Reporte() {
             {/* Diálogo para eliminar categoría */}
             <Dialog open={openEliminarCategoriaDialog} onClose={() => setOpenEliminarCategoriaDialog(false)} maxWidth="md" fullWidth>
                 <DialogTitle>
-                    <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Eliminar Campo</Typography>
+                    <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Eliminar Categoría</Typography>
                 </DialogTitle>
                 <DialogContent>
                     <Typography variant="body1">¿Está seguro de que desea eliminar la categoría "{categorias[categoriaActualIndex]}"?</Typography>
@@ -1118,7 +1113,7 @@ function Reporte() {
             </Dialog>
 
             {/* Diálogo para eliminar sección */}
-            <Dialog open={openEliminarSeccionDialog} onClose={() => setOpenEliminarSeccionDialog(false)} maxWidth="md" fullWidth>
+            <Dialog open={openEliminarSeccionDialog} onClose={() => handleCloseEliminarSeccion()} maxWidth="md" fullWidth>
                 <DialogTitle>
                     <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Eliminar Sección</Typography>
                 </DialogTitle>
@@ -1126,9 +1121,7 @@ function Reporte() {
                     <Typography variant="body1">¿Está seguro de que desea eliminar la sección "{secciones.length > 0 ? (secciones[seccionActualIndex] ? secciones[seccionActualIndex].titulo : '') : ''}"?</Typography>
                 </DialogContent>
                 <DialogActions>
-                    <Button color="secondary" variant="text" onClick={() => {
-                        setOpenEliminarSeccionDialog(false)
-                    }}>
+                    <Button color="secondary" variant="text" onClick={() => handleCloseEliminarSeccion()}>
                         Cancelar
                     </Button>
                     <Button color="error" variant="text" onClick={() => handleEliminarSeccion()} >
@@ -1176,17 +1169,17 @@ function Reporte() {
             </Dialog>
 
             {/* Diálogo para eliminar campo */}
-            <Dialog open={openEliminarCampoDialog} onClose={handleCerrarEliminarCampoDialog} maxWidth="md" fullWidth>
+            <Dialog open={openEliminarCampoDialog} onClose={() => handleCerrarEliminarCampoDialog()} maxWidth="md" fullWidth>
                 <DialogTitle>
                     <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Eliminar Campo</Typography>
                 </DialogTitle>
                 <DialogContent>
                     <Typography variant="body1">
-                        ¿Está seguro de que desea eliminar el campo "{secciones[seccionActualIndex] ? secciones[seccionActualIndex].titulo : ''}"?
+                        ¿Está seguro de que desea eliminar el campo "{secciones[seccionActualIndex] && secciones[seccionActualIndex].campos[campoActualIndex] ? secciones[seccionActualIndex].campos[campoActualIndex].titulo : ''}"?
                     </Typography>
                 </DialogContent>
                 <DialogActions>
-                    <Button color="secondary" variant="text" onClick={handleCerrarEliminarCampoDialog} >
+                    <Button color="secondary" variant="text" onClick={() => handleCerrarEliminarCampoDialog()} >
                         Cancelar
                     </Button>
                     <Button color="error" variant="text" onClick={() => handleEliminarCampo()} >
