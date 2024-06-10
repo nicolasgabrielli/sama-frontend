@@ -89,12 +89,12 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
                 <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: '100%' }}>
                     <Grid container spacing={2} justifyContent="center">
                         <Grid item>
-                            <Button variant="outlined" color="primary" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }} onClick={() => setOpenDialog(true)}>
+                            <Button variant="contained" color="primary" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }} onClick={() => setOpenDialog(true)}>
                                 Gestionar Evidencias
                             </Button>
                         </Grid>
                         <Grid item>
-                            <Button variant="outlined" color="cuaternary" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic" }}
+                            <Button variant="contained" color="cuaternary" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", color: "white" }}
                                 component={Link}
                             >
                                 Descargar Reporte

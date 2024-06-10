@@ -1,6 +1,7 @@
 import AddCircleOutlinedIcon from '@mui/icons-material/AddCircleOutlined';
 import CloseIcon from '@mui/icons-material/Close';
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { AppBar, Box, Button, Collapse, Dialog, DialogActions, DialogContent, Grid, IconButton, Tab, Tabs, TextField, Toolbar, Typography } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -101,11 +102,20 @@ function NavbarReporte({ useSectionMode, categorias, categoriaActualIndex, onCat
                                     />
                                 ))}
                             </Tabs>
-                            <Button variant="contained" onClick={() => handleOpenDialog()} sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "1rem", m: 0.5 }}>
-                                Agregar Categoría <AddCircleOutlinedIcon sx={{ ml: 0.5, mr: -0.5 }} />
+                            <Button
+                                variant="contained"
+                                onClick={() => handleOpenDialog()}
+                                sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "1rem", m: 0.5 }}
+                                startIcon={<AddCircleOutlinedIcon />}
+                            >
+                                Agregar Categoría
                             </Button>
                             <Link to={-1}>
-                                <Button variant="contained" sx={{ textTransform: "none", fontSize: "1rem", fontStyle: "italic", fontWeight: "bold", mr: 1 }}>
+                                <Button
+                                    variant="contained"
+                                    sx={{ textTransform: "none", fontSize: "1rem", fontStyle: "normal", fontWeight: "bold", mr: 1 }}
+                                    startIcon={<ArrowBackIcon />}
+                                >
                                     Volver
                                 </Button>
                             </Link>
