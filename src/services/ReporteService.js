@@ -68,6 +68,12 @@ class ReporteService {
     obtenerUrlS3(idEvidencia) {
         return axios.get(API_URL2 + "evidencia/url/" + idEvidencia);
     }
+
+    descargarReporte = (idReporte, formato) => {
+        return axios.get(API_URL + formato + "/" + idReporte, {
+            responseType: 'blob',  // Asegura que la respuesta sea manejada como un blob
+        });
+    };
 }
 
 const reporteService = new ReporteService();

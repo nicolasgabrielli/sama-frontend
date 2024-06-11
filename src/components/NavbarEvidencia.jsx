@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import CloseIcon from '@mui/icons-material/Close';
 import IconButton from '@mui/material/IconButton';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import React, { useEffect } from "react";
 import reporteService from "../services/ReporteService";
 
@@ -14,6 +15,7 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
     const [tipoEvidencia, setTipoEvidencia] = React.useState('archivo');
     const [paginaEvidencia, setPaginaEvidencia] = React.useState('');
     const [nombreEvidencia, setNombreEvidencia] = React.useState('');
+    const [openDescargarReporteDialog, setOpenDescargarReporteDialog] = React.useState(false);
 
     const handleFileChange = (event) => {
         const file = event.target.files[0];
@@ -30,6 +32,60 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
         setTipoEvidencia('archivo');
         setPaginaEvidencia('');
     };
+
+    const handleDescargarReporte = async (formato) => {
+        try {
+            const response = await reporteService.descargarReporte(idReporte, formato);
+    
+            // Verificar la estructura de la respuesta
+            console.log('Response:', response);
+    
+            if (!response || !response.data) {
+                throw new Error('No se recibió una respuesta válida del servidor.');
+            }
+    
+            const headers = response.headers || {};
+            console.log('Response headers:', headers);
+    
+            // Determinar el tipo de contenido basado en el formato
+            let contentType;
+            let extension;
+            if (formato === 'pdf') {
+                contentType = 'application/pdf';
+                extension = 'pdf';
+            } else if (formato === 'word') {
+                contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+                extension = 'docx';
+            } else {
+                throw new Error('Formato no soportado.');
+            }
+    
+            // Convertir la respuesta a un blob
+            const blob = new Blob([response.data], { type: contentType });
+    
+            if (formato === 'pdf') {
+                // Crear una URL para el blob y abrirla en una nueva pestaña para PDFs
+                const url = URL.createObjectURL(blob);
+                window.open(url);
+                setTimeout(() => {
+                    URL.revokeObjectURL(url);
+                }, 1000);
+            } else if (formato === 'word') {
+                // Crear una URL para el blob y simular un clic para descargar el archivo para Word
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `reporte.${extension}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        } catch (error) {
+            console.error('Error al descargar el reporte:', error);
+        }
+        setOpenDescargarReporteDialog(false);
+    };    
 
     function formatUrl(address) {
         // Elimina espacios en blanco al inicio y al final de la cadena
@@ -89,13 +145,21 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
                 <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: '100%' }}>
                     <Grid container spacing={2} justifyContent="center">
                         <Grid item>
-                            <Button variant="contained" color="primary" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }} onClick={() => setOpenDialog(true)}>
+                            <Button 
+                                variant="contained"
+                                color="primary" 
+                                sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }} 
+                                onClick={() => setOpenDialog(true)}
+                            >
                                 Gestionar Evidencias
                             </Button>
                         </Grid>
                         <Grid item>
-                            <Button variant="contained" color="cuaternary" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", color: "white" }}
-                                component={Link}
+                            <Button
+                                variant="contained" 
+                                color="cuaternary" 
+                                sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", color: "white" }}
+                                onClick={() => setOpenDescargarReporteDialog(true)}
                             >
                                 Descargar Reporte
                             </Button>
@@ -262,6 +326,53 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
                             </Button>
                             <Button color="primary" variant="text" onClick={() => handleAgregarEvidencia()}>
                                 Subir
+                            </Button>
+                        </Grid>
+                    </Grid>
+                </DialogActions>
+            </Dialog>
+                
+            {/* Diálogo de descargar reporte */}
+            <Dialog open={openDescargarReporteDialog} onClose={() => setOpenDescargarReporteDialog(false)} maxWidth="md" fullWidth>
+                {/* Contenido del diálogo */}
+                <DialogContent>
+                    <Grid container spacing={2}>
+                        <Grid item xs={8}>
+                            <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Descargar Reporte</Typography>
+                        </Grid>
+                        <Grid item xs={4} container justifyContent="flex-end" sx={{ mb: 2 }}>
+                            <IconButton onClick={() => setOpenDescargarReporteDialog(false)} disableRipple><CloseIcon /></IconButton>
+                        </Grid>
+                    </Grid>
+                    <Grid item xs={12} sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
+                        <Typography variant="h6">Seleccione el formato de descarga:</Typography>
+                    </Grid>
+                    <Grid item xs={12} sx={{ display: 'flex', alignItems: 'center', mt: 2, ml: 2 }}>
+                        <Button
+                            variant="contained"
+                            color="error"
+                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", mr: 2 }}
+                            onClick={() => handleDescargarReporte("pdf")}
+                            startIcon={<CloudDownloadIcon />}
+                        >
+                            Descargar PDF
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", mr: 2 }}
+                            onClick={() => handleDescargarReporte("word")}
+                            startIcon={<CloudDownloadIcon />}
+                        >
+                            Descargar Word
+                        </Button>
+                    </Grid>
+                </DialogContent>
+                <DialogActions>
+                    <Grid container>
+                        <Grid item xs={12} container justifyContent="flex-end">
+                            <Button color="secondary" variant="text" onClick={() => setOpenDescargarReporteDialog(false)}>
+                                Cancelar
                             </Button>
                         </Grid>
                     </Grid>
