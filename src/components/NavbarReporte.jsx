@@ -105,7 +105,7 @@ function NavbarReporte({ useSectionMode, categorias, categoriaActualIndex, onCat
                             <Button
                                 variant="contained"
                                 onClick={() => handleOpenDialog()}
-                                sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "1rem", m: 0.5 }}
+                                sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "1rem", m: 0.5, width: "250px" }}
                                 startIcon={<AddCircleOutlinedIcon />}
                             >
                                 Agregar Categoría

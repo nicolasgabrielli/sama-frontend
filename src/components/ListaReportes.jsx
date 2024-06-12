@@ -7,6 +7,9 @@ import { Link, useParams } from "react-router-dom";
 import empresaService from "../services/EmpresaService";
 import reporteService from "../services/ReporteService";
 import InformacionEmpresa from "./InformacionEmpresa";
+import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+
 
 function ListaReportes() {
     const useSectionMode = false;
@@ -28,6 +31,8 @@ function ListaReportes() {
     const [anioReporte, setAnioReporte] = useState(null);
     const [tituloReporteError, setTituloReporteError] = useState(false);
     const [anioReporteError, setAnioReporteError] = useState(false);
+    const [openDescargarReporteDialog, setOpenDescargarReporteDialog] = useState(false);
+    const [idReporte, setIdReporte] = useState(null);
 
     const handleOpenCrearReporte = () => {
         setOpenCrearReporte(true);
@@ -127,10 +132,71 @@ function ListaReportes() {
         reporteService.crearReporte(idEmpresa, reporte);
     };
 
+    const handleOpenDescargarReporteDialog = (idReporte) => {
+        setIdReporte(idReporte);
+        setOpenDescargarReporteDialog(true);
+    };
+
     // Función para eliminar el reporte
     const handleEliminarReporte = (idReporte) => {
         reporteService.eliminarReporte(idReporte);
         setOpenEliminarReporte(false);
+    };
+
+    // Función para descargar el reporte en un formato específico.
+    const handleDescargarReporte = async (formato) => {
+        try {
+            const response = await reporteService.descargarReporte(idReporte, formato);
+
+            // Verificar la estructura de la respuesta
+            console.log('Response:', response);
+
+            if (!response || !response.data) {
+                throw new Error('No se recibió una respuesta válida del servidor.');
+            }
+
+            const headers = response.headers || {};
+            console.log('Response headers:', headers);
+
+            // Determinar el tipo de contenido basado en el formato
+            let contentType;
+            let extension;
+            if (formato === 'pdf') {
+                contentType = 'application/pdf';
+                extension = 'pdf';
+            } else if (formato === 'word') {
+                contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+                extension = 'docx';
+            } else {
+                throw new Error('Formato no soportado.');
+            }
+
+            // Convertir la respuesta a un blob
+            const blob = new Blob([response.data], { type: contentType });
+
+            if (formato === 'pdf') {
+                // Crear una URL para el blob y abrirla en una nueva pestaña para PDFs
+                const url = URL.createObjectURL(blob);
+                window.open(url);
+                setTimeout(() => {
+                    URL.revokeObjectURL(url);
+                }, 1000);
+            } else if (formato === 'word') {
+                // Crear una URL para el blob y simular un clic para descargar el archivo para Word
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `reporte.${extension}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        } catch (error) {
+            console.error('Error al descargar el reporte:', error);
+        }
+        setOpenDescargarReporteDialog(false);
+        setIdReporte(null);
     };
 
     useEffect(() => {
@@ -167,7 +233,11 @@ function ListaReportes() {
                                 </Grid>
                                 <Grid item xs={6} container justifyContent="flex-end">
                                     <Link to="/empresas">
-                                        <Button variant="outlined" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1, fontSize: "1.1rem", maxHeight: 0.7 }}>
+                                        <Button 
+                                            variant="contained" 
+                                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1, fontSize: "1.1rem", maxHeight: 0.7 }}
+                                            startIcon={<ArrowBackIcon />}
+                                        >
                                             Volver
                                         </Button>
                                     </Link>
@@ -177,7 +247,7 @@ function ListaReportes() {
                                 <Box key={reporte.id} sx={{ pl: 2, pr: 2 }}>
                                     <Grid container alignItems="center" justifyContent="space-between" borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, mb: 1, py: 1 }}>
                                         <Grid item xs={4}>
-                                            <Typography variant="h5" color={"#000000"} sx={{ fontFamily: "Segoe UI" }}>{"Reporte " + reporte.titulo + " " + reporte.anio}</Typography>
+                                            <Typography variant="h5" color={"#000000"} sx={{ fontFamily: "Segoe UI" }}>{reporte.titulo + " " + reporte.anio}</Typography>
                                             <Typography variant="body2">Fecha creación: {reporte.fechaCreacion}</Typography>
                                             <Typography variant="body2">Fecha modificación: {reporte.fechaModificacion}</Typography>
                                             <Typography variant="body2">Estado: {reporte.estado}</Typography>
@@ -186,7 +256,12 @@ function ListaReportes() {
                                             <Button variant="outlined" color="error" value={reporte.id} onClick={() => handleOpenEliminarReporte(reporte.id)} sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}>
                                                 Eliminar Reporte
                                             </Button>
-                                            <Button variant="outlined" color="cuaternary" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}>
+                                            <Button 
+                                                variant="outlined" 
+                                                color="cuaternary" 
+                                                sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}
+                                                onClick={() => handleOpenDescargarReporteDialog(reporte.id)}
+                                            >
                                                 Descargar Reporte
                                             </Button>
                                             <Link to={`${reporte.id}`}>
@@ -418,6 +493,53 @@ function ListaReportes() {
                                 disabled={!tituloReporte || !anioReporte}
                             >
                                 Crear Reporte
+                            </Button>
+                        </Grid>
+                    </Grid>
+                </DialogActions>
+            </Dialog>
+
+            {/* Diálogo de descargar reporte */}
+            <Dialog open={openDescargarReporteDialog} onClose={() => setOpenDescargarReporteDialog(false)} maxWidth="md" fullWidth>
+                {/* Contenido del diálogo */}
+                <DialogContent>
+                    <Grid container spacing={2}>
+                        <Grid item xs={8}>
+                            <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Descargar Reporte</Typography>
+                        </Grid>
+                        <Grid item xs={4} container justifyContent="flex-end" sx={{ mb: 2 }}>
+                            <IconButton onClick={() => setOpenDescargarReporteDialog(false)} disableRipple><CloseIcon /></IconButton>
+                        </Grid>
+                    </Grid>
+                    <Grid item xs={12} sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
+                        <Typography variant="h6">Seleccione el formato de descarga:</Typography>
+                    </Grid>
+                    <Grid item xs={12} sx={{ display: 'flex', alignItems: 'center', mt: 2, ml: 2 }}>
+                        <Button
+                            variant="contained"
+                            color="error"
+                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", mr: 2 }}
+                            onClick={() => handleDescargarReporte("pdf")}
+                            startIcon={<CloudDownloadIcon />}
+                        >
+                            Descargar PDF
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", mr: 2 }}
+                            onClick={() => handleDescargarReporte("word")}
+                            startIcon={<CloudDownloadIcon />}
+                        >
+                            Descargar Word
+                        </Button>
+                    </Grid>
+                </DialogContent>
+                <DialogActions>
+                    <Grid container>
+                        <Grid item xs={12} container justifyContent="flex-end">
+                            <Button color="secondary" variant="text" onClick={() => setOpenDescargarReporteDialog(false)}>
+                                Cancelar
                             </Button>
                         </Grid>
                     </Grid>

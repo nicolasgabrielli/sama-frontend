@@ -44,6 +44,8 @@ function Empresas() {
         }
         empresaService.eliminarEmpresa(empresaAEliminar.id);
         setListaEmpresas(listaEmpresas.filter(empresa => empresa.id !== empresaAEliminar.id));
+        setEmpresaAEliminar(null);
+        setNombreIngresado("");
         setOpenDialog(false);
     };
 
