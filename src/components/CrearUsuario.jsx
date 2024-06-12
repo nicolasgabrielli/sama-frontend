@@ -76,7 +76,7 @@ function CrearUsuario() {
         try {
             await usuarioService.crearUsuario(userData);
             clearForm();
-            setOpenDialog(true);  
+            setOpenDialog(true);
         } catch (error) {
             console.error('Error al crear el usuario:', error);
         }
@@ -180,7 +180,7 @@ function CrearUsuario() {
                                             {...params}
                                             label="Empresas"
                                             variant="outlined"
-                                            
+
                                             InputProps={{
                                                 ...params.InputProps,
                                                 startAdornment: (
@@ -244,9 +244,11 @@ function CrearUsuario() {
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={handleCloseDialog} color="primary" autoFocus>
-                            OK
-                        </Button>
+                        <Link to="/usuarios" style={{ textDecoration: "none" }}>
+                            <Button onClick={() => handleCloseDialog()} color="primary" autoFocus>
+                                OK
+                            </Button>
+                        </Link>
                     </DialogActions>
                 </Dialog>
             </Container>

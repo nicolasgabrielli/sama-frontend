@@ -76,116 +76,118 @@ function CrearEmpresa() {
                             <Grid item xs={12}>
                                 <FormControl variant="outlined" fullWidth required>
                                     <InputLabel>Tipo de Sociedad</InputLabel>
-                                        <Select
-                                            label="Tipo de Sociedad"
-                                            name="tipoSociedad"
-                                            value={tipoSociedad}
-                                            onChange={(event) => setTipoSociedad(event.target.value)}
-                                        >
-                                            {tiposSociedad.map((tipo, index) => (
-                                                <MenuItem key={index} value={tipo}>{tipo}</MenuItem>
-                                            ))}
-                                        </Select>
-                                    </FormControl>
-                                </Grid>
-                                <Grid item xs={12}>
-                                    <TextField
-                                        label="RUT"
-                                        name="rut"
-                                        variant="outlined"
-                                        helperText="RUT de la empresa"
-                                        fullWidth
-                                        required
-                                        onChange={(event) => setRut(event.target.value)}
-                                    />
-                                </Grid>
-                                <Grid item xs={12}>
-                                    <TextField
-                                        label="Domicilio de la Empresa"
-                                        name="domicilioEmpresa"
-                                        variant="outlined"
-                                        helperText="Domicilio de la empresa"
-                                        fullWidth
-                                        required
-                                        onChange={(event) => setDomicilioEmpresa(event.target.value)}
-                                    />
-                                </Grid>
-                                <Grid item xs={12}>
-                                    <TextField
-                                        label="Página Web"
-                                        name="paginaWeb"
-                                        variant="outlined"
-                                        helperText="Página web de la empresa"
-                                        fullWidth
-                                        onChange={(event) => setPaginaWeb(event.target.value)}
-                                    />
-                                </Grid>
-                                <Grid item xs={12}>
-                                    <TextField
-                                        label="Correo Electrónico"
-                                        name="email"
-                                        type="email"
-                                        variant="outlined"
-                                        helperText="Correo electrónico de la empresa"
-                                        fullWidth
-                                        required
-                                        onChange={(event) => setEmail(event.target.value)}
-                                    />
-                                </Grid>
-                                <Grid item xs={12}>
-                                    <TextField
-                                        label="Domicilio de Contacto"
-                                        name="domicilioContacto"
-                                        variant="outlined"
-                                        helperText="Domicilio de contacto de la empresa"
-                                        fullWidth
-                                        onChange={(event) => setDomicilioContacto(event.target.value)}
-                                    />
-                                </Grid>
-                                <Grid item xs={12}>
-                                    <TextField
-                                        label="Teléfono"
-                                        name="telefono"
-                                        variant="outlined"
-                                        helperText="Teléfono de contacto de la empresa"
-                                        fullWidth
-                                        onChange={(event) => setTelefono(event.target.value)}
-                                    />
-                                </Grid>
-                                <Grid item xs={12} container justifyContent="flex-end">
-                                    <Button
-                                        type="submit"
-                                        variant="contained"
-                                        color="primary"
-                                        sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1, fontSize: "1.1rem" }}
+                                    <Select
+                                        label="Tipo de Sociedad"
+                                        name="tipoSociedad"
+                                        value={tipoSociedad}
+                                        onChange={(event) => setTipoSociedad(event.target.value)}
                                     >
-                                        Crear Empresa
-                                    </Button>
-                                </Grid>
+                                        {tiposSociedad.map((tipo, index) => (
+                                            <MenuItem key={index} value={tipo}>{tipo}</MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
                             </Grid>
-                        </form>
-                    </Paper>
-                    <Dialog
-                        open={openDialog}
-                        onClose={handleCloseDialog}
-                        aria-labelledby="alert-dialog-title"
-                        aria-describedby="alert-dialog-description"
-                    >
-                        <DialogTitle id="alert-dialog-title">{"Empresa creada"}</DialogTitle>
-                        <DialogContent>
-                            <DialogContentText id="alert-dialog-description">
-                                La empresa ha sido creada exitosamente.
-                            </DialogContentText>
-                        </DialogContent>
-                        <DialogActions>
+                            <Grid item xs={12}>
+                                <TextField
+                                    label="RUT"
+                                    name="rut"
+                                    variant="outlined"
+                                    helperText="RUT de la empresa"
+                                    fullWidth
+                                    required
+                                    onChange={(event) => setRut(event.target.value)}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextField
+                                    label="Domicilio de la Empresa"
+                                    name="domicilioEmpresa"
+                                    variant="outlined"
+                                    helperText="Domicilio de la empresa"
+                                    fullWidth
+                                    required
+                                    onChange={(event) => setDomicilioEmpresa(event.target.value)}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextField
+                                    label="Página Web"
+                                    name="paginaWeb"
+                                    variant="outlined"
+                                    helperText="Página web de la empresa"
+                                    fullWidth
+                                    onChange={(event) => setPaginaWeb(event.target.value)}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextField
+                                    label="Correo Electrónico"
+                                    name="email"
+                                    type="email"
+                                    variant="outlined"
+                                    helperText="Correo electrónico de la empresa"
+                                    fullWidth
+                                    required
+                                    onChange={(event) => setEmail(event.target.value)}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextField
+                                    label="Domicilio de Contacto"
+                                    name="domicilioContacto"
+                                    variant="outlined"
+                                    helperText="Domicilio de contacto de la empresa"
+                                    fullWidth
+                                    onChange={(event) => setDomicilioContacto(event.target.value)}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextField
+                                    label="Teléfono"
+                                    name="telefono"
+                                    variant="outlined"
+                                    helperText="Teléfono de contacto de la empresa"
+                                    fullWidth
+                                    onChange={(event) => setTelefono(event.target.value)}
+                                />
+                            </Grid>
+                            <Grid item xs={12} container justifyContent="flex-end">
+                                <Button
+                                    type="submit"
+                                    variant="contained"
+                                    color="primary"
+                                    sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1, fontSize: "1.1rem" }}
+                                >
+                                    Crear Empresa
+                                </Button>
+                            </Grid>
+                        </Grid>
+                    </form>
+                </Paper>
+                <Dialog
+                    open={openDialog}
+                    onClose={handleCloseDialog}
+                    aria-labelledby="alert-dialog-title"
+                    aria-describedby="alert-dialog-description"
+                >
+                    <DialogTitle id="alert-dialog-title">{"Empresa creada"}</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText id="alert-dialog-description">
+                            La empresa ha sido creada exitosamente.
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <Link to="/empresas" style={{ textDecoration: "none" }}>
                             <Button onClick={handleCloseDialog} color="primary" autoFocus>
                                 OK
                             </Button>
-                        </DialogActions>
-                    </Dialog>
-                </Container>
-            </>
-        );
-    }
-    
-    export default CrearEmpresa;
+                        </Link>
+                    </DialogActions>
+                </Dialog>
+            </Container>
+        </>
+    );
+}
+
+export default CrearEmpresa;
