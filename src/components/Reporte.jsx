@@ -1,12 +1,14 @@
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import RemoveCircleOutlineOutlinedIcon from '@mui/icons-material/RemoveCircleOutlineOutlined';
 import CloseIcon from '@mui/icons-material/Close';
+import EditNoteIcon from '@mui/icons-material/EditNote';
 import { Alert, Box, Checkbox, FormControlLabel, Button, Collapse, Container, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid, IconButton, InputLabel, MenuItem, Paper, Select, TextField, Typography } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import reporteService from "../services/ReporteService";
 import NavbarReporte from "./NavbarReporte";
 import NavbarEvidencia from './NavbarEvidencia';
+import Tabla from './Tabla';
 
 function Reporte() {
     const { idReporte } = useParams();
@@ -59,8 +61,8 @@ function Reporte() {
     const [openSectionDialog, setOpenSectionDialog] = useState(false);
     const [openSectionEditDialog, setOpenSectionEditDialog] = useState(false);
     const [openCategoryEditDialog, setOpenCategoryEditDialog] = useState(false);
-    const [editedField, setEditedField] = useState({ titulo: "", contenido: "", tipo: "Texto", subCampos: [] });
-    const [currentField, setCurrentField] = useState({ titulo: "", contenido: "", tipo: "Texto", subCampos: [] });
+    const [editedField, setEditedField] = useState({ titulo: "", contenido: "", tipo: "Texto", subCampos: [], datosTabla: []  });
+    const [currentField, setCurrentField] = useState({ titulo: "", contenido: "", tipo: "Texto", subCampos: [], datosTabla: []  });
     const [alerta, setAlerta] = useState(false);
     const [alertaTexto, setAlertaTexto] = useState("");
     const [isAdding, setIsAdding] = useState(false);
@@ -73,6 +75,8 @@ function Reporte() {
     const [filteredEvidencia, setFilteredEvidencia] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedEvidencias, setSelectedEvidencias] = useState([]);
+    
+    
 
     const handleSearchChange = (event) => {
         setSearchTerm(event.target.value);
@@ -223,7 +227,7 @@ function Reporte() {
         setCampoActualIndex(indexCampo);
         setOpenDialog(true);
     };
-
+    // Cerrar el pop up de editar campo
     const handleCloseEditDialog = () => {
         setOpenDialog(false);
         setEditedField(null);
@@ -233,16 +237,19 @@ function Reporte() {
         refreshFilteredEvidencia();
     };
 
+    // Abrir popup de eliminar campo
     const handleEliminarCampoDialog = (campoIndex, indexSeccion) => {
         setCampoActualIndex(campoIndex);
-        setSeccionActualIndex(indexSeccion);
+        setSeccionActualIndex(indexSeccion);                                
         setOpenEliminarCampoDialog(true);
     };
 
+    // Cerrar popup de eliminar campo
     const handleCerrarEliminarCampoDialog = () => {
         setOpenEliminarCampoDialog(false);
         handleCloseEditDialog();
     };
+
 
     const handleOpenSectionEditDialog = (seccionIndex) => {
         setOpenSectionEditDialog(true);
@@ -264,6 +271,7 @@ function Reporte() {
         setAlerta(false);
     };
 
+    
     const handleEliminarCategoria = async () => {
         let coordenadas = {
             indexCategoria: categoriaActualIndex
@@ -499,6 +507,8 @@ function Reporte() {
         setOpenCategoryEditDialog(false);
     };
 
+
+    // Cambiar un subcampo
     const handleFieldChange = (event) => {
         const { name, value } = event.target;
         if (name.startsWith('subCampos')) {
@@ -537,6 +547,7 @@ function Reporte() {
                 refreshReporte={refreshReporte}
             />
             <Container maxWidth="xl" sx={{ display: 'flex', flexDirection: 'column', minWidth: '80vw', pb: '100px' }}>
+                
                 <Paper sx={{ mt: 2, p: 2, flexGrow: 1 }}>
                     <Grid container justifyContent="space-between" alignItems="center">
                         <Grid item xs={8}>
@@ -588,10 +599,11 @@ function Reporte() {
                                             {campo.titulo}
                                         </Typography>
                                     </Grid>
-                                    <Grid item xs={4} container>
+                                    <Grid item xs={5}>
                                         <Typography variant="h5" color={"#000000"} sx={{
                                             fontFamily: "Segoe UI",
                                             fontStyle: "italic",
+                                            ml:10,
                                             color: campo.tipo === "Booleano" ? (campo.contenido ? "green" : "red") : undefined
                                         }}>
                                             {(() => {
@@ -601,11 +613,13 @@ function Reporte() {
                                                     return campo.contenido;
                                                 } else if (campo.tipo === "Booleano") {
                                                     return campo.contenido ? "Sí" : "No";
+                                                }else if (campo.tipo === "Tabla") {
+                                                    return campo.contenido;
                                                 }
                                             })()}
                                         </Typography>
                                     </Grid>
-                                    <Grid item xs={4} container justifyContent={"flex-end"}>
+                                    <Grid item xs={3} container justifyContent={"flex-end"}>
                                         <Button
                                             variant="outlined"
                                             color="primary"
@@ -621,12 +635,12 @@ function Reporte() {
                                         <Box sx={{ pl: 4, pr: 4 }}>
                                             {campo.subCampos.map((subCampos, index) => (
                                                 <Grid container alignItems="center" justifyContent="space-between" borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, mb: 1, py: 1 }} key={index}>
-                                                    <Grid item xs={6}>
+                                                    <Grid item xs={4}>
                                                         <Typography variant="h6" color={"#000000"} sx={{ fontFamily: "Segoe UI", fontWeight: "normal" }}>
                                                             {subCampos.titulo}
                                                         </Typography>
                                                     </Grid>
-                                                    <Grid item xs={6} container>
+                                                    <Grid item xs={8}>
                                                         <Typography variant="h6" color={"#000000"} sx={{
                                                             fontFamily: "Segoe UI",
                                                             fontStyle: "italic",
@@ -732,6 +746,7 @@ function Reporte() {
                                                     <MenuItem value="Texto">Texto</MenuItem>
                                                     <MenuItem value="Numerico">Número</MenuItem>
                                                     <MenuItem value="Booleano">Booleano</MenuItem>
+                                                    <MenuItem value="Tabla">Tabla</MenuItem>
                                                 </Select>
                                             </FormControl>
                                         </Grid>
@@ -753,6 +768,8 @@ function Reporte() {
                                                         <MenuItem value={false}>No</MenuItem>
                                                     </Select>
                                                 </FormControl>
+                                            ) : editedField.tipo === "Tabla" ? (
+                                                <Tabla />
                                             ) : (
                                                 <TextField
                                                     label="Valor"
@@ -764,8 +781,10 @@ function Reporte() {
                                                     value={editedField.contenido}
                                                     onChange={handleFieldChange}
                                                 />
+
                                             )}
                                         </Grid>
+                                        
                                         {/* Subcampos */}
                                         <Grid item xs={12}>
                                             <Typography
@@ -811,6 +830,7 @@ function Reporte() {
                                                                 <MenuItem value="Texto">Texto</MenuItem>
                                                                 <MenuItem value="Numerico">Número</MenuItem>
                                                                 <MenuItem value="Booleano">Booleano</MenuItem>
+                                                                <MenuItem value="Tabla">Tabla</MenuItem>
                                                             </Select>
                                                         </FormControl>
                                                     </Grid>

@@ -164,6 +164,16 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
                                 Descargar Reporte
                             </Button>
                         </Grid>
+                        <Grid item>
+                            <Button
+                                variant="contained"
+                                color="error"
+                                sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", color: "white" }}
+                                //onClick={() => setOpenDescargarCrearPresetDialog(true)}
+                            >
+                                Guardar Preset
+                            </Button>
+                        </Grid>
                     </Grid>
                 </Box>
             </Box>
