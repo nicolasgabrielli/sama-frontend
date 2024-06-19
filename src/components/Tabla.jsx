@@ -1,13 +1,28 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, IconButton, TextField
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import Papa from 'papaparse';
 
-const Tabla = () => {
+const Tabla = ({ csvString, onSave }) => {
   const [data, setData] = useState([['']]);
   const [columns, setColumns] = useState(['Columna 1']);
+
+  useEffect(() => {
+    if (csvString) {
+      Papa.parse(csvString, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          const { data, meta } = results;
+          setData(data.map(row => meta.fields.map(field => row[field] || '')));
+          setColumns(meta.fields);
+        },
+      });
+    }
+  }, [csvString]);
 
   const handleAddRow = () => {
     setData([...data, Array(columns.length).fill('')]);
@@ -41,6 +56,14 @@ const Tabla = () => {
     setColumns(newColumns);
   };
 
+  const handleSave = () => {
+    const csvData = Papa.unparse({
+      fields: columns,
+      data: data
+    });
+    onSave(csvData);
+  };
+
   return (
     <Box>
       <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
@@ -48,12 +71,13 @@ const Tabla = () => {
           <TableHead>
             <TableRow>
               {columns.map((column, colIndex) => (
-                <TableCell key={colIndex} sx={{ minWidth: 200 }}>
+                <TableCell key={colIndex} sx={{ minWidth: 200, fontWeight: 'bold' }}>
                   <TextField
                     value={column}
                     onChange={(e) => handleColumnNameChange(colIndex, e.target.value)}
                     variant="standard"
                     size="small"
+                    sx={{ fontWeight: 'bold' }}
                   />
                   <IconButton onClick={() => handleRemoveColumn(colIndex)}>
                     <DeleteIcon />
@@ -92,6 +116,9 @@ const Tabla = () => {
       </Button>
       <Button onClick={handleAddColumn} startIcon={<AddIcon />} sx={{ mt: 2, ml: 2 }}>
         Añadir Columna
+      </Button>
+      <Button onClick={handleSave} color="primary" variant="contained" sx={{ mt: 2, ml: 2 }}>
+        Guardar
       </Button>
     </Box>
   );

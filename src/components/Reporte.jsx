@@ -9,6 +9,8 @@ import reporteService from "../services/ReporteService";
 import NavbarReporte from "./NavbarReporte";
 import NavbarEvidencia from './NavbarEvidencia';
 import Tabla from './Tabla';
+import VerTabla from './VerTabla';
+import EditarTabla from './VerTabla';
 
 function Reporte() {
     const { idReporte } = useParams();
@@ -61,8 +63,8 @@ function Reporte() {
     const [openSectionDialog, setOpenSectionDialog] = useState(false);
     const [openSectionEditDialog, setOpenSectionEditDialog] = useState(false);
     const [openCategoryEditDialog, setOpenCategoryEditDialog] = useState(false);
-    const [editedField, setEditedField] = useState({ titulo: "", contenido: "", tipo: "Texto", subCampos: [], datosTabla: []  });
-    const [currentField, setCurrentField] = useState({ titulo: "", contenido: "", tipo: "Texto", subCampos: [], datosTabla: []  });
+    const [editedField, setEditedField] = useState({ titulo: "", contenido: "", tipo: "Texto", subCampos: [] });
+    const [currentField, setCurrentField] = useState({ titulo: "", contenido: "", tipo: "Texto", subCampos: [] });
     const [alerta, setAlerta] = useState(false);
     const [alertaTexto, setAlertaTexto] = useState("");
     const [isAdding, setIsAdding] = useState(false);
@@ -75,8 +77,20 @@ function Reporte() {
     const [filteredEvidencia, setFilteredEvidencia] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedEvidencias, setSelectedEvidencias] = useState([]);
-    
-    
+    const [openVerTablaDialog, setOpenVerTablaDialog] = useState(false);
+    const [csvData, setCsvData] = useState('');
+    const [openTableDialog, setOpenTableDialog] = useState(false);
+    const handleOpenTableDialog = () => {
+        setOpenTableDialog(true);
+    };
+
+    const handleCloseTableDialog = () => {
+        setOpenTableDialog(false);
+    };
+    const handleSaveTable = (newCsvData) => {
+        setCsvData(newCsvData);
+        handleCloseTableDialog();
+    };
 
     const handleSearchChange = (event) => {
         setSearchTerm(event.target.value);
@@ -240,7 +254,7 @@ function Reporte() {
     // Abrir popup de eliminar campo
     const handleEliminarCampoDialog = (campoIndex, indexSeccion) => {
         setCampoActualIndex(campoIndex);
-        setSeccionActualIndex(indexSeccion);                                
+        setSeccionActualIndex(indexSeccion);
         setOpenEliminarCampoDialog(true);
     };
 
@@ -271,7 +285,7 @@ function Reporte() {
         setAlerta(false);
     };
 
-    
+
     const handleEliminarCategoria = async () => {
         let coordenadas = {
             indexCategoria: categoriaActualIndex
@@ -534,7 +548,19 @@ function Reporte() {
         newSubcampos.splice(index, 1);
         setEditedField({ ...editedField, subCampos: newSubcampos });
     }
+    const handleOpenVerTabla = (data) => {
+        setCsvData(data);
+        setOpenVerTablaDialog(true);
+    };
 
+    const handleCloseVerTabla = () => {
+        setOpenVerTablaDialog(false);
+    };
+    const csvData2 = `Rut,Nombre,Porcentaje,Tipo de acciones,Observaciones
+11111111-1,Juan Pérez,25%,Preferentes,Sin observaciones
+22222222-2,María Gómez,15%,Ordinarias,Acciones nuevas emitidas
+33333333-3,Carlos Ramírez,30%,Preferentes,Necesita confirmación
+44444444-4,Ana López,10%,Ordinarias,Falta documento firmado`;
     return (
         <>
             <NavbarReporte
@@ -547,7 +573,6 @@ function Reporte() {
                 refreshReporte={refreshReporte}
             />
             <Container maxWidth="xl" sx={{ display: 'flex', flexDirection: 'column', minWidth: '80vw', pb: '100px' }}>
-                
                 <Paper sx={{ mt: 2, p: 2, flexGrow: 1 }}>
                     <Grid container justifyContent="space-between" alignItems="center">
                         <Grid item xs={8}>
@@ -603,7 +628,7 @@ function Reporte() {
                                         <Typography variant="h5" color={"#000000"} sx={{
                                             fontFamily: "Segoe UI",
                                             fontStyle: "italic",
-                                            ml:10,
+                                            ml: 10,
                                             color: campo.tipo === "Booleano" ? (campo.contenido ? "green" : "red") : undefined
                                         }}>
                                             {(() => {
@@ -613,8 +638,18 @@ function Reporte() {
                                                     return campo.contenido;
                                                 } else if (campo.tipo === "Booleano") {
                                                     return campo.contenido ? "Sí" : "No";
-                                                }else if (campo.tipo === "Tabla") {
-                                                    return campo.contenido;
+                                                } else if (campo.tipo === "Tabla") {
+                                                    return (
+                                                        <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                                            <Button
+                                                                variant="contained"
+                                                                onClick={() => handleOpenVerTabla(csvData)}
+                                                                sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "1rem", m: 0.5, width: "250px"}}
+                                                            >
+                                                                Ver Tabla
+                                                            </Button>
+                                                        </div>
+                                                    );
                                                 }
                                             })()}
                                         </Typography>
@@ -640,7 +675,7 @@ function Reporte() {
                                                             {subCampos.titulo}
                                                         </Typography>
                                                     </Grid>
-                                                    <Grid item xs={8}>
+                                                    <Grid item xs={7}>
                                                         <Typography variant="h6" color={"#000000"} sx={{
                                                             fontFamily: "Segoe UI",
                                                             fontStyle: "italic",
@@ -654,6 +689,19 @@ function Reporte() {
                                                                     return subCampos.contenido;
                                                                 } else if (subCampos.tipo === "Booleano") {
                                                                     return subCampos.contenido ? "Sí" : "No";
+                                                                } else if (subCampos.tipo === "Tabla") {
+                                                                    return (
+                                                                        <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                                                            <Button
+                                                                                variant="contained"
+                                                                                onClick={() => handleOpenVerTabla(csvData)}
+                                                                                sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "1rem", m: 0.5, width: "250px"}}
+                                                                            >
+                                                                                Ver Tabla
+                                                                            </Button>
+                                                                        </div>
+                                                                    );
+
                                                                 }
                                                             })()}
                                                         </Typography>
@@ -769,7 +817,13 @@ function Reporte() {
                                                     </Select>
                                                 </FormControl>
                                             ) : editedField.tipo === "Tabla" ? (
-                                                <Tabla />
+                                                <Button
+                                                    variant="contained"
+                                                    onClick={() => handleOpenTableDialog(csvData2)}
+                                                    sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "1rem", m: 0.5, width: "250px" }}
+                                                >
+                                                    Editar Tabla
+                                                </Button>
                                             ) : (
                                                 <TextField
                                                     label="Valor"
@@ -784,7 +838,7 @@ function Reporte() {
 
                                             )}
                                         </Grid>
-                                        
+
                                         {/* Subcampos */}
                                         <Grid item xs={12}>
                                             <Typography
@@ -855,20 +909,28 @@ function Reporte() {
                                                                     <MenuItem value={false}>No</MenuItem>
                                                                 </Select>
                                                             </FormControl>
+                                                        ) : subCampo.tipo === "Tabla" ? (
+                                                        <Button
+                                                            variant="contained"
+                                                            onClick={() => handleOpenTableDialog(csvData2)}
+                                                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "1rem", m: 0.5, width: "250px" }}
+                                                        >
+                                                            Editar Tabla
+                                                        </Button>
                                                         ) : (
-                                                            <TextField
-                                                                label="Valor del Subcampo"
-                                                                name={`subCampos-contenido-${index}`}
-                                                                variant="outlined"
-                                                                fullWidth
-                                                                margin="normal"
-                                                                value={subCampo.contenido}
-                                                                onChange={(event) => {
-                                                                    const newSubcampos = [...editedField.subCampos];
-                                                                    newSubcampos[index].contenido = event.target.value;
-                                                                    setEditedField({ ...editedField, subCampos: newSubcampos });
-                                                                }}
-                                                            />
+                                                        <TextField
+                                                            label="Valor del Subcampo"
+                                                            name={`subCampos-contenido-${index}`}
+                                                            variant="outlined"
+                                                            fullWidth
+                                                            margin="normal"
+                                                            value={subCampo.contenido}
+                                                            onChange={(event) => {
+                                                                const newSubcampos = [...editedField.subCampos];
+                                                                newSubcampos[index].contenido = event.target.value;
+                                                                setEditedField({ ...editedField, subCampos: newSubcampos });
+                                                            }}
+                                                        />
                                                         )}
                                                     </Grid>
                                                     <Grid container justifyContent="center">
@@ -1205,6 +1267,33 @@ function Reporte() {
                     <Button color="error" variant="text" onClick={() => handleEliminarCampo()} >
                         Eliminar
                     </Button>
+                </DialogActions>
+            </Dialog>
+            <Dialog open={openVerTablaDialog} onClose={handleCloseVerTabla} maxWidth="xl" fullWidth>
+                <DialogTitle>Datos de la Tabla</DialogTitle>
+                <DialogContent>
+                    <VerTabla csvString={csvData} />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseVerTabla} color="primary">
+                        Cerrar
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            <Dialog open={openTableDialog} onClose={handleCloseTableDialog} maxWidth="xl" fullWidth>
+                <DialogTitle>
+                    <Typography variant="h5" color="primary" fontWeight="bold">
+                        Editar Tabla
+                    </Typography>
+                    <IconButton onClick={handleCloseTableDialog} style={{ position: 'absolute', right: 8, top: 8 }}>
+                        <CloseIcon />
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent>
+                    <Tabla csvString={csvData} onSave={handleSaveTable} />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseTableDialog} color="secondary">Cerrar</Button>
                 </DialogActions>
             </Dialog>
         </>
