@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, IconButton, TextField
+  Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, IconButton, TextField, Input, Typography
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import Papa from 'papaparse';
 
 const Tabla = ({ csvString, onSave }) => {
   const [data, setData] = useState([['']]);
   const [columns, setColumns] = useState(['Columna 1']);
+  const [fileName, setFileName] = useState('');
 
   useEffect(() => {
     if (csvString) {
@@ -62,6 +64,23 @@ const Tabla = ({ csvString, onSave }) => {
       data: data
     });
     onSave(csvData);
+    console.log("Componente Tabla: ", csvData)
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          const { data, meta } = results;
+          setData(data.map(row => meta.fields.map(field => row[field] || '')));
+          setColumns(meta.fields);
+        },
+      });
+    }
+    setFileName(file.name);
   };
 
   return (
@@ -71,55 +90,86 @@ const Tabla = ({ csvString, onSave }) => {
           <TableHead>
             <TableRow>
               {columns.map((column, colIndex) => (
-                <TableCell key={colIndex} sx={{ minWidth: 200, fontWeight: 'bold' }}>
+                <TableCell key={colIndex} sx={{ minWidth: 200, fontWeight: 'bold', border: '1px solid #ddd', backgroundColor: '#f5f5f5', textAlign: 'center', position: 'relative' }}>
                   <TextField
                     value={column}
                     onChange={(e) => handleColumnNameChange(colIndex, e.target.value)}
                     variant="standard"
                     size="small"
-                    sx={{ fontWeight: 'bold' }}
+                    sx={{ fontWeight: 'bold', width: '90%', textAlign: 'center', mx: 1 }}
+                    inputProps={{ style: { textAlign: 'center' } }}
                   />
-                  <IconButton onClick={() => handleRemoveColumn(colIndex)}>
-                    <DeleteIcon />
+                  <IconButton onClick={() => handleRemoveColumn(colIndex)} sx={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)' }}>
+                    <RemoveCircleOutlineIcon />
                   </IconButton>
                 </TableCell>
               ))}
-              <TableCell sx={{ minWidth: 50 }} />
+              <TableCell sx={{ minWidth: 200, border: '1px solid #ddd', backgroundColor: '#f5f5f5', textAlign: 'center' }}>
+                <Button onClick={handleAddColumn} startIcon={<AddCircleOutlineIcon />}>
+                  Añadir Columna
+                </Button>
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {data.map((row, rowIndex) => (
               <TableRow key={rowIndex}>
                 {row.map((cell, colIndex) => (
-                  <TableCell key={colIndex} sx={{ minWidth: 200 }}>
+                  <TableCell key={colIndex} sx={{ minWidth: 200, border: '1px solid #ddd', textAlign: 'center' }}>
                     <TextField
                       value={cell}
                       onChange={(e) => handleCellChange(rowIndex, colIndex, e.target.value)}
-                      style={{ width: '100%', fontSize: '0.1rem' }}
+                      style={{ width: '100%', fontSize: '0.875rem', textAlign: 'center' }}
                       variant="outlined"
                       size="small"
+                      inputProps={{ style: { textAlign: 'center' } }}
                     />
                   </TableCell>
                 ))}
-                <TableCell sx={{ minWidth: 50 }}>
+                <TableCell sx={{ minWidth: 50, border: '1px solid #ddd', textAlign: 'center' }}>
                   <IconButton onClick={() => handleRemoveRow(rowIndex)}>
-                    <DeleteIcon />
+                    <RemoveCircleOutlineIcon />
                   </IconButton>
                 </TableCell>
               </TableRow>
             ))}
+            <TableRow>
+              <TableCell colSpan={columns.length + 1} sx={{ textAlign: 'center' }}>
+                <Button onClick={handleAddRow} startIcon={<AddCircleOutlineIcon />}>
+                  Añadir Fila
+                </Button>
+              </TableCell>
+            </TableRow>
           </TableBody>
         </Table>
       </TableContainer>
-      <Button onClick={handleAddRow} startIcon={<AddIcon />} sx={{ mt: 2 }}>
-        Añadir Fila
-      </Button>
-      <Button onClick={handleAddColumn} startIcon={<AddIcon />} sx={{ mt: 2, ml: 2 }}>
-        Añadir Columna
-      </Button>
-      <Button onClick={handleSave} color="primary" variant="contained" sx={{ mt: 2, ml: 2 }}>
-        Guardar
-      </Button>
+      <Box sx={{ mt: 2, display: 'flex', alignItems: 'center' }}>
+        <Button onClick={handleSave} color="primary" variant="contained" sx={{ mr: 2 }}>
+          Guardar
+        </Button>
+        <Button 
+          variant="contained" 
+          component="label"
+          startIcon={<CloudUploadIcon />}
+        >
+          Cargar Archivo CSV
+          <input
+            type="file"
+            hidden
+            accept=".csv"
+            onChange={handleFileUpload}
+          />
+        </Button>
+        <Typography variant="body2" sx={{ ml: 2 }}>
+          {fileName && (
+            <Box component="span" sx={{ fontWeight: 'bold' }}>
+              {fileName}
+            </Box>
+          )}
+          {fileName && <Box component="span"> seleccionado</Box>}
+          {!fileName && <Box component="span">No se ha seleccionado ningún archivo</Box>}
+        </Typography>
+      </Box>
     </Box>
   );
 };

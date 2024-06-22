@@ -10,7 +10,6 @@ import NavbarReporte from "./NavbarReporte";
 import NavbarEvidencia from './NavbarEvidencia';
 import Tabla from './Tabla';
 import VerTabla from './VerTabla';
-import EditarTabla from './VerTabla';
 
 function Reporte() {
     const { idReporte } = useParams();
@@ -74,21 +73,36 @@ function Reporte() {
     const [openEliminarCategoriaDialog, setOpenEliminarCategoriaDialog] = useState(false);
     const [openEliminarSeccionDialog, setOpenEliminarSeccionDialog] = useState(false);
     const [campoActualIndex, setCampoActualIndex] = useState(0);
+    const [subCampoActualIndex, setSubCampoActualIndex] = useState(0);
     const [filteredEvidencia, setFilteredEvidencia] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedEvidencias, setSelectedEvidencias] = useState([]);
     const [openVerTablaDialog, setOpenVerTablaDialog] = useState(false);
     const [csvData, setCsvData] = useState('');
     const [openTableDialog, setOpenTableDialog] = useState(false);
-    const handleOpenTableDialog = () => {
+
+
+    const handleOpenTableDialog = (csv, subCampoIndex) => {
+        setSubCampoActualIndex(subCampoIndex);
+        setCsvData(csv);
         setOpenTableDialog(true);
     };
 
     const handleCloseTableDialog = () => {
         setOpenTableDialog(false);
     };
-    const handleSaveTable = (newCsvData) => {
-        setCsvData(newCsvData);
+
+    const handleSaveTable = (csvData) => {
+        setCsvData(csvData);
+        if (subCampoActualIndex === -1) {
+            setEditedField({ ...editedField, contenido: csvData });
+            console.log(csvData);
+        } else {
+            const newSubCampos = [...editedField.subCampos];
+            newSubCampos[subCampoActualIndex].contenido = csvData;
+            setEditedField({ ...editedField, subCampos: newSubCampos });
+        }
+
         handleCloseTableDialog();
     };
 
@@ -346,6 +360,8 @@ function Reporte() {
 
     // Función para guardar el campo editado o agregado
     const handleSaveField = async () => {
+        
+
         // Validación Campo
         const campo = editedField;
         if (campo.contenido === "" || campo.contenido === null || campo.contenido === undefined) {
@@ -634,16 +650,16 @@ function Reporte() {
                                             {(() => {
                                                 if (campo.tipo === "Texto") {
                                                     return campo.contenido;
-                                                } else if (campo.tipo === "Numerico") {
+                                                } else if (campo.tipo.toLowerCase() === "Numerico") {
                                                     return campo.contenido;
-                                                } else if (campo.tipo === "Booleano") {
+                                                } else if (campo.tipo.toLowerCase() === "Booleano") {
                                                     return campo.contenido ? "Sí" : "No";
-                                                } else if (campo.tipo === "Tabla") {
+                                                } else if (campo.tipo.toLowerCase() === "tabla") {
                                                     return (
                                                         <div style={{ display: 'flex', justifyContent: 'center' }}>
                                                             <Button
                                                                 variant="contained"
-                                                                onClick={() => handleOpenVerTabla(csvData)}
+                                                                onClick={() => handleOpenVerTabla(campo.contenido)}
                                                                 sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "1rem", m: 0.5, width: "250px"}}
                                                             >
                                                                 Ver Tabla
@@ -683,18 +699,18 @@ function Reporte() {
                                                             color: subCampos.tipo === "Booleano" ? (subCampos.contenido ? "green" : "red") : undefined
                                                         }}>
                                                             {(() => {
-                                                                if (subCampos.tipo === "Texto") {
+                                                                if (subCampos.tipo === "texto") {
                                                                     return subCampos.contenido;
-                                                                } else if (subCampos.tipo === "Numerico") {
+                                                                } else if (subCampos.tipo.toLowerCase() === "numerico") {
                                                                     return subCampos.contenido;
-                                                                } else if (subCampos.tipo === "Booleano") {
+                                                                } else if (subCampos.tipo.toLowerCase() === "booleano") {
                                                                     return subCampos.contenido ? "Sí" : "No";
-                                                                } else if (subCampos.tipo === "Tabla") {
+                                                                } else if (subCampos.tipo.toLowerCase() === "tabla") {
                                                                     return (
                                                                         <div style={{ display: 'flex', justifyContent: 'center' }}>
                                                                             <Button
                                                                                 variant="contained"
-                                                                                onClick={() => handleOpenVerTabla(csvData)}
+                                                                                onClick={() => handleOpenVerTabla(subCampos.contenido)}
                                                                                 sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "1rem", m: 0.5, width: "250px"}}
                                                                             >
                                                                                 Ver Tabla
@@ -777,29 +793,32 @@ function Reporte() {
                                                 <Select
                                                     label="Tipo de Dato"
                                                     name="tipo"
-                                                    value={editedField.tipo}
+                                                    value={editedField.tipo.toLowerCase()}
                                                     sx={{ width: "99%" }}
                                                     onChange={(event) => {
                                                         const newCampo = { ...editedField };
-                                                        if (newCampo.tipo === "Booleano") {
+                                                        if (newCampo.tipo.toLowerCase() === "booleano") {
                                                             newCampo.contenido = "";
                                                         }
-                                                        if ((newCampo.tipo === "Texto" || newCampo.tipo === "Numerico") && event.target.value === "Booleano") {
+                                                        if ((newCampo.tipo.toLowerCase() === "texto" || newCampo.tipo.toLowerCase() === "numerico") && event.target.value.toLowerCase() === "booleano") {
                                                             newCampo.contenido = true;
+                                                        }
+                                                        if (newCampo.tipo.toLowerCase() === "tabla") {
+                                                            newCampo.contenido = "";
                                                         }
                                                         newCampo.tipo = event.target.value;
                                                         setEditedField({ ...editedField, tipo: event.target.value, contenido: newCampo.contenido });
                                                     }}
                                                 >
-                                                    <MenuItem value="Texto">Texto</MenuItem>
-                                                    <MenuItem value="Numerico">Número</MenuItem>
-                                                    <MenuItem value="Booleano">Booleano</MenuItem>
-                                                    <MenuItem value="Tabla">Tabla</MenuItem>
+                                                    <MenuItem value="texto">Texto</MenuItem>
+                                                    <MenuItem value="numerico">Número</MenuItem>
+                                                    <MenuItem value="booleano">Booleano</MenuItem>
+                                                    <MenuItem value="tabla">Tabla</MenuItem>
                                                 </Select>
                                             </FormControl>
                                         </Grid>
                                         <Grid item xs={12}>
-                                            {editedField.tipo === "Booleano" ? (
+                                            {editedField.tipo.toLowerCase() === "booleano" ? (
                                                 <FormControl fullWidth margin="normal">
                                                     <InputLabel>Valor</InputLabel>
                                                     <Select
@@ -816,10 +835,10 @@ function Reporte() {
                                                         <MenuItem value={false}>No</MenuItem>
                                                     </Select>
                                                 </FormControl>
-                                            ) : editedField.tipo === "Tabla" ? (
+                                            ) : editedField.tipo.toLowerCase() === "tabla" ? (
                                                 <Button
                                                     variant="contained"
-                                                    onClick={() => handleOpenTableDialog(csvData2)}
+                                                    onClick={() => handleOpenTableDialog(editedField.contenido, -1)}
                                                     sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "1rem", m: 0.5, width: "250px" }}
                                                 >
                                                     Editar Tabla
@@ -912,7 +931,7 @@ function Reporte() {
                                                         ) : subCampo.tipo === "Tabla" ? (
                                                         <Button
                                                             variant="contained"
-                                                            onClick={() => handleOpenTableDialog(csvData2)}
+                                                            onClick={() => handleOpenTableDialog(subCampo.contenido, index)}
                                                             sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "1rem", m: 0.5, width: "250px" }}
                                                         >
                                                             Editar Tabla
@@ -1269,6 +1288,8 @@ function Reporte() {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Diálogo para ver tabla */}
             <Dialog open={openVerTablaDialog} onClose={handleCloseVerTabla} maxWidth="xl" fullWidth>
                 <DialogTitle>Datos de la Tabla</DialogTitle>
                 <DialogContent>
@@ -1280,7 +1301,9 @@ function Reporte() {
                     </Button>
                 </DialogActions>
             </Dialog>
-            <Dialog open={openTableDialog} onClose={handleCloseTableDialog} maxWidth="xl" fullWidth>
+
+            {/* Diálogo para editar tabla */}
+            <Dialog open={openTableDialog} maxWidth="xl" fullWidth>
                 <DialogTitle>
                     <Typography variant="h5" color="primary" fontWeight="bold">
                         Editar Tabla
@@ -1293,7 +1316,7 @@ function Reporte() {
                     <Tabla csvString={csvData} onSave={handleSaveTable} />
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleCloseTableDialog} color="secondary">Cerrar</Button>
+                    <Button onClick={() => handleCloseTableDialog()} color="secondary">Cerrar</Button>
                 </DialogActions>
             </Dialog>
         </>
