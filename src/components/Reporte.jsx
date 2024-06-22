@@ -839,7 +839,7 @@ function Reporte() {
                                                 <Button
                                                     variant="contained"
                                                     onClick={() => handleOpenTableDialog(editedField.contenido, -1)}
-                                                    sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "1rem", m: 0.5, width: "250px" }}
+                                                    sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "1rem", width: "99%", mt: 2 }}
                                                 >
                                                     Editar Tabla
                                                 </Button>
@@ -932,7 +932,7 @@ function Reporte() {
                                                         <Button
                                                             variant="contained"
                                                             onClick={() => handleOpenTableDialog(subCampo.contenido, index)}
-                                                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "1rem", m: 0.5, width: "250px" }}
+                                                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "1rem", width: "100%", my: 2 }}
                                                         >
                                                             Editar Tabla
                                                         </Button>
