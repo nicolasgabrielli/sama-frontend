@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, IconButton, TextField, Input, Typography
+  Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, IconButton, TextField, Typography,
+  Tooltip
 } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
@@ -96,11 +97,13 @@ const Tabla = ({ csvString, onSave }) => {
                     onChange={(e) => handleColumnNameChange(colIndex, e.target.value)}
                     variant="standard"
                     size="small"
-                    sx={{ fontWeight: 'bold', width: '90%', textAlign: 'center', mx: 1 }}
+                    sx={{ fontWeight: 'bold', width: '100%', textAlign: 'center', mx: 1 }}
                     inputProps={{ style: { textAlign: 'center' } }}
                   />
                   <IconButton onClick={() => handleRemoveColumn(colIndex)} sx={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)' }}>
-                    <RemoveCircleOutlineIcon />
+                    <Tooltip title="Eliminar columna" placement="bottom" arrow>
+                      <RemoveCircleOutlineIcon />
+                    </Tooltip>
                   </IconButton>
                 </TableCell>
               ))}
@@ -128,7 +131,9 @@ const Tabla = ({ csvString, onSave }) => {
                 ))}
                 <TableCell sx={{ minWidth: 50, border: '1px solid #ddd', textAlign: 'center' }}>
                   <IconButton onClick={() => handleRemoveRow(rowIndex)}>
-                    <RemoveCircleOutlineIcon />
+                    <Tooltip title="Eliminar fila" placement="bottom" arrow>
+                      <RemoveCircleOutlineIcon />
+                    </Tooltip>
                   </IconButton>
                 </TableCell>
               </TableRow>
@@ -147,8 +152,8 @@ const Tabla = ({ csvString, onSave }) => {
         <Button onClick={handleSave} color="primary" variant="contained" sx={{ mr: 2 }}>
           Guardar
         </Button>
-        <Button 
-          variant="contained" 
+        <Button
+          variant="contained"
           component="label"
           startIcon={<CloudUploadIcon />}
         >

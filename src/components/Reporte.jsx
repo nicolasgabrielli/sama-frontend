@@ -1,8 +1,8 @@
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import RemoveCircleOutlineOutlinedIcon from '@mui/icons-material/RemoveCircleOutlineOutlined';
 import CloseIcon from '@mui/icons-material/Close';
-import EditNoteIcon from '@mui/icons-material/EditNote';
-import { Alert, Box, Checkbox, FormControlLabel, Button, Collapse, Container, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid, IconButton, InputLabel, MenuItem, Paper, Select, TextField, Typography } from "@mui/material";
+import { Alert, Box, Button, Collapse, Container, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid, IconButton, InputLabel, MenuItem, Paper, Select, TextField, Typography } from "@mui/material";
+import CircularProgress from '@mui/material/CircularProgress';
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import reporteService from "../services/ReporteService";
@@ -21,8 +21,9 @@ function Reporte() {
     const [categorias, setCategorias] = useState([]);
     const [secciones, setSecciones] = useState([]);
     const [evidencias, setEvidencias] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const refreshReporte = () => {
+    const refreshReporte = async () => {
         reporteService.obtenerReporte(idReporte)
             .then(response => response.data)
             .then(data => {
@@ -38,7 +39,7 @@ function Reporte() {
             .catch(error => console.error('Error al obtener el reporte:', error));
     };
 
-    const refreshEvidencia = () => {
+    const refreshEvidencia = async () => {
         reporteService.obtenerEvidencias(idReporte)
             .then(response => response.data)
             .then(data => {
@@ -47,9 +48,24 @@ function Reporte() {
             .catch(error => console.error('Error al obtener las evidencias:', error));
     };
 
+    const sleep = async (milliseconds) => {
+        await new Promise(resolve => {
+            return setTimeout(resolve, milliseconds)
+        });
+    };
+
+    // Función para obtener los datos del reporte y las evidencias de la base de datos
+    const fetchData = async () => {
+        setLoading(true);
+        await sleep(500); // Simular un tiempo de carga --------------------------- BORRAR DESPUÉS, ESTO ES SOLO PARA PRUEBAS --------------------------- //
+        await refreshReporte();
+        await refreshEvidencia();
+        setLoading(false);
+        return;
+    };
+
     useEffect(() => {
-        refreshReporte();
-        refreshEvidencia();
+        fetchData();
     }, [idReporte]);
 
     const handleCategoriaChange = (index) => {
@@ -307,7 +323,7 @@ function Reporte() {
         await reporteService.eliminarContenido(idReporte, coordenadas);
         setCategorias(categorias.filter((categoria, index) => index !== categoriaActualIndex));
         setCategoriaActualIndex(0);
-        refreshReporte();
+        fetchData();
         setOpenEliminarCategoriaDialog(false);
         setOpenCategoryEditDialog(false);
     };
@@ -360,7 +376,7 @@ function Reporte() {
 
     // Función para guardar el campo editado o agregado
     const handleSaveField = async () => {
-        
+
 
         // Validación Campo
         const campo = editedField;
@@ -420,8 +436,7 @@ function Reporte() {
                 return seccion;
             }));
             await reporteService.actualizarReporte(newReporte, idReporte);
-            refreshReporte();
-            refreshEvidencia();
+            fetchData();
             refreshFilteredEvidencia();
         }
         else {
@@ -452,8 +467,7 @@ function Reporte() {
                     return seccion;
                 }));
                 await reporteService.actualizarReporte(newReporte, idReporte);
-                refreshReporte();
-                refreshEvidencia();
+                fetchData();
                 refreshFilteredEvidencia();
             }
             else {
@@ -499,7 +513,7 @@ function Reporte() {
         }));
         try {
             await reporteService.actualizarReporte(newReporte, idReporte);
-            refreshReporte();
+            fetchData();
         } catch (error) {
             console.error('Error al guardar la sección:', error);
         }
@@ -530,6 +544,7 @@ function Reporte() {
         }));
         try {
             await reporteService.actualizarReporte(newReporte, idReporte);
+            fetchData();
         } catch (error) {
             console.error('Error al guardar la categoría:', error);
         }
@@ -572,753 +587,784 @@ function Reporte() {
     const handleCloseVerTabla = () => {
         setOpenVerTablaDialog(false);
     };
-    const csvData2 = `Rut,Nombre,Porcentaje,Tipo de acciones,Observaciones
-11111111-1,Juan Pérez,25%,Preferentes,Sin observaciones
-22222222-2,María Gómez,15%,Ordinarias,Acciones nuevas emitidas
-33333333-3,Carlos Ramírez,30%,Preferentes,Necesita confirmación
-44444444-4,Ana López,10%,Ordinarias,Falta documento firmado`;
+
     return (
         <>
-            <NavbarReporte
-                useSectionMode={true}
-                categorias={categorias}
-                categoriaActualIndex={categoriaActualIndex}
-                onCategoriaChange={handleCategoriaChange}
-                tituloReporte={tituloReporte}
-                anioReporte={anioReporte}
-                refreshReporte={refreshReporte}
-            />
-            <Container maxWidth="xl" sx={{ display: 'flex', flexDirection: 'column', minWidth: '80vw', pb: '100px' }}>
-                <Paper sx={{ mt: 2, p: 2, flexGrow: 1 }}>
-                    <Grid container justifyContent="space-between" alignItems="center">
-                        <Grid item xs={8}>
-                            <Typography variant="h4" color={"primary.main"} fontWeight={"bold"}>
-                                {categorias[categoriaActualIndex]}
-                            </Typography>
-                        </Grid>
-                        <Grid item xs={4} container justifyContent="flex-end">
-                            <Button
-                                variant="outlined"
-                                color="primary"
-                                sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", width: "200px", mr: 2 }}
-                                onClick={() => setOpenCategoryEditDialog(true)}
-                            >
-                                Editar Categoría
-                            </Button>
-                        </Grid>
-                    </Grid>
-                </Paper>
-                {secciones.map((seccion, indexSeccion) => (
-                    <Paper sx={{ mt: 2, p: 2, flexGrow: 1 }} key={indexSeccion}>
-                        <Grid container>
-                            <Grid item xs={8}>
-                                <Typography variant="h4" color={"primary.main"} fontWeight={"bold"}>
-                                    {seccion.titulo}
-                                </Typography>
-                            </Grid>
-                            <Grid item xs={4} container justifyContent="flex-end">
-                                <Button
-                                    variant="outlined"
-                                    color="primary"
-                                    sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", mr: 2, width: "200px" }}
-                                    onClick={() => handleOpenSectionEditDialog(indexSeccion)}
-                                >
-                                    Editar Sección
-                                </Button>
-                            </Grid>
-                        </Grid>
+            {loading && (
+                <>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            height: '100vh',
+                            flexDirection: 'column',
+                        }}
+                    >
+                        <CircularProgress size={80} />
+                        <Typography variant="h6" sx={{ mt: 2 }}>
+                            Cargando...
+                        </Typography>
+                    </Box>
+                </>
+            )}
 
-                        {seccion.campos.map((campo, index) => (
-                            <Box sx={{ pl: 2, pr: 2, mb: 2 }} key={index}>
-                                <Grid container alignItems="center" justifyContent="space-between" borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, py: 1 }}>
-                                    <Grid item xs={4}>
-                                        <Typography
-                                            variant="h5"
-                                            color="#000000"
-                                            sx={{ fontFamily: "Segoe UI", fontWeight: "bold" }}
-                                        >
-                                            {campo.titulo}
+            {!loading && (
+                <>
+                    <NavbarReporte
+                        useSectionMode={true}
+                        categorias={categorias}
+                        categoriaActualIndex={categoriaActualIndex}
+                        onCategoriaChange={handleCategoriaChange}
+                        tituloReporte={tituloReporte}
+                        anioReporte={anioReporte}
+                        refreshReporte={refreshReporte}
+                    />
+                    <Container maxWidth="xl" sx={{ display: 'flex', flexDirection: 'column', minWidth: '80vw', pb: '100px' }}>
+                        <Paper sx={{ mt: 2, p: 2, flexGrow: 1 }}>
+                            <Grid container justifyContent="space-between" alignItems="center">
+                                <Grid item xs={8}>
+                                    <Typography variant="h4" color={"primary.main"} fontWeight={"bold"}>
+                                        {categorias[categoriaActualIndex]}
+                                    </Typography>
+                                </Grid>
+                                <Grid item xs={4} container justifyContent="flex-end">
+                                    <Button
+                                        variant="outlined"
+                                        color="primary"
+                                        sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", width: "200px", mr: 2 }}
+                                        onClick={() => setOpenCategoryEditDialog(true)}
+                                    >
+                                        Editar Categoría
+                                    </Button>
+                                </Grid>
+                            </Grid>
+                        </Paper>
+                        {secciones.map((seccion, indexSeccion) => (
+                            <Paper sx={{ mt: 2, p: 2, flexGrow: 1 }} key={indexSeccion}>
+                                <Grid container>
+                                    <Grid item xs={8}>
+                                        <Typography variant="h4" color={"primary.main"} fontWeight={"bold"}>
+                                            {seccion.titulo}
                                         </Typography>
                                     </Grid>
-                                    <Grid item xs={5}>
-                                        <Typography variant="h5" color={"#000000"} sx={{
-                                            fontFamily: "Segoe UI",
-                                            fontStyle: "italic",
-                                            ml: 10,
-                                            color: campo.tipo === "Booleano" ? (campo.contenido ? "green" : "red") : undefined
-                                        }}>
-                                            {(() => {
-                                                if (campo.tipo === "Texto") {
-                                                    return campo.contenido;
-                                                } else if (campo.tipo.toLowerCase() === "Numerico") {
-                                                    return campo.contenido;
-                                                } else if (campo.tipo.toLowerCase() === "Booleano") {
-                                                    return campo.contenido ? "Sí" : "No";
-                                                } else if (campo.tipo.toLowerCase() === "tabla") {
-                                                    return (
-                                                        <div style={{ display: 'flex', justifyContent: 'center' }}>
-                                                            <Button
-                                                                variant="contained"
-                                                                onClick={() => handleOpenVerTabla(campo.contenido)}
-                                                                sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "1rem", m: 0.5, width: "250px"}}
-                                                            >
-                                                                Ver Tabla
-                                                            </Button>
-                                                        </div>
-                                                    );
-                                                }
-                                            })()}
-                                        </Typography>
-                                    </Grid>
-                                    <Grid item xs={3} container justifyContent={"flex-end"}>
+                                    <Grid item xs={4} container justifyContent="flex-end">
                                         <Button
                                             variant="outlined"
                                             color="primary"
-                                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", width: "200px" }}
-                                            onClick={() => handleOpenEditDialog(campo, seccion, indexSeccion, index)}
+                                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", mr: 2, width: "200px" }}
+                                            onClick={() => handleOpenSectionEditDialog(indexSeccion)}
                                         >
-                                            Editar Campo
+                                            Editar Sección
                                         </Button>
                                     </Grid>
                                 </Grid>
-                                {(campo.subCampos && (campo.subCampos.length > 0)) && (
-                                    <Grid item xs={12}>
-                                        <Box sx={{ pl: 4, pr: 4 }}>
-                                            {campo.subCampos.map((subCampos, index) => (
-                                                <Grid container alignItems="center" justifyContent="space-between" borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, mb: 1, py: 1 }} key={index}>
-                                                    <Grid item xs={4}>
-                                                        <Typography variant="h6" color={"#000000"} sx={{ fontFamily: "Segoe UI", fontWeight: "normal" }}>
-                                                            {subCampos.titulo}
-                                                        </Typography>
-                                                    </Grid>
-                                                    <Grid item xs={7}>
-                                                        <Typography variant="h6" color={"#000000"} sx={{
-                                                            fontFamily: "Segoe UI",
-                                                            fontStyle: "italic",
-                                                            fontWeight: "normal",
-                                                            color: subCampos.tipo === "Booleano" ? (subCampos.contenido ? "green" : "red") : undefined
-                                                        }}>
-                                                            {(() => {
-                                                                if (subCampos.tipo === "texto") {
-                                                                    return subCampos.contenido;
-                                                                } else if (subCampos.tipo.toLowerCase() === "numerico") {
-                                                                    return subCampos.contenido;
-                                                                } else if (subCampos.tipo.toLowerCase() === "booleano") {
-                                                                    return subCampos.contenido ? "Sí" : "No";
-                                                                } else if (subCampos.tipo.toLowerCase() === "tabla") {
-                                                                    return (
-                                                                        <div style={{ display: 'flex', justifyContent: 'center' }}>
-                                                                            <Button
-                                                                                variant="contained"
-                                                                                onClick={() => handleOpenVerTabla(subCampos.contenido)}
-                                                                                sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "1rem", m: 0.5, width: "250px"}}
-                                                                            >
-                                                                                Ver Tabla
-                                                                            </Button>
-                                                                        </div>
-                                                                    );
 
-                                                                }
-                                                            })()}
-                                                        </Typography>
-                                                    </Grid>
-                                                </Grid>
-                                            ))}
-                                        </Box>
-                                    </Grid>
-                                )}
-                            </Box>
-                        ))}
-                        <Grid container justifyContent="center">
-                            <Button
-                                variant="outlined"
-                                color="primary"
-                                sx={{
-                                    textTransform: "none",
-                                    fontWeight: "bold",
-                                    fontStyle: "italic",
-                                    fontSize: "1rem",
-                                    mt: 2,
-                                }}
-                                onClick={() => handleOpenEditDialog(null, seccion, indexSeccion, -1)}
-                            >
-                                Agregar Campo
-                            </Button>
-                        </Grid>
-                    </Paper>
-                ))}
-                <Button
-                    variant="contained"
-                    color="primary"
-                    sx={{
-                        textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1.5rem", my: 2
-                    }}
-                    onClick={() => setOpenSectionDialog(true)}
-                >
-                    Agregar Sección
-                </Button>
-                <NavbarEvidencia
-                    evidencias={evidencias}
-                    refreshEvidencias={refreshEvidencia}
-                />
-            </Container>
-
-            {/* Diálogo de edición de campo */}
-            <Dialog open={openDialog} maxWidth="lg" fullWidth>
-                <DialogContent>
-                    <Grid container>
-                        <Grid item xs={6} container direction="column" sx={{ height: '70vh', overflowY: 'auto' }}>
-                            {/* Campo */}
-                            {editedField && (
-                                <>
-                                    <Grid container>
-                                        <Typography variant="h5" color="primary" fontWeight="bold">
-                                            {isAdding ? "Agregar Campo" : "Editar Campo"}
-                                        </Typography>
-                                        <Grid item xs={12}>
-                                            <TextField
-                                                label="Título del Campo"
-                                                name="titulo"
-                                                variant="outlined"
-                                                fullWidth
-                                                margin="normal"
-                                                value={editedField.titulo}
-                                                onChange={handleFieldChange}
-                                                sx={{ width: "99%" }}
-                                            />
-                                        </Grid>
-                                        <Grid item xs={12}>
-                                            <FormControl fullWidth margin="normal">
-                                                <InputLabel>Tipo de Dato</InputLabel>
-                                                <Select
-                                                    label="Tipo de Dato"
-                                                    name="tipo"
-                                                    value={editedField.tipo.toLowerCase()}
-                                                    sx={{ width: "99%" }}
-                                                    onChange={(event) => {
-                                                        const newCampo = { ...editedField };
-                                                        if (newCampo.tipo.toLowerCase() === "booleano") {
-                                                            newCampo.contenido = "";
-                                                        }
-                                                        if ((newCampo.tipo.toLowerCase() === "texto" || newCampo.tipo.toLowerCase() === "numerico") && event.target.value.toLowerCase() === "booleano") {
-                                                            newCampo.contenido = true;
-                                                        }
-                                                        if (newCampo.tipo.toLowerCase() === "tabla") {
-                                                            newCampo.contenido = "";
-                                                        }
-                                                        newCampo.tipo = event.target.value;
-                                                        setEditedField({ ...editedField, tipo: event.target.value, contenido: newCampo.contenido });
-                                                    }}
+                                {seccion.campos.map((campo, index) => (
+                                    <Box sx={{ pl: 2, pr: 2, mb: 2 }} key={index}>
+                                        <Grid container alignItems="center" justifyContent="space-between" borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, py: 1 }}>
+                                            <Grid item xs={4}>
+                                                <Typography
+                                                    variant="h5"
+                                                    color="#000000"
+                                                    sx={{ fontFamily: "Segoe UI", fontWeight: "bold" }}
                                                 >
-                                                    <MenuItem value="texto">Texto</MenuItem>
-                                                    <MenuItem value="numerico">Número</MenuItem>
-                                                    <MenuItem value="booleano">Booleano</MenuItem>
-                                                    <MenuItem value="tabla">Tabla</MenuItem>
-                                                </Select>
-                                            </FormControl>
+                                                    {campo.titulo}
+                                                </Typography>
+                                            </Grid>
+                                            <Grid item xs={5}>
+                                                <Typography variant="h5" color={"#000000"} sx={{
+                                                    fontFamily: "Segoe UI",
+                                                    fontStyle: "italic",
+                                                    ml: 10,
+                                                    color: campo.tipo === "Booleano" ? (campo.contenido ? "green" : "red") : undefined
+                                                }}>
+                                                    {(() => {
+                                                        if (campo.tipo) {
+                                                            if (campo.tipo.toLowerCase() === "texto") {
+                                                                return campo.contenido;
+                                                            } else if (campo.tipo.toLowerCase() === "numerico") {
+                                                                return campo.contenido;
+                                                            } else if (campo.tipo.toLowerCase() === "booleano") {
+                                                                return campo.contenido ? "Sí" : "No";
+                                                            } else if (campo.tipo.toLowerCase() === "tabla") {
+                                                                return (
+                                                                    <div style={{ justifyContent: 'center' }}>
+                                                                        <Button
+                                                                            variant="contained"
+                                                                            onClick={() => handleOpenVerTabla(campo.contenido)}
+                                                                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "1rem", m: 0.5, width: "250px" }}
+                                                                        >
+                                                                            Ver Tabla
+                                                                        </Button>
+                                                                    </div>
+                                                                );
+                                                            }
+                                                        }
+                                                    })()}
+                                                </Typography>
+                                            </Grid>
+                                            <Grid item xs={3} container justifyContent={"flex-end"}>
+                                                <Button
+                                                    variant="outlined"
+                                                    color="primary"
+                                                    sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", width: "200px" }}
+                                                    onClick={() => handleOpenEditDialog(campo, seccion, indexSeccion, index)}
+                                                >
+                                                    Editar Campo
+                                                </Button>
+                                            </Grid>
                                         </Grid>
-                                        <Grid item xs={12}>
-                                            {editedField.tipo.toLowerCase() === "booleano" ? (
-                                                <FormControl fullWidth margin="normal">
-                                                    <InputLabel>Valor</InputLabel>
-                                                    <Select
-                                                        label="Valor"
-                                                        name="contenido"
+                                        {(campo.subCampos && (campo.subCampos.length > 0)) && (
+                                            <Grid item xs={12}>
+                                                <Box sx={{ pl: 4, pr: 4 }}>
+                                                    {campo.subCampos.map((subCampos, index) => (
+                                                        <Grid container alignItems="center" justifyContent="space-between" borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, mb: 1, py: 1 }} key={index}>
+                                                            <Grid item xs={4}>
+                                                                <Typography variant="h6" color={"#000000"} sx={{ fontFamily: "Segoe UI", fontWeight: "normal" }}>
+                                                                    {subCampos.titulo}
+                                                                </Typography>
+                                                            </Grid>
+                                                            <Grid item xs={7}>
+                                                                <Typography variant="h6" color={"#000000"} sx={{
+                                                                    fontFamily: "Segoe UI",
+                                                                    fontStyle: "italic",
+                                                                    fontWeight: "normal",
+                                                                    color: subCampos.tipo === "Booleano" ? (subCampos.contenido ? "green" : "red") : undefined
+                                                                }}>
+                                                                    {(() => {
+                                                                        if (subCampos.tipo) {
+                                                                            if (subCampos.tipo.toLowerCase() === "texto") {
+                                                                                return subCampos.contenido;
+                                                                            } else if (subCampos.tipo.toLowerCase() === "numerico") {
+                                                                                return subCampos.contenido;
+                                                                            } else if (subCampos.tipo.toLowerCase() === "booleano") {
+                                                                                return subCampos.contenido ? "Sí" : "No";
+                                                                            } else if (subCampos.tipo.toLowerCase() === "tabla") {
+                                                                                return (
+                                                                                    <div style={{ justifyContent: 'center' }}>
+                                                                                        <Button
+                                                                                            variant="contained"
+                                                                                            onClick={() => handleOpenVerTabla(subCampos.contenido)}
+                                                                                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "1rem", m: 0.5, width: "250px" }}
+                                                                                        >
+                                                                                            Ver Tabla
+                                                                                        </Button>
+                                                                                    </div>
+                                                                                );
+
+                                                                            }
+                                                                        }
+                                                                    })()}
+                                                                </Typography>
+                                                            </Grid>
+                                                        </Grid>
+                                                    ))}
+                                                </Box>
+                                            </Grid>
+                                        )}
+                                    </Box>
+                                ))}
+                                <Grid container justifyContent="center">
+                                    <Button
+                                        variant="outlined"
+                                        color="primary"
+                                        sx={{
+                                            textTransform: "none",
+                                            fontWeight: "bold",
+                                            fontStyle: "italic",
+                                            fontSize: "1rem",
+                                            mt: 2,
+                                        }}
+                                        onClick={() => handleOpenEditDialog(null, seccion, indexSeccion, -1)}
+                                    >
+                                        Agregar Campo
+                                    </Button>
+                                </Grid>
+                            </Paper>
+                        ))}
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            sx={{
+                                textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1.5rem", my: 2
+                            }}
+                            onClick={() => setOpenSectionDialog(true)}
+                        >
+                            Agregar Sección
+                        </Button>
+                        <NavbarEvidencia
+                            evidencias={evidencias}
+                            refreshEvidencias={refreshEvidencia}
+                        />
+                    </Container>
+
+                    {/* Diálogo de edición de campo */}
+                    <Dialog open={openDialog} maxWidth="lg" fullWidth>
+                        <DialogContent>
+                            <Grid container>
+                                <Grid item xs={6} container direction="column" sx={{ height: '70vh', overflowY: 'auto' }}>
+                                    {/* Campo */}
+                                    {editedField && (
+                                        <>
+                                            <Grid container>
+                                                <Typography variant="h5" color="primary" fontWeight="bold">
+                                                    {isAdding ? "Agregar Campo" : "Editar Campo"}
+                                                </Typography>
+                                                <Grid item xs={12}>
+                                                    <TextField
+                                                        label="Título del Campo"
+                                                        name="titulo"
                                                         variant="outlined"
                                                         fullWidth
                                                         margin="normal"
-                                                        value={editedField.contenido}
+                                                        value={editedField.titulo}
                                                         onChange={handleFieldChange}
                                                         sx={{ width: "99%" }}
-                                                    >
-                                                        <MenuItem value={true}>Sí</MenuItem>
-                                                        <MenuItem value={false}>No</MenuItem>
-                                                    </Select>
-                                                </FormControl>
-                                            ) : editedField.tipo.toLowerCase() === "tabla" ? (
-                                                <Button
-                                                    variant="contained"
-                                                    onClick={() => handleOpenTableDialog(editedField.contenido, -1)}
-                                                    sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "1rem", width: "99%", mt: 2 }}
-                                                >
-                                                    Editar Tabla
-                                                </Button>
-                                            ) : (
-                                                <TextField
-                                                    label="Valor"
-                                                    name="contenido"
-                                                    variant="outlined"
-                                                    fullWidth
-                                                    margin="normal"
-                                                    sx={{ width: "99%" }}
-                                                    value={editedField.contenido}
-                                                    onChange={handleFieldChange}
-                                                />
-
-                                            )}
-                                        </Grid>
-
-                                        {/* Subcampos */}
-                                        <Grid item xs={12}>
-                                            <Typography
-                                                variant="h6"
-                                                sx={{ mt: 2 }}
-                                                color="primary.main"
-                                            >
-                                                Subcampos
-                                            </Typography>
-                                            {(editedField.subCampos != null) && editedField.subCampos.map((subCampo, index) => (
-                                                <Grid container key={index} sx={{ mb: 1, p: 2 }} borderBottom={1} borderColor={"secondary.main"}>
-                                                    <Grid item xs={12}>
-                                                        <TextField
-                                                            label="Título del Subcampo"
-                                                            name={`subCampos-titulo-${index}`}
-                                                            variant="outlined"
-                                                            fullWidth
-                                                            margin="normal"
-                                                            value={subCampo.titulo}
+                                                    />
+                                                </Grid>
+                                                <Grid item xs={12}>
+                                                    <FormControl fullWidth margin="normal">
+                                                        <InputLabel>Tipo de Dato</InputLabel>
+                                                        <Select
+                                                            label="Tipo de Dato"
+                                                            name="tipo"
+                                                            value={editedField.tipo ? editedField.tipo.toLowerCase() : "Texto"}
+                                                            sx={{ width: "99%" }}
                                                             onChange={(event) => {
-                                                                const newSubcampos = [...editedField.subCampos];
-                                                                newSubcampos[index].titulo = event.target.value;
-                                                                setEditedField({ ...editedField, subCampos: newSubcampos });
+                                                                const newTipo = event.target.value;
+                                                                const newCampo = { ...editedField };
+
+                                                                if (newCampo.tipo && newCampo.tipo.toLowerCase() === "booleano") {
+                                                                    newCampo.contenido = "";
+                                                                }
+
+                                                                if ((newCampo.tipo && (newCampo.tipo.toLowerCase() === "texto" || newCampo.tipo.toLowerCase() === "numerico")) && newTipo.toLowerCase() === "booleano") {
+                                                                    newCampo.contenido = true;
+                                                                }
+
+                                                                if (newTipo.toLowerCase() === "tabla") {
+                                                                    newCampo.contenido = "";
+                                                                }
+
+                                                                newCampo.tipo = newTipo;
+                                                                setEditedField({ ...editedField, tipo: newTipo, contenido: newCampo.contenido });
                                                             }}
-                                                        />
-                                                    </Grid>
-                                                    <Grid item xs={12}>
-                                                        <FormControl fullWidth margin="normal">
-                                                            <InputLabel>Tipo de Dato</InputLabel>
-                                                            <Select
-                                                                label="Tipo de Dato"
-                                                                name={`subCampos-tipo-${index}`}
-                                                                value={subCampo.tipo}
-                                                                onChange={(event) => {
-                                                                    const newSubcampos = [...editedField.subCampos];
-                                                                    if (newSubcampos[index].tipo === "Booleano") {
-                                                                        newSubcampos[index].contenido = "";
-                                                                    }
-                                                                    newSubcampos[index].tipo = event.target.value;
-                                                                    setEditedField({ ...editedField, subCampos: newSubcampos });
-                                                                }}
-                                                            >
-                                                                <MenuItem value="Texto">Texto</MenuItem>
-                                                                <MenuItem value="Numerico">Número</MenuItem>
-                                                                <MenuItem value="Booleano">Booleano</MenuItem>
-                                                                <MenuItem value="Tabla">Tabla</MenuItem>
-                                                            </Select>
-                                                        </FormControl>
-                                                    </Grid>
-                                                    <Grid item xs={12}>
-                                                        {subCampo.tipo === "Booleano" ? (
+
+                                                        >
+                                                            <MenuItem value="texto">Texto</MenuItem>
+                                                            <MenuItem value="numerico">Número</MenuItem>
+                                                            <MenuItem value="booleano">Booleano</MenuItem>
+                                                            <MenuItem value="tabla">Tabla</MenuItem>
+                                                        </Select>
+                                                    </FormControl>
+                                                </Grid>
+                                                <Grid item xs={12}>
+                                                    {editedField.tipo ? (
+                                                        editedField.tipo.toLowerCase() === "booleano" ? (
                                                             <FormControl fullWidth margin="normal">
-                                                                <InputLabel>Valor del Subcampo</InputLabel>
+                                                                <InputLabel>Valor</InputLabel>
                                                                 <Select
-                                                                    label="Valor del Subcampo"
-                                                                    name={`subCampos-contenido-${index}`}
+                                                                    label="Valor"
+                                                                    name="contenido"
                                                                     variant="outlined"
                                                                     fullWidth
                                                                     margin="normal"
-                                                                    value={subCampo.contenido}
-                                                                    onChange={(event) => {
-                                                                        const newSubcampos = [...editedField.subCampos];
-                                                                        newSubcampos[index].contenido = event.target.value;
-                                                                        setEditedField({ ...editedField, subCampos: newSubcampos });
-                                                                    }}
+                                                                    value={editedField.contenido}
+                                                                    onChange={handleFieldChange}
+                                                                    sx={{ width: "99%" }}
                                                                 >
                                                                     <MenuItem value={true}>Sí</MenuItem>
                                                                     <MenuItem value={false}>No</MenuItem>
                                                                 </Select>
                                                             </FormControl>
-                                                        ) : subCampo.tipo === "Tabla" ? (
-                                                        <Button
-                                                            variant="contained"
-                                                            onClick={() => handleOpenTableDialog(subCampo.contenido, index)}
-                                                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "1rem", width: "100%", my: 2 }}
-                                                        >
-                                                            Editar Tabla
-                                                        </Button>
+                                                        ) : editedField.tipo.toLowerCase() === "tabla" ? (
+                                                            <Button
+                                                                variant="contained"
+                                                                onClick={() => handleOpenTableDialog(editedField.contenido, -1)}
+                                                                sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "1rem", width: "99%", mt: 2 }}
+                                                            >
+                                                                Editar Tabla
+                                                            </Button>
                                                         ) : (
-                                                        <TextField
-                                                            label="Valor del Subcampo"
-                                                            name={`subCampos-contenido-${index}`}
-                                                            variant="outlined"
-                                                            fullWidth
-                                                            margin="normal"
-                                                            value={subCampo.contenido}
-                                                            onChange={(event) => {
-                                                                const newSubcampos = [...editedField.subCampos];
-                                                                newSubcampos[index].contenido = event.target.value;
-                                                                setEditedField({ ...editedField, subCampos: newSubcampos });
-                                                            }}
-                                                        />
-                                                        )}
-                                                    </Grid>
-                                                    <Grid container justifyContent="center">
-                                                        <Button color="error" onClick={() => handleDeleteSubcampo(index)}>
-                                                            <CloseIcon />
-                                                            Eliminar Subcampo
-                                                        </Button>
-                                                    </Grid>
+                                                            <TextField
+                                                                label="Valor"
+                                                                name="contenido"
+                                                                variant="outlined"
+                                                                fullWidth
+                                                                margin="normal"
+                                                                sx={{ width: "99%" }}
+                                                                value={editedField.contenido}
+                                                                onChange={handleFieldChange}
+                                                            />
+                                                        )
+                                                    ) : null}
                                                 </Grid>
-                                            ))}
-                                        </Grid>
-                                        <Grid item xs={12} container justifyContent="center">
-                                            <Button color="cuaternary"
-                                                variant="text"
-                                                onClick={() => handleAddSubcampo()}
-                                                startIcon={<AddCircleOutlineOutlinedIcon />}
-                                            >
-                                                Agregar Subcampo
-                                            </Button>
-                                        </Grid>
-                                    </Grid>
-                                </>
-                            )}
-                        </Grid>
-                        <Grid item xs={6} container direction="column" sx={{ px: 2, height: "70vh" }}>
-                            <Grid item xs={6} sx={{ overflowY: 'auto', px: 2 }}>
-                                <Grid item xs={12}>
-                                    <Typography variant="h5" color="primary" fontWeight="bold">
-                                        Gestión de Evidencia
-                                    </Typography>
+
+                                                {/* Subcampos */}
+                                                <Grid item xs={12}>
+                                                    <Typography
+                                                        variant="h6"
+                                                        sx={{ mt: 2 }}
+                                                        color="primary.main"
+                                                    >
+                                                        Subcampos
+                                                    </Typography>
+                                                    {(editedField.subCampos != null) && editedField.subCampos.map((subCampo, index) => (
+                                                        <Grid container key={index} sx={{ mb: 1, p: 2 }} borderBottom={1} borderColor={"secondary.main"}>
+                                                            <Grid item xs={12}>
+                                                                <TextField
+                                                                    label="Título del Subcampo"
+                                                                    name={`subCampos-titulo-${index}`}
+                                                                    variant="outlined"
+                                                                    fullWidth
+                                                                    margin="normal"
+                                                                    value={subCampo.titulo}
+                                                                    onChange={(event) => {
+                                                                        const newSubcampos = [...editedField.subCampos];
+                                                                        newSubcampos[index].titulo = event.target.value;
+                                                                        setEditedField({ ...editedField, subCampos: newSubcampos });
+                                                                    }}
+                                                                />
+                                                            </Grid>
+                                                            <Grid item xs={12}>
+                                                                <FormControl fullWidth margin="normal">
+                                                                    <InputLabel>Tipo de Dato</InputLabel>
+                                                                    <Select
+                                                                        label="Tipo de Dato"
+                                                                        name={`subCampos-tipo-${index}`}
+                                                                        value={subCampo.tipo}
+                                                                        onChange={(event) => {
+                                                                            const newSubcampos = [...editedField.subCampos];
+                                                                            if (newSubcampos[index].tipo === "Booleano") {
+                                                                                newSubcampos[index].contenido = "";
+                                                                            }
+                                                                            newSubcampos[index].tipo = event.target.value;
+                                                                            setEditedField({ ...editedField, subCampos: newSubcampos });
+                                                                        }}
+                                                                    >
+                                                                        <MenuItem value="Texto">Texto</MenuItem>
+                                                                        <MenuItem value="Numerico">Número</MenuItem>
+                                                                        <MenuItem value="Booleano">Booleano</MenuItem>
+                                                                        <MenuItem value="Tabla">Tabla</MenuItem>
+                                                                    </Select>
+                                                                </FormControl>
+                                                            </Grid>
+                                                            <Grid item xs={12}>
+                                                                {subCampo.tipo === "Booleano" ? (
+                                                                    <FormControl fullWidth margin="normal">
+                                                                        <InputLabel>Valor del Subcampo</InputLabel>
+                                                                        <Select
+                                                                            label="Valor del Subcampo"
+                                                                            name={`subCampos-contenido-${index}`}
+                                                                            variant="outlined"
+                                                                            fullWidth
+                                                                            margin="normal"
+                                                                            value={subCampo.contenido}
+                                                                            onChange={(event) => {
+                                                                                const newSubcampos = [...editedField.subCampos];
+                                                                                newSubcampos[index].contenido = event.target.value;
+                                                                                setEditedField({ ...editedField, subCampos: newSubcampos });
+                                                                            }}
+                                                                        >
+                                                                            <MenuItem value={true}>Sí</MenuItem>
+                                                                            <MenuItem value={false}>No</MenuItem>
+                                                                        </Select>
+                                                                    </FormControl>
+                                                                ) : subCampo.tipo === "Tabla" ? (
+                                                                    <Button
+                                                                        variant="contained"
+                                                                        onClick={() => handleOpenTableDialog(subCampo.contenido, index)}
+                                                                        sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "1rem", width: "100%", my: 2 }}
+                                                                    >
+                                                                        Editar Tabla
+                                                                    </Button>
+                                                                ) : (
+                                                                    <TextField
+                                                                        label="Valor del Subcampo"
+                                                                        name={`subCampos-contenido-${index}`}
+                                                                        variant="outlined"
+                                                                        fullWidth
+                                                                        margin="normal"
+                                                                        value={subCampo.contenido}
+                                                                        onChange={(event) => {
+                                                                            const newSubcampos = [...editedField.subCampos];
+                                                                            newSubcampos[index].contenido = event.target.value;
+                                                                            setEditedField({ ...editedField, subCampos: newSubcampos });
+                                                                        }}
+                                                                    />
+                                                                )}
+                                                            </Grid>
+                                                            <Grid container justifyContent="center">
+                                                                <Button color="error" onClick={() => handleDeleteSubcampo(index)}>
+                                                                    <CloseIcon />
+                                                                    Eliminar Subcampo
+                                                                </Button>
+                                                            </Grid>
+                                                        </Grid>
+                                                    ))}
+                                                </Grid>
+                                                <Grid item xs={12} container justifyContent="center">
+                                                    <Button color="cuaternary"
+                                                        variant="text"
+                                                        onClick={() => handleAddSubcampo()}
+                                                        startIcon={<AddCircleOutlineOutlinedIcon />}
+                                                    >
+                                                        Agregar Subcampo
+                                                    </Button>
+                                                </Grid>
+                                            </Grid>
+                                        </>
+                                    )}
                                 </Grid>
-                                <Grid item xs={12}>
-                                    <Typography variant="h6" color="primary" sx={{ mt: 2 }}>
-                                        Evidencias del Reporte
-                                    </Typography>
+                                <Grid item xs={6} container direction="column" sx={{ px: 2, height: "70vh" }}>
+                                    <Grid item xs={6} sx={{ overflowY: 'auto', px: 2 }}>
+                                        <Grid item xs={12}>
+                                            <Typography variant="h5" color="primary" fontWeight="bold">
+                                                Gestión de Evidencia
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <Typography variant="h6" color="primary" sx={{ mt: 2 }}>
+                                                Evidencias del Reporte
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <TextField
+                                                label="Buscar Evidencias"
+                                                variant="outlined"
+                                                fullWidth
+                                                margin="normal"
+                                                value={searchTerm}
+                                                onChange={handleSearchChange}
+                                            />
+                                        </Grid>
+                                        {filteredEvidencia && (
+                                            <>
+                                                {filteredEvidencia.map((evidencia, index) => (
+                                                    <Box key={index} sx={{ mt: 2, width: '100%' }}>
+                                                        <Grid container borderBottom={2} borderColor={"secondary.main"} sx={{ py: 1 }}>
+                                                            <Grid item xs={3}>
+                                                                <Typography
+                                                                    variant="body1"
+                                                                    color="#000000"
+                                                                    sx={{ fontFamily: "Segoe UI", fontWeight: "bold" }}
+                                                                >
+                                                                    {evidencia.nombre}
+                                                                </Typography>
+                                                            </Grid>
+                                                            <Grid item xs={3}>
+                                                                <Button
+                                                                    variant="text"
+                                                                    sx={{
+                                                                        fontFamily: "Segoe UI",
+                                                                        fontStyle: "italic",
+                                                                        fontSize: "1rem",
+                                                                        textTransform: "none",
+                                                                        fontWeight: "bold",
+                                                                        color: "primary.main",
+                                                                        ml: 2,
+                                                                        p: 0,
+                                                                    }}
+                                                                    onClick={() => accederEvidencia(evidencia)}
+                                                                >
+                                                                    {evidencia.tipo.toLowerCase() === "archivo" ? "Archivo" : "Página Web"}
+                                                                </Button>
+                                                            </Grid>
+                                                            <Grid item xs={6} container justifyContent="flex-end">
+                                                                <Button
+                                                                    color="cuaternary"
+                                                                    variant="text"
+                                                                    startIcon={<AddCircleOutlineOutlinedIcon />}
+                                                                    onClick={() => handleAgregarEvidenciaAlCampo(evidencia)}
+                                                                >
+                                                                    Agregar al Campo
+                                                                </Button>
+                                                            </Grid>
+                                                        </Grid>
+                                                    </Box>
+                                                ))}
+                                            </>
+                                        )}
+                                    </Grid>
+                                    <Grid item xs={6} sx={{ overflowY: 'auto', px: 2 }}>
+                                        <Typography variant="h6" color="primary" sx={{ mt: 2 }}>
+                                            Evidencias del Campo
+                                        </Typography>
+                                        {selectedEvidencias && (
+                                            <>
+                                                {selectedEvidencias.map((evidencia, index) => (
+                                                    <Box key={index} sx={{ mt: 2, width: '100%' }}>
+                                                        <Grid container borderBottom={2} borderColor={"secondary.main"} sx={{ py: 1 }}>
+                                                            <Grid item xs={3}>
+                                                                <Typography
+                                                                    variant="body1"
+                                                                    color="#000000"
+                                                                    sx={{ fontFamily: "Segoe UI", fontWeight: "bold" }}
+                                                                >
+                                                                    {evidencia.nombre}
+                                                                </Typography>
+                                                            </Grid>
+                                                            <Grid item xs={3}>
+                                                                <Button
+                                                                    variant="text"
+                                                                    sx={{
+                                                                        fontFamily: "Segoe UI",
+                                                                        fontStyle: "italic",
+                                                                        fontSize: "1rem",
+                                                                        textTransform: "none",
+                                                                        fontWeight: "bold",
+                                                                        color: "primary.main",
+                                                                        ml: 2,
+                                                                        p: 0,
+                                                                    }}
+                                                                    onClick={() => accederEvidencia(evidencia)}
+                                                                >
+                                                                    {evidencia.tipo.toLowerCase() === "archivo" ? "Archivo" : "Página Web"}
+                                                                </Button>
+                                                            </Grid>
+                                                            <Grid item xs={6} container justifyContent="flex-end">
+                                                                <Button
+                                                                    color="error"
+                                                                    variant="text"
+                                                                    startIcon={<RemoveCircleOutlineOutlinedIcon />}
+                                                                    onClick={() => handleRemoverEvidenciaDelCampo(evidencia)}
+                                                                >
+                                                                    Remover del Campo
+                                                                </Button>
+                                                            </Grid>
+                                                        </Grid>
+                                                    </Box>
+                                                ))}
+                                            </>
+                                        )}
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                        </DialogContent>
+                        <DialogActions sx={{ position: 'sticky', bottom: 0, backgroundColor: 'white', zIndex: 1000 }}>
+                            <Collapse in={alerta}>
+                                <Alert severity="error" onClose={handleCloseAlert}>
+                                    {alertaTexto}
+                                </Alert>
+                            </Collapse>
+                            {isAdding ? null : (
+                                <Button onClick={() => handleEliminarCampoDialog(campoActualIndex, seccionActualIndex)} color="error">Eliminar</Button>
+                            )}
+                            <Button onClick={() => handleCloseEditDialog()} color="secondary">Descartar</Button>
+                            <Button onClick={() => handleSaveField()} color="primary">Guardar</Button>
+                        </DialogActions>
+                    </Dialog>
+
+                    {/* Diálogo para editar el titulo de la sección */}
+                    <Dialog open={openSectionEditDialog} onClose={() => handleCloseSectionEditDialog()} maxWidth="md" fullWidth>
+                        <DialogContent>
+                            <Grid container spacing={2}>
+                                <Grid item xs={8}>
+                                    <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Editar Sección</Typography>
+                                </Grid>
+                                <Grid item xs={4} container justifyContent="flex-end" sx={{ mb: 2 }}>
+                                    <IconButton onClick={() => handleCloseSectionEditDialog()} disableRipple><CloseIcon /></IconButton>
+                                </Grid>
+                                <Grid item xs={12} container>
+                                    <Typography variant="body1">Introduzca el título de la sección:</Typography>
                                 </Grid>
                                 <Grid item xs={12}>
                                     <TextField
-                                        label="Buscar Evidencias"
+                                        label="Título de la Sección"
                                         variant="outlined"
                                         fullWidth
-                                        margin="normal"
-                                        value={searchTerm}
-                                        onChange={handleSearchChange}
+                                        value={editedSection.titulo}
+                                        onChange={(event) => setEditedSection({ ...editedSection, titulo: event.target.value })}
                                     />
                                 </Grid>
-                                {filteredEvidencia && (
-                                    <>
-                                        {filteredEvidencia.map((evidencia, index) => (
-                                            <Box key={index} sx={{ mt: 2, width: '100%' }}>
-                                                <Grid container borderBottom={2} borderColor={"secondary.main"} sx={{ py: 1 }}>
-                                                    <Grid item xs={3}>
-                                                        <Typography
-                                                            variant="body1"
-                                                            color="#000000"
-                                                            sx={{ fontFamily: "Segoe UI", fontWeight: "bold" }}
-                                                        >
-                                                            {evidencia.nombre}
-                                                        </Typography>
-                                                    </Grid>
-                                                    <Grid item xs={3}>
-                                                        <Button
-                                                            variant="text"
-                                                            sx={{
-                                                                fontFamily: "Segoe UI",
-                                                                fontStyle: "italic",
-                                                                fontSize: "1rem",
-                                                                textTransform: "none",
-                                                                fontWeight: "bold",
-                                                                color: "primary.main",
-                                                                ml: 2,
-                                                                p: 0,
-                                                            }}
-                                                            onClick={() => accederEvidencia(evidencia)}
-                                                        >
-                                                            {evidencia.tipo.toLowerCase() === "archivo" ? "Archivo" : "Página Web"}
-                                                        </Button>
-                                                    </Grid>
-                                                    <Grid item xs={6} container justifyContent="flex-end">
-                                                        <Button
-                                                            color="cuaternary"
-                                                            variant="text"
-                                                            startIcon={<AddCircleOutlineOutlinedIcon />}
-                                                            onClick={() => handleAgregarEvidenciaAlCampo(evidencia)}
-                                                        >
-                                                            Agregar al Campo
-                                                        </Button>
-                                                    </Grid>
-                                                </Grid>
-                                            </Box>
-                                        ))}
-                                    </>
-                                )}
                             </Grid>
-                            <Grid item xs={6} sx={{ overflowY: 'auto', px: 2 }}>
-                                <Typography variant="h6" color="primary" sx={{ mt: 2 }}>
-                                    Evidencias del Campo
-                                </Typography>
-                                {selectedEvidencias && (
-                                    <>
-                                        {selectedEvidencias.map((evidencia, index) => (
-                                            <Box key={index} sx={{ mt: 2, width: '100%' }}>
-                                                <Grid container borderBottom={2} borderColor={"secondary.main"} sx={{ py: 1 }}>
-                                                    <Grid item xs={3}>
-                                                        <Typography
-                                                            variant="body1"
-                                                            color="#000000"
-                                                            sx={{ fontFamily: "Segoe UI", fontWeight: "bold" }}
-                                                        >
-                                                            {evidencia.nombre}
-                                                        </Typography>
-                                                    </Grid>
-                                                    <Grid item xs={3}>
-                                                        <Button
-                                                            variant="text"
-                                                            sx={{
-                                                                fontFamily: "Segoe UI",
-                                                                fontStyle: "italic",
-                                                                fontSize: "1rem",
-                                                                textTransform: "none",
-                                                                fontWeight: "bold",
-                                                                color: "primary.main",
-                                                                ml: 2,
-                                                                p: 0,
-                                                            }}
-                                                            onClick={() => accederEvidencia(evidencia)}
-                                                        >
-                                                            {evidencia.tipo.toLowerCase() === "archivo" ? "Archivo" : "Página Web"}
-                                                        </Button>
-                                                    </Grid>
-                                                    <Grid item xs={6} container justifyContent="flex-end">
-                                                        <Button
-                                                            color="error"
-                                                            variant="text"
-                                                            startIcon={<RemoveCircleOutlineOutlinedIcon />}
-                                                            onClick={() => handleRemoverEvidenciaDelCampo(evidencia)}
-                                                        >
-                                                            Remover del Campo
-                                                        </Button>
-                                                    </Grid>
-                                                </Grid>
-                                            </Box>
-                                        ))}
-                                    </>
-                                )}
+                        </DialogContent>
+                        <DialogActions>
+                            <Grid container>
+                                <Grid item xs={12} container justifyContent="flex-end">
+                                    <Button onClick={() => handleOpenEliminarSeccion()} color="error">
+                                        Eliminar
+                                    </Button>
+                                    <Button color="secondary" variant="text" onClick={() => handleCloseSectionEditDialog()} >
+                                        Descartar
+                                    </Button>
+                                    <Button color="primary" variant="text" onClick={() => handleSaveSection(false)} >
+                                        Guardar
+                                    </Button>
+                                </Grid>
                             </Grid>
-                        </Grid>
-                    </Grid>
-                </DialogContent>
-                <DialogActions sx={{ position: 'sticky', bottom: 0, backgroundColor: 'white', zIndex: 1000 }}>
-                    <Collapse in={alerta}>
-                        <Alert severity="error" onClose={handleCloseAlert}>
-                            {alertaTexto}
-                        </Alert>
-                    </Collapse>
-                    {isAdding ? null : (
-                        <Button onClick={() => handleEliminarCampoDialog(campoActualIndex, seccionActualIndex)} color="error">Eliminar</Button>
-                    )}
-                    <Button onClick={() => handleCloseEditDialog()} color="secondary">Descartar</Button>
-                    <Button onClick={() => handleSaveField()} color="primary">Guardar</Button>
-                </DialogActions>
-            </Dialog>
+                        </DialogActions>
+                    </Dialog>
 
-            {/* Diálogo para editar el titulo de la sección */}
-            <Dialog open={openSectionEditDialog} onClose={() => handleCloseSectionEditDialog()} maxWidth="md" fullWidth>
-                <DialogContent>
-                    <Grid container spacing={2}>
-                        <Grid item xs={8}>
-                            <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Editar Sección</Typography>
-                        </Grid>
-                        <Grid item xs={4} container justifyContent="flex-end" sx={{ mb: 2 }}>
-                            <IconButton onClick={() => handleCloseSectionEditDialog()} disableRipple><CloseIcon /></IconButton>
-                        </Grid>
-                        <Grid item xs={12} container>
-                            <Typography variant="body1">Introduzca el título de la sección:</Typography>
-                        </Grid>
-                        <Grid item xs={12}>
-                            <TextField
-                                label="Título de la Sección"
-                                variant="outlined"
-                                fullWidth
-                                value={editedSection.titulo}
-                                onChange={(event) => setEditedSection({ ...editedSection, titulo: event.target.value })}
-                            />
-                        </Grid>
-                    </Grid>
-                </DialogContent>
-                <DialogActions>
-                    <Grid container>
-                        <Grid item xs={12} container justifyContent="flex-end">
-                            <Button onClick={() => handleOpenEliminarSeccion()} color="error">
-                                Eliminar
-                            </Button>
-                            <Button color="secondary" variant="text" onClick={() => handleCloseSectionEditDialog()} >
-                                Descartar
-                            </Button>
-                            <Button color="primary" variant="text" onClick={() => handleSaveSection(false)} >
-                                Guardar
-                            </Button>
-                        </Grid>
-                    </Grid>
-                </DialogActions>
-            </Dialog>
+                    {/* Diálogo para editar el titulo de la categoría */}
+                    <Dialog open={openCategoryEditDialog} onClose={() => setOpenCategoryEditDialog(false)} maxWidth="md" fullWidth>
+                        <DialogContent>
+                            <Grid container spacing={2}>
+                                <Grid item xs={8}>
+                                    <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Editar Categoría</Typography>
+                                </Grid>
+                                <Grid item xs={4} container justifyContent="flex-end" sx={{ mb: 2 }}>
+                                    <IconButton onClick={() => setOpenCategoryEditDialog(false)} disableRipple><CloseIcon /></IconButton>
+                                </Grid>
+                                <Grid item xs={12} container>
+                                    <Typography variant="body1">Introduzca el título de la categoría:</Typography>
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <TextField
+                                        label="Título de la Categoría"
+                                        variant="outlined"
+                                        fullWidth
+                                        value={tituloIngresado}
+                                        onChange={(event) => setTituloIngresado(event.target.value)}
+                                    />
+                                </Grid>
+                            </Grid>
+                        </DialogContent>
+                        <DialogActions>
+                            <Grid container>
+                                <Grid item xs={12} container justifyContent="flex-end">
+                                    <Button color="error" onClick={() => setOpenEliminarCategoriaDialog(true)}>
+                                        Eliminar
+                                    </Button>
+                                    <Button color="secondary" variant="text" onClick={() => setOpenCategoryEditDialog(false)} >
+                                        Descartar
+                                    </Button>
+                                    <Button color="primary" variant="text" onClick={() => handleEditCategory()} >
+                                        Guardar
+                                    </Button>
+                                </Grid>
+                            </Grid>
+                        </DialogActions>
+                    </Dialog>
 
-            {/* Diálogo para editar el titulo de la categoría */}
-            <Dialog open={openCategoryEditDialog} onClose={() => setOpenCategoryEditDialog(false)} maxWidth="md" fullWidth>
-                <DialogContent>
-                    <Grid container spacing={2}>
-                        <Grid item xs={8}>
-                            <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Editar Categoría</Typography>
-                        </Grid>
-                        <Grid item xs={4} container justifyContent="flex-end" sx={{ mb: 2 }}>
-                            <IconButton onClick={() => setOpenCategoryEditDialog(false)} disableRipple><CloseIcon /></IconButton>
-                        </Grid>
-                        <Grid item xs={12} container>
-                            <Typography variant="body1">Introduzca el título de la categoría:</Typography>
-                        </Grid>
-                        <Grid item xs={12}>
-                            <TextField
-                                label="Título de la Categoría"
-                                variant="outlined"
-                                fullWidth
-                                value={tituloIngresado}
-                                onChange={(event) => setTituloIngresado(event.target.value)}
-                            />
-                        </Grid>
-                    </Grid>
-                </DialogContent>
-                <DialogActions>
-                    <Grid container>
-                        <Grid item xs={12} container justifyContent="flex-end">
-                            <Button color="error" onClick={() => setOpenEliminarCategoriaDialog(true)}>
-                                Eliminar
-                            </Button>
-                            <Button color="secondary" variant="text" onClick={() => setOpenCategoryEditDialog(false)} >
-                                Descartar
-                            </Button>
-                            <Button color="primary" variant="text" onClick={() => handleEditCategory()} >
-                                Guardar
-                            </Button>
-                        </Grid>
-                    </Grid>
-                </DialogActions>
-            </Dialog>
-
-            {/* Diálogo para eliminar categoría */}
-            <Dialog open={openEliminarCategoriaDialog} onClose={() => setOpenEliminarCategoriaDialog(false)} maxWidth="md" fullWidth>
-                <DialogTitle>
-                    <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Eliminar Categoría</Typography>
-                </DialogTitle>
-                <DialogContent>
-                    <Typography variant="body1">¿Está seguro de que desea eliminar la categoría "{categorias[categoriaActualIndex]}"?</Typography>
-                </DialogContent>
-                <DialogActions>
-                    <Button color="secondary" variant="text" onClick={() => setOpenEliminarCategoriaDialog(false)} >
-                        Cancelar
-                    </Button>
-                    <Button color="error" variant="text" onClick={() => handleEliminarCategoria()} >
-                        Eliminar
-                    </Button>
-                </DialogActions>
-            </Dialog>
-
-            {/* Diálogo para eliminar sección */}
-            <Dialog open={openEliminarSeccionDialog} onClose={() => handleCloseEliminarSeccion()} maxWidth="md" fullWidth>
-                <DialogTitle>
-                    <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Eliminar Sección</Typography>
-                </DialogTitle>
-                <DialogContent>
-                    <Typography variant="body1">¿Está seguro de que desea eliminar la sección "{secciones.length > 0 ? (secciones[seccionActualIndex] ? secciones[seccionActualIndex].titulo : '') : ''}"?</Typography>
-                </DialogContent>
-                <DialogActions>
-                    <Button color="secondary" variant="text" onClick={() => handleCloseEliminarSeccion()}>
-                        Cancelar
-                    </Button>
-                    <Button color="error" variant="text" onClick={() => handleEliminarSeccion()} >
-                        Eliminar
-                    </Button>
-                </DialogActions>
-            </Dialog>
-
-            {/* Diálogo para agregar sección */}
-            <Dialog open={openSectionDialog} onClose={() => setOpenSectionDialog(false)} maxWidth="md" fullWidth>
-                <DialogContent>
-                    <Grid container spacing={2}>
-                        <Grid item xs={8}>
-                            <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Agregar Sección</Typography>
-                        </Grid>
-                        <Grid item xs={4} container justifyContent="flex-end" sx={{ mb: 2 }}>
-                            <IconButton onClick={() => setOpenSectionDialog(false)} disableRipple><CloseIcon /></IconButton>
-                        </Grid>
-                        <Grid item xs={12} container>
-                            <Typography variant="body1">Introduzca el título de la sección:</Typography>
-                        </Grid>
-                        <Grid item xs={12}>
-                            <TextField
-                                label="Título de la Sección"
-                                variant="outlined"
-                                fullWidth
-                                value={editedSection.titulo}
-                                onChange={(event) => setEditedSection({ ...editedSection, titulo: event.target.value })}
-                            />
-                        </Grid>
-                    </Grid>
-                </DialogContent>
-                <DialogActions>
-                    <Grid container>
-                        <Grid item xs={12} container justifyContent="flex-end">
-                            <Button color="secondary" variant="text" onClick={() => setOpenSectionDialog(false)} >
+                    {/* Diálogo para eliminar categoría */}
+                    <Dialog open={openEliminarCategoriaDialog} onClose={() => setOpenEliminarCategoriaDialog(false)} maxWidth="md" fullWidth>
+                        <DialogTitle>
+                            <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Eliminar Categoría</Typography>
+                        </DialogTitle>
+                        <DialogContent>
+                            <Typography variant="body1">¿Está seguro de que desea eliminar la categoría "{categorias[categoriaActualIndex]}"?</Typography>
+                        </DialogContent>
+                        <DialogActions>
+                            <Button color="secondary" variant="text" onClick={() => setOpenEliminarCategoriaDialog(false)} >
                                 Cancelar
                             </Button>
-                            <Button color="primary" variant="text" onClick={() => handleSaveSection(true)} >
-                                Agregar
+                            <Button color="error" variant="text" onClick={() => handleEliminarCategoria()} >
+                                Eliminar
                             </Button>
-                        </Grid>
-                    </Grid>
-                </DialogActions>
-            </Dialog>
+                        </DialogActions>
+                    </Dialog>
 
-            {/* Diálogo para eliminar campo */}
-            <Dialog open={openEliminarCampoDialog} onClose={() => handleCerrarEliminarCampoDialog()} maxWidth="md" fullWidth>
-                <DialogTitle>
-                    <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Eliminar Campo</Typography>
-                </DialogTitle>
-                <DialogContent>
-                    <Typography variant="body1">
-                        ¿Está seguro de que desea eliminar el campo "{secciones[seccionActualIndex] && secciones[seccionActualIndex].campos[campoActualIndex] ? secciones[seccionActualIndex].campos[campoActualIndex].titulo : ''}"?
-                    </Typography>
-                </DialogContent>
-                <DialogActions>
-                    <Button color="secondary" variant="text" onClick={() => handleCerrarEliminarCampoDialog()} >
-                        Cancelar
-                    </Button>
-                    <Button color="error" variant="text" onClick={() => handleEliminarCampo()} >
-                        Eliminar
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                    {/* Diálogo para eliminar sección */}
+                    <Dialog open={openEliminarSeccionDialog} onClose={() => handleCloseEliminarSeccion()} maxWidth="md" fullWidth>
+                        <DialogTitle>
+                            <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Eliminar Sección</Typography>
+                        </DialogTitle>
+                        <DialogContent>
+                            <Typography variant="body1">¿Está seguro de que desea eliminar la sección "{secciones.length > 0 ? (secciones[seccionActualIndex] ? secciones[seccionActualIndex].titulo : '') : ''}"?</Typography>
+                        </DialogContent>
+                        <DialogActions>
+                            <Button color="secondary" variant="text" onClick={() => handleCloseEliminarSeccion()}>
+                                Cancelar
+                            </Button>
+                            <Button color="error" variant="text" onClick={() => handleEliminarSeccion()} >
+                                Eliminar
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
 
-            {/* Diálogo para ver tabla */}
-            <Dialog open={openVerTablaDialog} onClose={handleCloseVerTabla} maxWidth="xl" fullWidth>
-                <DialogTitle>Datos de la Tabla</DialogTitle>
-                <DialogContent>
-                    <VerTabla csvString={csvData} />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseVerTabla} color="primary">
-                        Cerrar
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                    {/* Diálogo para agregar sección */}
+                    <Dialog open={openSectionDialog} onClose={() => setOpenSectionDialog(false)} maxWidth="md" fullWidth>
+                        <DialogContent>
+                            <Grid container spacing={2}>
+                                <Grid item xs={8}>
+                                    <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Agregar Sección</Typography>
+                                </Grid>
+                                <Grid item xs={4} container justifyContent="flex-end" sx={{ mb: 2 }}>
+                                    <IconButton onClick={() => setOpenSectionDialog(false)} disableRipple><CloseIcon /></IconButton>
+                                </Grid>
+                                <Grid item xs={12} container>
+                                    <Typography variant="body1">Introduzca el título de la sección:</Typography>
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <TextField
+                                        label="Título de la Sección"
+                                        variant="outlined"
+                                        fullWidth
+                                        value={editedSection.titulo}
+                                        onChange={(event) => setEditedSection({ ...editedSection, titulo: event.target.value })}
+                                    />
+                                </Grid>
+                            </Grid>
+                        </DialogContent>
+                        <DialogActions>
+                            <Grid container>
+                                <Grid item xs={12} container justifyContent="flex-end">
+                                    <Button color="secondary" variant="text" onClick={() => setOpenSectionDialog(false)} >
+                                        Cancelar
+                                    </Button>
+                                    <Button color="primary" variant="text" onClick={() => handleSaveSection(true)} >
+                                        Agregar
+                                    </Button>
+                                </Grid>
+                            </Grid>
+                        </DialogActions>
+                    </Dialog>
 
-            {/* Diálogo para editar tabla */}
-            <Dialog open={openTableDialog} maxWidth="xl" fullWidth>
-                <DialogTitle>
-                    <Typography variant="h5" color="primary" fontWeight="bold">
-                        Editar Tabla
-                    </Typography>
-                    <IconButton onClick={handleCloseTableDialog} style={{ position: 'absolute', right: 8, top: 8 }}>
-                        <CloseIcon />
-                    </IconButton>
-                </DialogTitle>
-                <DialogContent>
-                    <Tabla csvString={csvData} onSave={handleSaveTable} />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => handleCloseTableDialog()} color="secondary">Cerrar</Button>
-                </DialogActions>
-            </Dialog>
+                    {/* Diálogo para eliminar campo */}
+                    <Dialog open={openEliminarCampoDialog} onClose={() => handleCerrarEliminarCampoDialog()} maxWidth="md" fullWidth>
+                        <DialogTitle>
+                            <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Eliminar Campo</Typography>
+                        </DialogTitle>
+                        <DialogContent>
+                            <Typography variant="body1">
+                                ¿Está seguro de que desea eliminar el campo "{secciones[seccionActualIndex] && secciones[seccionActualIndex].campos[campoActualIndex] ? secciones[seccionActualIndex].campos[campoActualIndex].titulo : ''}"?
+                            </Typography>
+                        </DialogContent>
+                        <DialogActions>
+                            <Button color="secondary" variant="text" onClick={() => handleCerrarEliminarCampoDialog()} >
+                                Cancelar
+                            </Button>
+                            <Button color="error" variant="text" onClick={() => handleEliminarCampo()} >
+                                Eliminar
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
+
+                    {/* Diálogo para ver tabla */}
+                    <Dialog open={openVerTablaDialog} onClose={handleCloseVerTabla} maxWidth="xl" fullWidth>
+                        <DialogTitle>Datos de la Tabla</DialogTitle>
+                        <DialogContent>
+                            <VerTabla csvString={csvData} />
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={handleCloseVerTabla} color="primary">
+                                Cerrar
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
+
+                    {/* Diálogo para editar tabla */}
+                    <Dialog open={openTableDialog} maxWidth="xl" fullWidth>
+                        <DialogTitle>
+                            <Typography variant="h5" color="primary" fontWeight="bold">
+                                Editar Tabla
+                            </Typography>
+                            <IconButton onClick={handleCloseTableDialog} style={{ position: 'absolute', right: 8, top: 8 }}>
+                                <CloseIcon />
+                            </IconButton>
+                        </DialogTitle>
+                        <DialogContent>
+                            <Tabla csvString={csvData} onSave={handleSaveTable} />
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={() => handleCloseTableDialog()} color="secondary">Cerrar</Button>
+                        </DialogActions>
+                    </Dialog>
+                </>
+            )}
+
         </>
     );
 }
