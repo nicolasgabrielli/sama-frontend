@@ -206,12 +206,6 @@ function ListaReportes() {
         setIdReporte(null);
     };
 
-    const sleep = async (milliseconds) => {
-        await new Promise(resolve => {
-            return setTimeout(resolve, milliseconds)
-        });
-    };
-
     // Función para obtener la lista de reportes, preconfiguraciones y la información de la empresa
     const fetchData = async () => {
         setLoading(true);
