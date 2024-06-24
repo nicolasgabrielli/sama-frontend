@@ -23,7 +23,7 @@ const VerTabla = ({ csvString }) => {
   }, [csvString]);
 
   return (
-    <Box>
+    <Box sx={{ p: 1 }}>
       {data.length > 0 ? (
         <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
           <Table stickyHeader>

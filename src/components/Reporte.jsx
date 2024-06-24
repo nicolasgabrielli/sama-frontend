@@ -1,7 +1,10 @@
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import RemoveCircleOutlineOutlinedIcon from '@mui/icons-material/RemoveCircleOutlineOutlined';
 import CloseIcon from '@mui/icons-material/Close';
-import { Alert, Box, Button, Collapse, Container, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid, IconButton, InputLabel, MenuItem, Paper, Select, TextField, Typography } from "@mui/material";
+import EditIcon from '@mui/icons-material/Edit';
+import DescriptionIcon from '@mui/icons-material/Description';
+import CheckIcon from '@mui/icons-material/Check';
+import { Alert, Box, Button, Collapse, Container, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid, Icon, IconButton, InputLabel, MenuItem, Paper, Select, TextField, Tooltip, Typography } from "@mui/material";
 import CircularProgress from '@mui/material/CircularProgress';
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -48,16 +51,11 @@ function Reporte() {
             .catch(error => console.error('Error al obtener las evidencias:', error));
     };
 
-    const sleep = async (milliseconds) => {
-        await new Promise(resolve => {
-            return setTimeout(resolve, milliseconds)
-        });
-    };
+
 
     // Función para obtener los datos del reporte y las evidencias de la base de datos
     const fetchData = async () => {
         setLoading(true);
-        await sleep(500); // Simular un tiempo de carga --------------------------- BORRAR DESPUÉS, ESTO ES SOLO PARA PRUEBAS --------------------------- //
         await refreshReporte();
         await refreshEvidencia();
         setLoading(false);
@@ -82,7 +80,7 @@ function Reporte() {
     const [currentField, setCurrentField] = useState({ titulo: "", contenido: "", tipo: "Texto", subCampos: [] });
     const [alerta, setAlerta] = useState(false);
     const [alertaTexto, setAlertaTexto] = useState("");
-    const [isAdding, setIsAdding] = useState(false);
+    const [isAdding, setIsAdding] = useState(true);
     const [editedSection, setEditedSection] = useState({ titulo: "" });
     const [openEliminarCampoDialog, setOpenEliminarCampoDialog] = useState(false);
     const [tituloIngresado, setTituloIngresado] = useState("");
@@ -96,6 +94,8 @@ function Reporte() {
     const [openVerTablaDialog, setOpenVerTablaDialog] = useState(false);
     const [csvData, setCsvData] = useState('');
     const [openTableDialog, setOpenTableDialog] = useState(false);
+    const [openAutorizarCampoDialog, setOpenAutorizarCampoDialog] = useState(false);
+    const [openEvidenciaDialog, setOpenEvidenciaDialog] = useState(false);
 
 
     const handleOpenTableDialog = (csv, subCampoIndex) => {
@@ -294,7 +294,12 @@ function Reporte() {
         handleCloseEditDialog();
     };
 
+    const handleOpenCategoryEditDialog = () => {
+        setOpenCategoryEditDialog(true);
+        setTituloIngresado(categorias[categoriaActualIndex]);
+    }
 
+    // Abrir popup de editar sección
     const handleOpenSectionEditDialog = (seccionIndex) => {
         setOpenSectionEditDialog(true);
         setSeccionActualIndex(seccionIndex)
@@ -323,7 +328,7 @@ function Reporte() {
         await reporteService.eliminarContenido(idReporte, coordenadas);
         setCategorias(categorias.filter((categoria, index) => index !== categoriaActualIndex));
         setCategoriaActualIndex(0);
-        fetchData();
+        await fetchData();
         setOpenEliminarCategoriaDialog(false);
         setOpenCategoryEditDialog(false);
     };
@@ -348,14 +353,14 @@ function Reporte() {
         handleCloseEliminarSeccion();
     };
 
-    const handleEliminarCampo = () => {
+    const handleEliminarCampo = async () => {
         if (campoActualIndex !== -1) {
             let coordenadas = {
                 indexCategoria: categoriaActualIndex,
                 indexSeccion: seccionActualIndex,
                 indexCampo: campoActualIndex,
             }
-            reporteService.eliminarContenido(idReporte, coordenadas);
+            await reporteService.eliminarContenido(idReporte, coordenadas);
             setSecciones(secciones.map((seccion, index) => {
                 if (index === seccionActualIndex) {
                     return {
@@ -369,6 +374,7 @@ function Reporte() {
         else {
             console.log("error al eliminar campo");
         }
+        await fetchData();
         setOpenEliminarCampoDialog(false);
         handleCerrarEliminarCampoDialog();
         handleCloseEditDialog();
@@ -376,16 +382,10 @@ function Reporte() {
 
     // Función para guardar el campo editado o agregado
     const handleSaveField = async () => {
-
-
         // Validación Campo
         const campo = editedField;
         if (campo.contenido === "" || campo.contenido === null || campo.contenido === undefined) {
             handleOpenAlert("Por favor, complete el contenido del campo.");
-            return;
-        }
-        if (campo.titulo === "" || campo.titulo === null || campo.titulo === undefined) {
-            handleOpenAlert("Por favor, complete el titulo del campo.");
             return;
         }
 
@@ -397,10 +397,6 @@ function Reporte() {
                     handleOpenAlert("Por favor, complete todos los valores de los subCampos.");
                     return;
                 }
-                if (subCampos[i].titulo === "" || subCampos[i].titulo === null || subCampos[i].titulo === undefined) {
-                    handleOpenAlert("Por favor, complete todos los titulos de los subCampos.");
-                    return;
-                }
             }
         }
 
@@ -409,7 +405,8 @@ function Reporte() {
             contenido: editedField.contenido,
             tipo: editedField.tipo,
             subCampos: editedField.subCampos,
-            evidencias: selectedEvidencias   // Se envían solo los IDs de las evidencias
+            evidencias: selectedEvidencias,   // Se envían solo los IDs de las evidencias
+            autorizacion: false
         };
 
         let campoIndex = 0;
@@ -633,7 +630,7 @@ function Reporte() {
                                         variant="outlined"
                                         color="primary"
                                         sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", width: "200px", mr: 2 }}
-                                        onClick={() => setOpenCategoryEditDialog(true)}
+                                        onClick={handleOpenCategoryEditDialog}
                                     >
                                         Editar Categoría
                                     </Button>
@@ -652,7 +649,7 @@ function Reporte() {
                                         <Button
                                             variant="outlined"
                                             color="primary"
-                                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", mr: 2, width: "200px" }}
+                                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", mr: 2, width: "200px", mb: 2 }}
                                             onClick={() => handleOpenSectionEditDialog(indexSeccion)}
                                         >
                                             Editar Sección
@@ -705,14 +702,33 @@ function Reporte() {
                                                 </Typography>
                                             </Grid>
                                             <Grid item xs={3} container justifyContent={"flex-end"}>
-                                                <Button
-                                                    variant="outlined"
-                                                    color="primary"
-                                                    sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", width: "200px" }}
-                                                    onClick={() => handleOpenEditDialog(campo, seccion, indexSeccion, index)}
-                                                >
-                                                    Editar Campo
-                                                </Button>
+                                                <Tooltip title="Autorizar Campo" placement="bottom" arrow>
+                                                    <IconButton
+                                                        variant="outlined"
+                                                        color="primary"
+                                                        onClick={() => setOpenAutorizarCampoDialog(true)}
+                                                    >
+                                                        <CheckIcon />
+                                                    </IconButton>
+                                                </Tooltip>
+                                                <Tooltip title="Visualizar Evidencia" placement="bottom" arrow>
+                                                    <IconButton
+                                                        variant="outlined"
+                                                        color="primary"
+                                                        onClick={() => setOpenEvidenciaDialog(true)}
+                                                    >
+                                                        <DescriptionIcon />
+                                                    </IconButton>
+                                                </Tooltip>
+                                                <Tooltip title="Editar Campo" placement="bottom" arrow>
+                                                    <IconButton
+                                                        variant="outlined"
+                                                        color="primary"
+                                                        onClick={() => handleOpenEditDialog(campo, seccion, indexSeccion, index)}
+                                                    >
+                                                        <EditIcon />
+                                                    </IconButton>
+                                                </Tooltip>
                                             </Grid>
                                         </Grid>
                                         {(campo.subCampos && (campo.subCampos.length > 0)) && (
@@ -1166,17 +1182,19 @@ function Reporte() {
                                 <Grid item xs={4} container justifyContent="flex-end" sx={{ mb: 2 }}>
                                     <IconButton onClick={() => handleCloseSectionEditDialog()} disableRipple><CloseIcon /></IconButton>
                                 </Grid>
-                                <Grid item xs={12} container>
-                                    <Typography variant="body1">Introduzca el título de la sección:</Typography>
-                                </Grid>
-                                <Grid item xs={12}>
-                                    <TextField
-                                        label="Título de la Sección"
-                                        variant="outlined"
-                                        fullWidth
-                                        value={editedSection.titulo}
-                                        onChange={(event) => setEditedSection({ ...editedSection, titulo: event.target.value })}
-                                    />
+                                <Grid item xs={12} >
+                                    <Typography variant="body1" sx={{ px: 2, mb: 2, mt: -1 }}>
+                                        Introduzca el título de la sección:
+                                    </Typography>
+                                    <Box sx={{ px: 2 }}>
+                                        <TextField
+                                            label="Título de la Sección"
+                                            variant="outlined"
+                                            fullWidth
+                                            value={editedSection.titulo}
+                                            onChange={(event) => setEditedSection({ ...editedSection, titulo: event.target.value })}
+                                        />
+                                    </Box>
                                 </Grid>
                             </Grid>
                         </DialogContent>
@@ -1189,7 +1207,7 @@ function Reporte() {
                                     <Button color="secondary" variant="text" onClick={() => handleCloseSectionEditDialog()} >
                                         Descartar
                                     </Button>
-                                    <Button color="primary" variant="text" onClick={() => handleSaveSection(false)} >
+                                    <Button color="cuaternary" variant="text" onClick={() => handleSaveSection(false)} >
                                         Guardar
                                     </Button>
                                 </Grid>
@@ -1207,17 +1225,19 @@ function Reporte() {
                                 <Grid item xs={4} container justifyContent="flex-end" sx={{ mb: 2 }}>
                                     <IconButton onClick={() => setOpenCategoryEditDialog(false)} disableRipple><CloseIcon /></IconButton>
                                 </Grid>
-                                <Grid item xs={12} container>
-                                    <Typography variant="body1">Introduzca el título de la categoría:</Typography>
-                                </Grid>
                                 <Grid item xs={12}>
-                                    <TextField
-                                        label="Título de la Categoría"
-                                        variant="outlined"
-                                        fullWidth
-                                        value={tituloIngresado}
-                                        onChange={(event) => setTituloIngresado(event.target.value)}
-                                    />
+                                    <Typography variant="body1" sx={{ px: 2, mb: 2, mt: -1 }}>
+                                        Introduzca el título de la categoría:
+                                    </Typography>
+                                    <Box sx={{ px: 2 }}>
+                                        <TextField
+                                            label="Título de la Categoría"
+                                            variant="outlined"
+                                            fullWidth
+                                            value={tituloIngresado}
+                                            onChange={(event) => setTituloIngresado(event.target.value)}
+                                        />
+                                    </Box>
                                 </Grid>
                             </Grid>
                         </DialogContent>
@@ -1230,7 +1250,7 @@ function Reporte() {
                                     <Button color="secondary" variant="text" onClick={() => setOpenCategoryEditDialog(false)} >
                                         Descartar
                                     </Button>
-                                    <Button color="primary" variant="text" onClick={() => handleEditCategory()} >
+                                    <Button color="cuaternary" variant="text" onClick={() => handleEditCategory()} >
                                         Guardar
                                     </Button>
                                 </Grid>
@@ -1239,7 +1259,7 @@ function Reporte() {
                     </Dialog>
 
                     {/* Diálogo para eliminar categoría */}
-                    <Dialog open={openEliminarCategoriaDialog} onClose={() => setOpenEliminarCategoriaDialog(false)} maxWidth="md" fullWidth>
+                    <Dialog open={openEliminarCategoriaDialog} maxWidth="md" fullWidth>
                         <DialogTitle>
                             <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Eliminar Categoría</Typography>
                         </DialogTitle>
@@ -1257,7 +1277,7 @@ function Reporte() {
                     </Dialog>
 
                     {/* Diálogo para eliminar sección */}
-                    <Dialog open={openEliminarSeccionDialog} onClose={() => handleCloseEliminarSeccion()} maxWidth="md" fullWidth>
+                    <Dialog open={openEliminarSeccionDialog} maxWidth="md" fullWidth>
                         <DialogTitle>
                             <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Eliminar Sección</Typography>
                         </DialogTitle>
@@ -1334,9 +1354,13 @@ function Reporte() {
 
                     {/* Diálogo para ver tabla */}
                     <Dialog open={openVerTablaDialog} onClose={handleCloseVerTabla} maxWidth="xl" fullWidth>
-                        <DialogTitle>Datos de la Tabla</DialogTitle>
+                        <DialogTitle>
+                            <Typography variant="h5" color="primary" fontWeight="bold">
+                                Datos de la Tabla
+                            </Typography>
+                        </DialogTitle>
                         <DialogContent>
-                            <VerTabla csvString={csvData} />
+                            <VerTabla csvString={csvData}/>
                         </DialogContent>
                         <DialogActions>
                             <Button onClick={handleCloseVerTabla} color="primary">
@@ -1360,6 +1384,43 @@ function Reporte() {
                         </DialogContent>
                         <DialogActions>
                             <Button onClick={() => handleCloseTableDialog()} color="secondary">Cerrar</Button>
+                        </DialogActions>
+                    </Dialog>
+
+                    {/* Diálogo para autorizar campo */}
+                    <Dialog open={openAutorizarCampoDialog} onClose={() => setOpenAutorizarCampoDialog(false)} maxWidth="md" fullWidth>
+                        <DialogTitle>
+                            <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Autorizar Campo</Typography>
+                        </DialogTitle>
+                        <DialogContent>
+                            <Typography variant="body1" sx={{ p: 2 }}>
+                                ¿Está seguro de que desea autorizar el campo "{secciones[seccionActualIndex] && secciones[seccionActualIndex].campos[campoActualIndex] ? secciones[seccionActualIndex].campos[campoActualIndex].titulo : ''}"? Una vez autorizado, el campo no podrá ser modificado.
+                            </Typography>
+                        </DialogContent>
+                        <DialogActions>
+                            <Button color="secondary" variant="text" onClick={() => setOpenAutorizarCampoDialog(false)} >
+                                Cancelar
+                            </Button>
+                            <Button color="cuaternary" variant="text">
+                                Autorizar
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
+
+                    {/* Diálogo para ver la evidencia del campo */}
+                    <Dialog open={openEvidenciaDialog} onClose={() => setOpenEvidenciaDialog(false)} maxWidth="md" fullWidth>
+                        <DialogTitle>
+                            <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Evidencia del Campo</Typography>
+                        </DialogTitle>
+                        <DialogContent>
+                            <Typography variant="body1" sx={{ p: 2 }}>
+                                Ejemplo Evidencia
+                            </Typography>
+                        </DialogContent>
+                        <DialogActions>
+                            <Button color="secondary" variant="text" onClick={() => setOpenEvidenciaDialog(false)} >
+                                Cerrar
+                            </Button>
                         </DialogActions>
                     </Dialog>
                 </>

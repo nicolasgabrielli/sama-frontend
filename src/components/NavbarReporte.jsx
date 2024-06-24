@@ -123,7 +123,7 @@ function NavbarReporte({ useSectionMode, categorias, categoriaActualIndex, onCat
                     </Collapse>
                 )}
             </AppBar>
-            <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+            <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="md" fullWidth>
                 <DialogContent>
                     <Grid container spacing={2}>
                         <Grid item xs={8}>
@@ -132,17 +132,19 @@ function NavbarReporte({ useSectionMode, categorias, categoriaActualIndex, onCat
                         <Grid item xs={4} container justifyContent="flex-end" sx={{ mb: 2 }}>
                             <IconButton onClick={() => setOpenDialog(false)} disableRipple><CloseIcon /></IconButton>
                         </Grid>
-                        <Grid item xs={12} container>
-                            <Typography variant="h7">Introduzca el título de la categoría:</Typography>
-                        </Grid>
                         <Grid item xs={12}>
-                            <TextField
-                                label="Título de la Categoría"
-                                variant="outlined"
-                                fullWidth
-                                value={tituloCategoria}
-                                onChange={handleTituloCategoriaChange}
-                            />
+                            <Typography variant="body1" sx={{ px: 2, mb: 2, mt: -1 }}>
+                                Introduzca el título de la categoría:
+                            </Typography>
+                            <Box sx={{ px: 2 }}>
+                                <TextField
+                                    label="Título de la Categoría"
+                                    variant="outlined"
+                                    fullWidth
+                                    value={tituloCategoria}
+                                    onChange={handleTituloCategoriaChange}
+                                />
+                            </Box>
                         </Grid>
                     </Grid>
                 </DialogContent>
@@ -152,7 +154,7 @@ function NavbarReporte({ useSectionMode, categorias, categoriaActualIndex, onCat
                             <Button color="secondary" variant="text" onClick={() => setOpenDialog(false)}>
                                 Cancelar
                             </Button>
-                            <Button color="primary" variant="text" onClick={handleAgregarCategoria}>
+                            <Button color="cuaternary" variant="text" onClick={handleAgregarCategoria}>
                                 Agregar
                             </Button>
                         </Grid>
