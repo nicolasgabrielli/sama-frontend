@@ -7,9 +7,12 @@ import FindInPageIcon from '@mui/icons-material/FindInPage';
 import CheckIcon from '@mui/icons-material/Check';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import BackupTableIcon from '@mui/icons-material/BackupTable';
-import { Alert, Box, Button, Collapse, Container, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid, Icon, IconButton, InputLabel, MenuItem, Paper, Select, TextField, Tooltip, Typography } from "@mui/material";
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
+import { Alert, Box, Button, Collapse, Container, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid, IconButton, InputLabel, MenuItem, Paper, Select, TextField, Tooltip, Typography } from "@mui/material";
 import CircularProgress from '@mui/material/CircularProgress';
-import React, { useEffect, useState } from "react";
+import Loading from './Loading';
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import reporteService from "../services/ReporteService";
 import NavbarReporte from "./NavbarReporte";
@@ -54,16 +57,18 @@ function Reporte() {
             .catch(error => console.error('Error al obtener las evidencias:', error));
     };
 
-
-
     // Función para obtener los datos del reporte y las evidencias de la base de datos
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         setLoading(true);
-        await refreshReporte();
-        await refreshEvidencia();
-        setLoading(false);
-        return;
-    };
+        try {
+            await refreshReporte();
+            await refreshEvidencia();
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
 
     useEffect(() => {
         fetchData();
@@ -618,20 +623,7 @@ function Reporte() {
         <>
             {loading && (
                 <>
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            height: '100vh',
-                            flexDirection: 'column',
-                        }}
-                    >
-                        <CircularProgress size={80} />
-                        <Typography variant="h6" sx={{ mt: 2 }}>
-                            Cargando...
-                        </Typography>
-                    </Box>
+                    <Loading />
                 </>
             )}
 
@@ -658,7 +650,17 @@ function Reporte() {
                                     <Button
                                         variant="text"
                                         color="primary"
-                                        sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1.1rem", width: "200px" }}
+                                        sx={{
+                                            textTransform: "none",
+                                            fontWeight: "bold",
+                                            fontStyle: "italic",
+                                            fontSize: "1.1rem",
+                                            width: "200px",
+                                            transition: "transform 0.2s",
+                                            '&:hover': {
+                                                transform: "scale(1.02)",
+                                            },
+                                        }}
                                         onClick={handleOpenCategoryEditDialog}
                                         endIcon={<EditIcon style={{ fontSize: "1.1rem" }} />}
                                     >
@@ -679,7 +681,18 @@ function Reporte() {
                                         <Button
                                             variant="text"
                                             color="primary"
-                                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1.1rem", width: "200px", mb: 2 }}
+                                            sx={{
+                                                textTransform: "none",
+                                                fontWeight: "bold",
+                                                fontStyle: "italic",
+                                                fontSize: "1.1rem",
+                                                width: "200px",
+                                                mb: 2,
+                                                transition: "transform 0.2s",
+                                                '&:hover': {
+                                                    transform: "scale(1.02)",
+                                                },
+                                            }}
                                             onClick={() => handleOpenSectionEditDialog(indexSeccion)}
                                             endIcon={<EditIcon style={{ fontSize: "1.1rem" }} />}
                                         >
@@ -742,10 +755,14 @@ function Reporte() {
                                                     <span>
                                                         <IconButton
                                                             variant="outlined"
-                                                            color={campo.autorizacion === true ? "secondary" : "primary"} // Cambia el color base según la condición
+                                                            color={campo.autorizacion === true ? "secondary" : "primary"}
                                                             onClick={() => handleOpenAutorizarCampo(index)}
                                                             disabled={campo.autorizacion === true}
                                                             sx={{
+                                                                transition: "transform 0.2s",
+                                                                '&:hover': {
+                                                                    transform: "scale(1.1) translateY(-2px)",
+                                                                },
                                                                 '&:disabled': { // Establece un estilo específico para cuando está deshabilitado
                                                                     color: "cuaternary.main",
                                                                     borderColor: "cuaternary.main",
@@ -769,6 +786,12 @@ function Reporte() {
                                                             color="primary"
                                                             onClick={() => handleVisualizarEvidenciaCampo(indexSeccion, index)}
                                                             disabled={campo.evidencias.length === 0}
+                                                            sx={{
+                                                                transition: "transform 0.2s",
+                                                                '&:hover': {
+                                                                    transform: "scale(1.1) translateY(-2px)",
+                                                                },
+                                                            }}
                                                         >
                                                             <FindInPageIcon />
                                                         </IconButton>
@@ -782,6 +805,12 @@ function Reporte() {
                                                             variant="outlined"
                                                             color="primary"
                                                             onClick={() => handleOpenEditDialog(campo, seccion, indexSeccion, index)}
+                                                            sx={{
+                                                                transition: "transform 0.2s",
+                                                                '&:hover': {
+                                                                    transform: "scale(1.1) translateY(-2px)",
+                                                                },
+                                                            }}
                                                         >
                                                             <EditIcon />
                                                         </IconButton>
@@ -819,7 +848,7 @@ function Reporte() {
                                                                                     <div style={{ justifyContent: 'center' }}>
                                                                                         <Button
                                                                                             variant="contained"
-                                                                                            onClick={() => handleOpenVerTabla(campo.contenido)}
+                                                                                            onClick={() => handleOpenVerTabla(subCampos.contenido)}
                                                                                             sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "1rem", width: "250px" }}
                                                                                             startIcon={<BackupTableIcon />}
                                                                                         >
@@ -1073,8 +1102,17 @@ function Reporte() {
                                                                 )}
                                                             </Grid>
                                                             <Grid container justifyContent="center">
-                                                                <Button color="error" onClick={() => handleDeleteSubcampo(index)}>
-                                                                    <CloseIcon />
+                                                                <Button
+                                                                    color="error"
+                                                                    onClick={() => handleDeleteSubcampo(index)}
+                                                                    startIcon={<CloseIcon />}
+                                                                    sx={{
+                                                                        transition: "transform 0.2s",
+                                                                        '&:hover': {
+                                                                            transform: "scale(1.02)",
+                                                                        },
+                                                                    }}
+                                                                >
                                                                     Eliminar Subcampo
                                                                 </Button>
                                                             </Grid>
@@ -1086,6 +1124,12 @@ function Reporte() {
                                                         variant="text"
                                                         onClick={() => handleAddSubcampo()}
                                                         startIcon={<AddCircleOutlineIcon />}
+                                                        sx={{
+                                                            transition: "transform 0.2s",
+                                                            '&:hover': {
+                                                                transform: "scale(1.02)",
+                                                            },
+                                                        }}
                                                     >
                                                         Agregar Subcampo
                                                     </Button>
@@ -1142,6 +1186,10 @@ function Reporte() {
                                                                         color: "primary.main",
                                                                         ml: 2,
                                                                         p: 0,
+                                                                        transition: "transform 0.2s",
+                                                                        '&:hover': {
+                                                                            transform: "scale(1.02)",
+                                                                        },
                                                                     }}
                                                                     onClick={() => accederEvidencia(evidencia)}
                                                                 >
@@ -1154,6 +1202,12 @@ function Reporte() {
                                                                     variant="text"
                                                                     startIcon={<AddCircleOutlineIcon />}
                                                                     onClick={() => handleAgregarEvidenciaAlCampo(evidencia)}
+                                                                    sx={{
+                                                                        transition: "transform 0.2s",
+                                                                        '&:hover': {
+                                                                            transform: "scale(1.02)",
+                                                                        },
+                                                                    }}
                                                                 >
                                                                     Agregar al Campo
                                                                 </Button>
@@ -1194,6 +1248,10 @@ function Reporte() {
                                                                         color: "primary.main",
                                                                         ml: 2,
                                                                         p: 0,
+                                                                        transition: "transform 0.2s",
+                                                                        '&:hover': {
+                                                                            transform: "scale(1.02)",
+                                                                        },
                                                                     }}
                                                                     onClick={() => accederEvidencia(evidencia)}
                                                                 >
@@ -1477,35 +1535,36 @@ function Reporte() {
                             {selectedEvidencias && (
                                 <>
                                     {selectedEvidencias.map((evidencia, index) => (
-                                        <Box key={index} sx={{ mt: 2, width: '100%' }}>
-                                            <Grid container borderBottom={2} borderColor={"secondary.main"} sx={{ py: 1 }}>
-                                                <Grid item xs={4}>
+                                        <Box sx={{ pl: 2, pr: 2, mb: 2 }} key={index}>
+                                            <Grid container alignItems="center" justifyContent="space-between" borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, py: 1 }}>
+                                                <Grid item xs={3}>
                                                     <Typography
-                                                        variant="body1"
+                                                        variant="h6"
                                                         color="#000000"
                                                         sx={{ fontFamily: "Segoe UI", fontWeight: "bold" }}
                                                     >
                                                         {evidencia.nombre}
                                                     </Typography>
                                                 </Grid>
-                                                <Grid item xs={4}>
-                                                    <Typography
-                                                        variant="body1"
-                                                        color="primary"
-                                                        sx={{ fontFamily: "Segoe UI", fontStyle: "italic", fontWeight: "normal", fontSize: "1.1rem" }}
-                                                    >
-                                                        {evidencia.tipo.toLowerCase() === "archivo" ? evidencia.nombreOriginal : formatUrl(evidencia.url)}
+                                                <Grid item xs={3} container>
+                                                    <Typography variant="h6" color={"primary"} sx={{
+                                                        fontFamily: "Segoe UI",
+                                                        fontStyle: "italic",
+                                                        fontWeight: "normal"
+                                                    }}>
+                                                        {evidencia.tipo.toLowerCase() === 'archivo' ? evidencia.nombreOriginal : formatUrl(evidencia.url)}
                                                     </Typography>
                                                 </Grid>
-                                                <Grid item xs={4} container justifyContent="flex-end">
-                                                    <Button
-                                                        color="cuaternary"
-                                                        variant="contained"
-                                                        sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "auto", width: "150px", color: "white" }}
-                                                        onClick={() => accederEvidencia(evidencia)}
-                                                    >
-                                                        {evidencia.tipo.toLowerCase() === "archivo" ? "Descargar" : "Abrir"}
-                                                    </Button>
+                                                <Grid item xs={6} container justifyContent={"flex-end"}>
+                                                    <Tooltip title={evidencia.tipo.toLowerCase() === 'archivo' ? "Descargar" : "Abrir"} placement="bottom" arrow>
+                                                        <IconButton
+                                                            variant="outlined"
+                                                            color="primary"
+                                                            onClick={() => () => accederEvidencia(evidencia)}
+                                                        >
+                                                            {evidencia.tipo.toLowerCase() === 'archivo' ? <CloudDownloadIcon /> : <OpenInNewIcon />}
+                                                        </IconButton>
+                                                    </Tooltip>
                                                 </Grid>
                                             </Grid>
                                         </Box>

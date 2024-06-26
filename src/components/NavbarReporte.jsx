@@ -114,9 +114,16 @@ function NavbarReporte({ useSectionMode, categorias, categoriaActualIndex, onCat
                             <Link to={-1}>
                                 <Button
                                     variant="contained"
-                                    sx={{ textTransform: "none", fontSize: "1rem", fontStyle: "italic", fontWeight: "bold", mr: 1 }}
+                                    sx={{
+                                        textTransform: "none",
+                                        fontSize: "1rem",
+                                        fontStyle: "italic",
+                                        fontWeight: "bold",
+                                        mr: 1,
+                                    }}
                                     startIcon={<ArrowBackIcon />}
                                 >
+
                                     Volver
                                 </Button>
                             </Link>

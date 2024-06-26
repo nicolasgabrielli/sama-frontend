@@ -2,14 +2,12 @@ import CloseIcon from '@mui/icons-material/Close';
 import { Box, Button, Container, Dialog, DialogActions, DialogContent, FormControl, Grid, IconButton, InputLabel, MenuItem, Paper, Select, TextField, Typography } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import Navbar from "./Navbar";
-
 import { Link, useParams } from "react-router-dom";
 import empresaService from "../services/EmpresaService";
 import reporteService from "../services/ReporteService";
 import InformacionEmpresa from "./InformacionEmpresa";
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import CircularProgress from '@mui/material/CircularProgress';
 import Loading from './Loading';
 
 function ListaReportes() {

@@ -1,10 +1,12 @@
-import { Grid, Box, Button, Dialog, DialogContent, DialogActions, Typography, TextField, Select, MenuItem } from "@mui/material";
-import { Link, useParams } from "react-router-dom";
+import { Grid, Box, Button, Dialog, DialogContent, DialogActions, Typography, TextField, Tooltip, Select, MenuItem } from "@mui/material";
+import { useParams } from "react-router-dom";
 import CloseIcon from '@mui/icons-material/Close';
 import IconButton from '@mui/material/IconButton';
+import DeleteIcon from '@mui/icons-material/Delete';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
-import React, { useEffect } from "react";
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import React from "react";
 import reporteService from "../services/ReporteService";
 
 function NavbarEvidencia({ evidencias, refreshEvidencias }) {
@@ -169,7 +171,7 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
                                 variant="contained"
                                 color="error"
                                 sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", color: "white" }}
-                                //onClick={() => setOpenDescargarCrearPresetDialog(true)}
+                            //onClick={() => setOpenDescargarCrearPresetDialog(true)}
                             >
                                 Guardar Preset
                             </Button>
@@ -206,28 +208,30 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
                                         <Typography variant="h6" color={"primary"} sx={{
                                             fontFamily: "Segoe UI",
                                             fontStyle: "italic",
-                                            fontWeight: "bold"
+                                            fontWeight: "normal"
                                         }}>
                                             {evidencia.tipo.toLowerCase() === 'archivo' ? evidencia.nombreOriginal : formatUrl(evidencia.url)}
                                         </Typography>
                                     </Grid>
                                     <Grid item xs={6} container justifyContent={"flex-end"}>
-                                        <Button
-                                            variant="contained"
-                                            color="error"
-                                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", mr: 1 }}
-                                            onClick={() => handleEliminarEvidencia(evidencia.id)}
-                                        >
-                                            Eliminar
-                                        </Button>
-                                        <Button
-                                            variant="contained"
-                                            color="cuaternary"
-                                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", color: "white" }}
-                                            onClick={() => accederEvidencia(evidencia)}
-                                        >
-                                            {evidencia.tipo.toLowerCase() === 'archivo' ? "Descargar" : "Abrir"}
-                                        </Button>
+                                        <Tooltip title="Eliminar" placement="bottom" arrow>
+                                            <IconButton
+                                                variant="outlined"
+                                                color="error"
+                                                onClick={() => handleEliminarEvidencia(evidencia)}
+                                            >
+                                                <DeleteIcon />
+                                            </IconButton>
+                                        </Tooltip>
+                                        <Tooltip title={evidencia.tipo.toLowerCase() === 'archivo' ? "Descargar" : "Abrir"} placement="bottom" arrow>
+                                            <IconButton
+                                                variant="outlined"
+                                                color="primary"
+                                                onClick={() => () => accederEvidencia(evidencia)}
+                                            >
+                                                {evidencia.tipo.toLowerCase() === 'archivo' ? <CloudDownloadIcon /> : <OpenInNewIcon />}
+                                            </IconButton>
+                                        </Tooltip>
                                     </Grid>
                                 </Grid>
                             </Box>
@@ -270,7 +274,7 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
                             label="Nombre de la Evidencia"
                             variant="outlined"
                             value={nombreEvidencia}
-                            sx={{ width: "90%"}}
+                            sx={{ width: "90%" }}
                             onChange={(e) => setNombreEvidencia(e.target.value)}
                         />
                     </Grid>
