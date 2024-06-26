@@ -24,7 +24,7 @@ class ReporteService {
     }
 
     obtenerPresets() {
-        return axios.get(API_URL + "preset");
+        return axios.get(API_URL + "preset/");
     }
 
     obtenerPreset(id) {
@@ -74,6 +74,10 @@ class ReporteService {
             responseType: 'blob',  // Asegura que la respuesta sea manejada como un blob
         });
     };
+
+    autorizarCampo = (idReporte, coordenadas) => {
+        return axios.put(API_URL + "autorizar/campo/" + idReporte, coordenadas);
+    }
 }
 
 const reporteService = new ReporteService();

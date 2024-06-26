@@ -1,4 +1,5 @@
-import AddCircleOutlinedIcon from '@mui/icons-material/AddCircleOutlined';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
 import CloseIcon from '@mui/icons-material/Close';
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -105,15 +106,15 @@ function NavbarReporte({ useSectionMode, categorias, categoriaActualIndex, onCat
                             <Button
                                 variant="contained"
                                 onClick={() => handleOpenDialog()}
-                                sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "1rem", m: 0.5, width: "250px" }}
-                                startIcon={<AddCircleOutlinedIcon />}
+                                sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", m: 0.5, width: "250px" }}
+                                startIcon={<AddCircleIcon />}
                             >
                                 Agregar Categoría
                             </Button>
                             <Link to={-1}>
                                 <Button
                                     variant="contained"
-                                    sx={{ textTransform: "none", fontSize: "1rem", fontStyle: "normal", fontWeight: "bold", mr: 1 }}
+                                    sx={{ textTransform: "none", fontSize: "1rem", fontStyle: "italic", fontWeight: "bold", mr: 1 }}
                                     startIcon={<ArrowBackIcon />}
                                 >
                                     Volver
@@ -142,7 +143,7 @@ function NavbarReporte({ useSectionMode, categorias, categoriaActualIndex, onCat
                                     variant="outlined"
                                     fullWidth
                                     value={tituloCategoria}
-                                    onChange={handleTituloCategoriaChange}
+                                    onChange={(event) => handleTituloCategoriaChange(event)}
                                 />
                             </Box>
                         </Grid>
@@ -154,7 +155,7 @@ function NavbarReporte({ useSectionMode, categorias, categoriaActualIndex, onCat
                             <Button color="secondary" variant="text" onClick={() => setOpenDialog(false)}>
                                 Cancelar
                             </Button>
-                            <Button color="cuaternary" variant="text" onClick={handleAgregarCategoria}>
+                            <Button color="cuaternary" variant="text" onClick={() => handleAgregarCategoria()}>
                                 Agregar
                             </Button>
                         </Grid>

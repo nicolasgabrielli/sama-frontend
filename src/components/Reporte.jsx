@@ -1,9 +1,12 @@
-import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RemoveCircleOutlineOutlinedIcon from '@mui/icons-material/RemoveCircleOutlineOutlined';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
-import DescriptionIcon from '@mui/icons-material/Description';
+import FindInPageIcon from '@mui/icons-material/FindInPage';
 import CheckIcon from '@mui/icons-material/Check';
+import DoneAllIcon from '@mui/icons-material/DoneAll';
+import BackupTableIcon from '@mui/icons-material/BackupTable';
 import { Alert, Box, Button, Collapse, Container, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid, Icon, IconButton, InputLabel, MenuItem, Paper, Select, TextField, Tooltip, Typography } from "@mui/material";
 import CircularProgress from '@mui/material/CircularProgress';
 import React, { useEffect, useState } from "react";
@@ -585,6 +588,32 @@ function Reporte() {
         setOpenVerTablaDialog(false);
     };
 
+    const handleVisualizarEvidenciaCampo = async (indexSeccion, indexCampo) => {
+        if (secciones[seccionActualIndex].campos[indexCampo].evidencias.length > 0) {
+            await refreshEvidencia();
+            setOpenEvidenciaDialog(true);
+            refreshEvidenciaCampo(secciones[seccionActualIndex].campos[indexCampo]);
+            setSeccionActualIndex(indexSeccion);
+            setCampoActualIndex(indexCampo);
+        }
+    };
+
+    const handleOpenAutorizarCampo = (indexCampo) => {
+        setCampoActualIndex(indexCampo);
+        setOpenAutorizarCampoDialog(true);
+    };
+
+    const handleAutorizarCampo = async () => {
+        let coordenadas = {
+            indexCategoria: categoriaActualIndex,
+            indexSeccion: seccionActualIndex,
+            indexCampo: campoActualIndex
+        }
+        await reporteService.autorizarCampo(idReporte, coordenadas);
+        setOpenAutorizarCampoDialog(false);
+        await fetchData();
+    };
+
     return (
         <>
             {loading && (
@@ -627,10 +656,11 @@ function Reporte() {
                                 </Grid>
                                 <Grid item xs={4} container justifyContent="flex-end">
                                     <Button
-                                        variant="outlined"
+                                        variant="text"
                                         color="primary"
-                                        sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", width: "200px", mr: 2 }}
+                                        sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1.1rem", width: "200px" }}
                                         onClick={handleOpenCategoryEditDialog}
+                                        endIcon={<EditIcon style={{ fontSize: "1.1rem" }} />}
                                     >
                                         Editar Categoría
                                     </Button>
@@ -647,10 +677,11 @@ function Reporte() {
                                     </Grid>
                                     <Grid item xs={4} container justifyContent="flex-end">
                                         <Button
-                                            variant="outlined"
+                                            variant="text"
                                             color="primary"
-                                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", mr: 2, width: "200px", mb: 2 }}
+                                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1.1rem", width: "200px", mb: 2 }}
                                             onClick={() => handleOpenSectionEditDialog(indexSeccion)}
+                                            endIcon={<EditIcon style={{ fontSize: "1.1rem" }} />}
                                         >
                                             Editar Sección
                                         </Button>
@@ -690,7 +721,8 @@ function Reporte() {
                                                                         <Button
                                                                             variant="contained"
                                                                             onClick={() => handleOpenVerTabla(campo.contenido)}
-                                                                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "1rem", m: 0.5, width: "250px" }}
+                                                                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "1rem", width: "250px" }}
+                                                                            startIcon={<BackupTableIcon />}
                                                                         >
                                                                             Ver Tabla
                                                                         </Button>
@@ -702,33 +734,59 @@ function Reporte() {
                                                 </Typography>
                                             </Grid>
                                             <Grid item xs={3} container justifyContent={"flex-end"}>
-                                                <Tooltip title="Autorizar Campo" placement="bottom" arrow>
-                                                    <IconButton
-                                                        variant="outlined"
-                                                        color="primary"
-                                                        onClick={() => setOpenAutorizarCampoDialog(true)}
-                                                    >
-                                                        <CheckIcon />
-                                                    </IconButton>
+                                                <Tooltip
+                                                    title={campo.autorizacion === true ? "Campo Autorizado" : "Autorizar Campo"}
+                                                    placement="bottom"
+                                                    arrow
+                                                >
+                                                    <span>
+                                                        <IconButton
+                                                            variant="outlined"
+                                                            color={campo.autorizacion === true ? "secondary" : "primary"} // Cambia el color base según la condición
+                                                            onClick={() => handleOpenAutorizarCampo(index)}
+                                                            disabled={campo.autorizacion === true}
+                                                            sx={{
+                                                                '&:disabled': { // Establece un estilo específico para cuando está deshabilitado
+                                                                    color: "cuaternary.main",
+                                                                    borderColor: "cuaternary.main",
+                                                                },
+                                                            }}
+                                                        >
+                                                            {campo.autorizacion === true ? <DoneAllIcon /> : <CheckIcon />}
+                                                        </IconButton>
+                                                    </span>
                                                 </Tooltip>
-                                                <Tooltip title="Visualizar Evidencia" placement="bottom" arrow>
-                                                    <IconButton
-                                                        variant="outlined"
-                                                        color="primary"
-                                                        onClick={() => setOpenEvidenciaDialog(true)}
-                                                    >
-                                                        <DescriptionIcon />
-                                                    </IconButton>
+
+                                                <Tooltip
+                                                    title={campo.evidencias.length === 0 ? "No contiene evidencias" : "Visualizar Evidencias"}
+                                                    placement="bottom"
+                                                    arrow
+                                                    disableInteractive
+                                                >
+                                                    <span>
+                                                        <IconButton
+                                                            variant="outlined"
+                                                            color="primary"
+                                                            onClick={() => handleVisualizarEvidenciaCampo(indexSeccion, index)}
+                                                            disabled={campo.evidencias.length === 0}
+                                                        >
+                                                            <FindInPageIcon />
+                                                        </IconButton>
+                                                    </span>
                                                 </Tooltip>
-                                                <Tooltip title="Editar Campo" placement="bottom" arrow>
-                                                    <IconButton
-                                                        variant="outlined"
-                                                        color="primary"
-                                                        onClick={() => handleOpenEditDialog(campo, seccion, indexSeccion, index)}
-                                                    >
-                                                        <EditIcon />
-                                                    </IconButton>
-                                                </Tooltip>
+
+
+                                                {campo.autorizacion !== true && (
+                                                    <Tooltip title="Editar Campo" placement="bottom" arrow>
+                                                        <IconButton
+                                                            variant="outlined"
+                                                            color="primary"
+                                                            onClick={() => handleOpenEditDialog(campo, seccion, indexSeccion, index)}
+                                                        >
+                                                            <EditIcon />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                )}
                                             </Grid>
                                         </Grid>
                                         {(campo.subCampos && (campo.subCampos.length > 0)) && (
@@ -761,8 +819,9 @@ function Reporte() {
                                                                                     <div style={{ justifyContent: 'center' }}>
                                                                                         <Button
                                                                                             variant="contained"
-                                                                                            onClick={() => handleOpenVerTabla(subCampos.contenido)}
-                                                                                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "1rem", m: 0.5, width: "250px" }}
+                                                                                            onClick={() => handleOpenVerTabla(campo.contenido)}
+                                                                                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "1rem", width: "250px" }}
+                                                                                            startIcon={<BackupTableIcon />}
                                                                                         >
                                                                                             Ver Tabla
                                                                                         </Button>
@@ -783,7 +842,7 @@ function Reporte() {
                                 ))}
                                 <Grid container justifyContent="center">
                                     <Button
-                                        variant="outlined"
+                                        variant="contained"
                                         color="primary"
                                         sx={{
                                             textTransform: "none",
@@ -793,6 +852,7 @@ function Reporte() {
                                             mt: 2,
                                         }}
                                         onClick={() => handleOpenEditDialog(null, seccion, indexSeccion, -1)}
+                                        startIcon={<AddCircleIcon />}
                                     >
                                         Agregar Campo
                                     </Button>
@@ -806,6 +866,7 @@ function Reporte() {
                                 textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1.5rem", my: 2
                             }}
                             onClick={() => setOpenSectionDialog(true)}
+                            startIcon={<AddCircleIcon style={{ fontSize: "1.5rem" }} />}
                         >
                             Agregar Sección
                         </Button>
@@ -819,7 +880,7 @@ function Reporte() {
                     <Dialog open={openDialog} maxWidth="lg" fullWidth>
                         <DialogContent>
                             <Grid container>
-                                <Grid item xs={6} container direction="column" sx={{ height: '70vh', overflowY: 'auto' }}>
+                                <Grid item xs={6} container direction="column" sx={{ height: '70vh', overflowY: 'auto' }} borderColor={"secondary.main"}>
                                     {/* Campo */}
                                     {editedField && (
                                         <>
@@ -1024,7 +1085,7 @@ function Reporte() {
                                                     <Button color="cuaternary"
                                                         variant="text"
                                                         onClick={() => handleAddSubcampo()}
-                                                        startIcon={<AddCircleOutlineOutlinedIcon />}
+                                                        startIcon={<AddCircleOutlineIcon />}
                                                     >
                                                         Agregar Subcampo
                                                     </Button>
@@ -1091,7 +1152,7 @@ function Reporte() {
                                                                 <Button
                                                                     color="cuaternary"
                                                                     variant="text"
-                                                                    startIcon={<AddCircleOutlineOutlinedIcon />}
+                                                                    startIcon={<AddCircleOutlineIcon />}
                                                                     onClick={() => handleAgregarEvidenciaAlCampo(evidencia)}
                                                                 >
                                                                     Agregar al Campo
@@ -1360,7 +1421,7 @@ function Reporte() {
                             </Typography>
                         </DialogTitle>
                         <DialogContent>
-                            <VerTabla csvString={csvData}/>
+                            <VerTabla csvString={csvData} />
                         </DialogContent>
                         <DialogActions>
                             <Button onClick={handleCloseVerTabla} color="primary">
@@ -1401,7 +1462,7 @@ function Reporte() {
                             <Button color="secondary" variant="text" onClick={() => setOpenAutorizarCampoDialog(false)} >
                                 Cancelar
                             </Button>
-                            <Button color="cuaternary" variant="text">
+                            <Button color="cuaternary" variant="text" onClick={() => handleAutorizarCampo()}>
                                 Autorizar
                             </Button>
                         </DialogActions>
@@ -1410,12 +1471,47 @@ function Reporte() {
                     {/* Diálogo para ver la evidencia del campo */}
                     <Dialog open={openEvidenciaDialog} onClose={() => setOpenEvidenciaDialog(false)} maxWidth="md" fullWidth>
                         <DialogTitle>
-                            <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Evidencia del Campo</Typography>
+                            <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Evidencias del campo "{secciones[seccionActualIndex] && secciones[seccionActualIndex].campos[campoActualIndex] ? secciones[seccionActualIndex].campos[campoActualIndex].titulo : ''}"</Typography>
                         </DialogTitle>
                         <DialogContent>
-                            <Typography variant="body1" sx={{ p: 2 }}>
-                                Ejemplo Evidencia
-                            </Typography>
+                            {selectedEvidencias && (
+                                <>
+                                    {selectedEvidencias.map((evidencia, index) => (
+                                        <Box key={index} sx={{ mt: 2, width: '100%' }}>
+                                            <Grid container borderBottom={2} borderColor={"secondary.main"} sx={{ py: 1 }}>
+                                                <Grid item xs={4}>
+                                                    <Typography
+                                                        variant="body1"
+                                                        color="#000000"
+                                                        sx={{ fontFamily: "Segoe UI", fontWeight: "bold" }}
+                                                    >
+                                                        {evidencia.nombre}
+                                                    </Typography>
+                                                </Grid>
+                                                <Grid item xs={4}>
+                                                    <Typography
+                                                        variant="body1"
+                                                        color="primary"
+                                                        sx={{ fontFamily: "Segoe UI", fontStyle: "italic", fontWeight: "normal", fontSize: "1.1rem" }}
+                                                    >
+                                                        {evidencia.tipo.toLowerCase() === "archivo" ? evidencia.nombreOriginal : formatUrl(evidencia.url)}
+                                                    </Typography>
+                                                </Grid>
+                                                <Grid item xs={4} container justifyContent="flex-end">
+                                                    <Button
+                                                        color="cuaternary"
+                                                        variant="contained"
+                                                        sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "auto", width: "150px", color: "white" }}
+                                                        onClick={() => accederEvidencia(evidencia)}
+                                                    >
+                                                        {evidencia.tipo.toLowerCase() === "archivo" ? "Descargar" : "Abrir"}
+                                                    </Button>
+                                                </Grid>
+                                            </Grid>
+                                        </Box>
+                                    ))}
+                                </>
+                            )}
                         </DialogContent>
                         <DialogActions>
                             <Button color="secondary" variant="text" onClick={() => setOpenEvidenciaDialog(false)} >
@@ -1423,6 +1519,7 @@ function Reporte() {
                             </Button>
                         </DialogActions>
                     </Dialog>
+
                 </>
             )}
 

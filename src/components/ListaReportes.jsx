@@ -148,6 +148,7 @@ function ListaReportes() {
         await reporteService.eliminarReporte(idReporte);
         await fetchData();
         setOpenEliminarReporte(false);
+        window.location.reload();
     };
 
     // Función para descargar el reporte en un formato específico.
@@ -212,14 +213,26 @@ function ListaReportes() {
         try {
             await reporteService.obtenerListaReportes(idEmpresa)
                 .then(response => response.data)
-                .then(data => setReportes(data))
+                .then(data => {
+                    if (data) {
+                        setReportes(data);
+                    } else {
+                        setReportes([]);
+                    }
+                })
                 .catch(error => console.error('Error al obtener la lista de reportes:', error));
-
+    
             await reporteService.obtenerPresets()
                 .then(response => response.data)
-                .then(data => setPreconfiguraciones(data))
+                .then(data => {
+                    if (data) {
+                        setPreconfiguraciones(data);
+                    } else {
+                        setPreconfiguraciones([]);
+                    }
+                })
                 .catch(error => console.error('Error al obtener la lista de preconfiguraciones:', error));
-
+    
             await empresaService.getEmpresa(idEmpresa)
                 .then(response => response.data)
                 .then(data => setInfoEmpresa(data))
@@ -229,6 +242,7 @@ function ListaReportes() {
         }
         setLoading(false);
     };
+    
 
     // Cargar la lista de reportes, preconfiguraciones y la información de la empresa al cargar el componente
     useEffect(() => {
