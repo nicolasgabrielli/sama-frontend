@@ -24,7 +24,7 @@ class ReporteService {
     }
 
     obtenerPresets() {
-        return axios.get(API_URL + "preset/");
+        return axios.get(API_URL + "preset");
     }
 
     obtenerPreset(id) {
@@ -77,6 +77,10 @@ class ReporteService {
 
     autorizarCampo = (idReporte, coordenadas) => {
         return axios.put(API_URL + "autorizar/campo/" + idReporte, coordenadas);
+    }
+
+    crearPreset = (data) => {
+        return axios.post(API_URL + "preset/", data);
     }
 }
 

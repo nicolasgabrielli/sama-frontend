@@ -74,7 +74,7 @@ function NavbarReporte({ useSectionMode, categorias, categoriaActualIndex, onCat
                     </Typography>
                     <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "center" }}>
                         <Typography variant="h5" component="div" noWrap sx={{ display: { xs: "none", md: "flex" }, fontStyle: "italic", p: 1 }}>
-                            Reporte {tituloReporte} - {anioReporte}
+                            {tituloReporte} - {anioReporte}
                         </Typography>
                     </Box>
                 </Toolbar>

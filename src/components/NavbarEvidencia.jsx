@@ -18,6 +18,34 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
     const [paginaEvidencia, setPaginaEvidencia] = React.useState('');
     const [nombreEvidencia, setNombreEvidencia] = React.useState('');
     const [openDescargarReporteDialog, setOpenDescargarReporteDialog] = React.useState(false);
+    const [openGuardarPresetDialog, setOpenGuardarPresetDialog] = React.useState(false);
+    const [tituloPreset, setTituloPreset] = React.useState('');
+
+
+
+    const handleOpenGuardarPreset = () => {
+        setOpenGuardarPresetDialog(true);
+    };
+
+    const handleCloseGuardarPreset = () => {
+        setOpenGuardarPresetDialog(false);
+        setTituloPreset('');
+    };
+
+    const handleGuardarPreset = async () => {
+        try {
+            const response = await reporteService.crearPreset({ nombre: tituloPreset, idReporte });
+            if (response.status === 200) {
+                console.log('Preset guardado exitosamente:', response.data);
+                refreshEvidencias(); // Asumiendo que quieres refrescar las evidencias después de guardar el preset
+                handleCloseGuardarPreset();
+            } else {
+                console.error('Error al guardar el preset:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Error al guardar el preset:', error);
+        }
+    };
 
     const handleFileChange = (event) => {
         const file = event.target.files[0];
@@ -171,7 +199,7 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
                                 variant="contained"
                                 color="error"
                                 sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", color: "white" }}
-                            //onClick={() => setOpenDescargarCrearPresetDialog(true)}
+                                onClick={() => handleOpenGuardarPreset()}
                             >
                                 Guardar Preset
                             </Button>
@@ -394,6 +422,43 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
                     </Grid>
                 </DialogActions>
             </Dialog>
+            <Dialog open={openGuardarPresetDialog} onClose={() => handleCloseGuardarPreset()} maxWidth="sm" fullWidth>
+                <DialogContent>
+                    <Grid container spacing={2}>
+                        <Grid item xs={8}>
+                            <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Guardar Preset</Typography>
+                        </Grid>
+                        <Grid item xs={4} container justifyContent="flex-end" sx={{ mb: 2 }}>
+                            <IconButton onClick={() => handleCloseGuardarPreset()} disableRipple><CloseIcon /></IconButton>
+                        </Grid>
+                    </Grid>
+                    <Grid item xs={12} sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
+                        <Typography variant="h6">Ingrese el título del preset:</Typography>
+                    </Grid>
+                    <Grid item xs={12} sx={{ display: 'flex', alignItems: 'center', mt: 2, ml: 2 }}>
+                        <TextField
+                            label="Título del Preset"
+                            variant="outlined"
+                            value={tituloPreset}
+                            sx={{ width: "90%" }}
+                            onChange={(e) => setTituloPreset(e.target.value)}
+                        />
+                    </Grid>
+                </DialogContent>
+                <DialogActions>
+                    <Grid container>
+                        <Grid item xs={12} container justifyContent="flex-end">
+                            <Button color="secondary" variant="text" onClick={() => handleCloseGuardarPreset()}>
+                                Cancelar
+                            </Button>
+                            <Button color="primary" variant="text" onClick={() => handleGuardarPreset()}>
+                                Guardar
+                            </Button>
+                        </Grid>
+                    </Grid>
+                </DialogActions>
+            </Dialog>
+
         </React.Fragment>
     );
 }
