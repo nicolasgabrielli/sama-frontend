@@ -442,7 +442,6 @@ function ListaReportes() {
                                             onChange={handlePreconfiguracionSeleccionadaChange}
                                             fullWidth
                                         >
-                                            {preconfiguraciones && preconfiguraciones.length > 1 && preconfiguraciones.map((preconfiguracion) => (
                                             {preconfiguraciones && preconfiguraciones.length >= 1 && preconfiguraciones.map((preconfiguracion) => (
                                                 <MenuItem value={preconfiguracion.id}>{preconfiguracion.titulo}</MenuItem>
                                             ))}
