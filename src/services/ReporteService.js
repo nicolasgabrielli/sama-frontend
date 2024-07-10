@@ -53,10 +53,6 @@ class ReporteService {
         return axios.get(API_URL2 + "evidencia/" + idReporte);
     }
 
-    obtenerEvidencias(idReporte, coordenadas) {
-        return axios.get(API_URL2 + "evidencia/" + idReporte, coordenadas);
-    }
-
     crearEvidencia(idReporte, evidencia) {
         return axios.post(API_URL2 + "evidencia/" + idReporte, evidencia);
     }

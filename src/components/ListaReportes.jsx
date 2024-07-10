@@ -1,6 +1,6 @@
 import CloseIcon from '@mui/icons-material/Close';
 import { Box, Button, Container, Dialog, DialogActions, DialogContent, FormControl, Grid, IconButton, InputLabel, MenuItem, Paper, Select, TextField, Typography } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Navbar from "./Navbar";
 import { Link, useParams } from "react-router-dom";
 import empresaService from "../services/EmpresaService";
@@ -25,7 +25,6 @@ function ListaReportes() {
     const [openSinPreconfiguraciones, setOpenSinPreconfiguraciones] = useState(false);
     const [preconfiguracionSeleccionadaId, setPreconfiguracionSeleccionadaId] = useState(null);
     const [preconfiguraciones, setPreconfiguraciones] = useState([]);
-    const [categorias, setCategorias] = useState([]);
     const [tituloReporte, setTituloReporte] = useState("");
     const [anioReporte, setAnioReporte] = useState(null);
     const [tituloReporteError, setTituloReporteError] = useState(false);
@@ -36,12 +35,10 @@ function ListaReportes() {
 
     const handleOpenCrearReporte = () => {
         setOpenCrearReporte(true);
-        setCategorias([]);
     };
 
     const handleCloseCrearReporte = () => {
         setOpenCrearReporte(false);
-        setCategorias([]);
         setAnioReporte(null);
         setTituloReporte("");
     };
@@ -206,7 +203,7 @@ function ListaReportes() {
     };
 
     // Función para obtener la lista de reportes, preconfiguraciones y la información de la empresa
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         setLoading(true);
         try {
             await reporteService.obtenerListaReportes(idEmpresa)
@@ -239,7 +236,7 @@ function ListaReportes() {
             console.error('Error al obtener la información:', error);
         }
         setLoading(false);
-    };
+    }, [idEmpresa]);
     
 
     // Cargar la lista de reportes, preconfiguraciones y la información de la empresa al cargar el componente
@@ -249,7 +246,7 @@ function ListaReportes() {
             await fetchData();
             setLoading(false);
         })();
-    }, []);
+    }, [fetchData]);
 
     return (
         <>

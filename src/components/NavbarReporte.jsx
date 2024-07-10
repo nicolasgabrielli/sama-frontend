@@ -1,4 +1,3 @@
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import CloseIcon from '@mui/icons-material/Close';
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
@@ -69,10 +68,10 @@ function NavbarReporte({ useSectionMode, categorias, categoriaActualIndex, onCat
                             <KeyboardArrowDownIcon />
                         </IconButton>
                     )}
-                    <Typography variant="h4" component="div" sx={{ mr: 2, fontFamily: "Copperplate Gothic", fontWeight: "bold" }}>
+                    <Typography variant="h4" component="div" sx={{ mr: 2, ml: 2, fontFamily: "Copperplate Gothic", fontWeight: "bold" }}>
                         SAMA
                     </Typography>
-                    <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "center" }}>
+                    <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "center", ml: -20 }}>
                         <Typography variant="h5" component="div" noWrap sx={{ display: { xs: "none", md: "flex" }, fontStyle: "italic", p: 1 }}>
                             {tituloReporte} - {anioReporte}
                         </Typography>
