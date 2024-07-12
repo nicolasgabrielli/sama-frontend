@@ -76,7 +76,7 @@ class ReporteService {
     }
 
     crearPreset = (data) => {
-        return axios.post(API_URL + "preset/", data);
+        return axios.post(API_URL + "preset", data);
     }
 }
 

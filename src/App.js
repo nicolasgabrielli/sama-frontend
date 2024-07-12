@@ -7,6 +7,7 @@ import CrearUsuario from './components/CrearUsuario';
 import Reporte from './components/Reporte';
 import ListaReportes from './components/ListaReportes';
 import CrearEmpresa from './components/CrearEmpresa';
+import Login from './components/Login';
 
 
 const theme = createTheme({
@@ -32,7 +33,7 @@ function App() {
       <ThemeProvider theme={theme}>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Empresas />} />
+            <Route path="/" element={<Login />} />
             <Route path="/empresas" element={<Empresas />} />
             <Route path="/empresas/crear" element={<CrearEmpresa />} />
             <Route path="/empresas/:idEmpresa/reportes/:idReporte" element={<Reporte />} />

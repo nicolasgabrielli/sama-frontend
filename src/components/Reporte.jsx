@@ -878,7 +878,7 @@ function Reporte() {
                                             <Grid item xs={12}>
                                                 <Box sx={{ pl: 4, pr: 4 }}>
                                                     {campo.subCampos.map((subCampos, index) => (
-                                                        <Grid container alignItems="center" justifyContent="space-between" borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, mb: 1, py: 1 }} key={index}>
+                                                        <Grid  alignItems="center" justifyContent="space-between" borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, mb: 1, py: 1 }} key={index}>
                                                             <Grid item xs={3}>
                                                                 <Typography variant="h6" color={"#000000"} sx={{ fontFamily: "Segoe UI", fontWeight: "normal" }}>
                                                                     {subCampos.titulo}

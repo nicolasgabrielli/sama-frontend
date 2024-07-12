@@ -34,7 +34,7 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
 
     const handleGuardarPreset = async () => {
         try {
-            const response = await reporteService.crearPreset({ nombre: tituloPreset, idReporte });
+            const response = await reporteService.crearPreset({ id: idReporte, nombre: tituloPreset });
             if (response.status === 200) {
                 console.log('Preset guardado exitosamente:', response.data);
                 refreshEvidencias(); // Asumiendo que quieres refrescar las evidencias después de guardar el preset
