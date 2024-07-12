@@ -9,6 +9,7 @@ import DoneAllIcon from '@mui/icons-material/DoneAll';
 import BackupTableIcon from '@mui/icons-material/BackupTable';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
+import ImportExportIcon from '@mui/icons-material/ImportExport';
 import { Alert, Box, Button, Collapse, Container, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid, IconButton, InputLabel, MenuItem, Paper, Select, TextField, Tooltip, Typography } from "@mui/material";
 import Loading from './Loading';
 import React, { useEffect, useState, useCallback } from "react";
@@ -108,6 +109,7 @@ function Reporte() {
     const [openTableDialog, setOpenTableDialog] = useState(false);
     const [openAutorizarCampoDialog, setOpenAutorizarCampoDialog] = useState(false);
     const [openEvidenciaDialog, setOpenEvidenciaDialog] = useState(false);
+    const [editMode, setEditMode] = useState(false);    // Modo de edición de estructura.
 
 
     // ------------------------ FUNCIONES ------------------------
@@ -662,6 +664,16 @@ function Reporte() {
         await fetchData();
     };
 
+    // Función para activar modo de edición de estructura.
+    const handleEditMode = (indexSeccion) => {
+        setEditMode(!editMode);
+        if (editMode) {
+            setSeccionActualIndex(indexSeccion);
+        } else {
+            setSeccionActualIndex(0);
+        }
+    };
+
     return (
         <>
             {loading && (
@@ -715,46 +727,71 @@ function Reporte() {
                         {secciones.map((seccion, indexSeccion) => (
                             <Paper sx={{ mt: 2, p: 2, flexGrow: 1 }} key={indexSeccion}>
                                 <Grid container>
-                                    <Grid item xs={8}>
+                                    <Grid item xs={6}>
                                         <Typography variant="h4" color={"primary.main"} fontWeight={"bold"}>
                                             {seccion.titulo}
+                                            <Tooltip
+                                                title="Editar Sección"
+                                                placement="bottom"
+                                                arrow
+                                            >
+                                                <span>
+                                                    <IconButton
+                                                        variant="outlined"
+                                                        onClick={() => handleOpenSectionEditDialog(indexSeccion)}
+                                                        disabled={editMode}
+                                                        sx={{
+                                                            ml: 1,
+                                                            transition: "transform 0.2s",
+                                                            '&:hover': {
+                                                                transform: "scale(1.1) translateY(-2px)",
+                                                            },
+                                                        }}
+                                                    >
+                                                        <EditIcon color={editMode ? 'secondary' : 'primary'} />
+                                                    </IconButton>
+                                                </span>
+                                            </Tooltip>
+                                            <Tooltip
+                                                title="Mover Campos"
+                                                placement="bottom"
+                                                arrow
+                                            >
+                                                <IconButton
+                                                    variant="outlined"
+                                                    onClick={() => handleEditMode(indexSeccion)}
+                                                    sx={{
+                                                        transition: "transform 0.2s",
+                                                        '&:hover': {
+                                                            transform: "scale(1.1) translateY(-2px)",
+                                                        },
+                                                    }}
+                                                >
+                                                    <ImportExportIcon color={editMode ? "cuaternary" : "primary"} />
+                                                </IconButton>
+                                            </Tooltip>
                                         </Typography>
                                     </Grid>
-                                    <Grid item xs={4} container justifyContent="flex-end">
-                                        <Button
-                                            variant="text"
-                                            color="primary"
-                                            sx={{
-                                                textTransform: "none",
-                                                fontWeight: "bold",
-                                                fontStyle: "italic",
-                                                fontSize: "1.1rem",
-                                                width: "200px",
-                                                mb: 2,
-                                                transition: "transform 0.2s",
-                                                '&:hover': {
-                                                    transform: "scale(1.02)",
-                                                },
-                                            }}
-                                            onClick={() => handleOpenSectionEditDialog(indexSeccion)}
-                                            endIcon={<EditIcon style={{ fontSize: "1.1rem" }} />}
-                                        >
-                                            Editar Sección
-                                        </Button>
+                                    <Grid item xs={6}>
+                                        {editMode && (
+                                            <Typography variant="h6" color={"cuaternary.main"} fontWeight={"bold"}>
+                                                Modo cambio de estructura activado
+                                            </Typography>
+                                        )}
                                     </Grid>
                                 </Grid>
 
                                 {seccion.campos.map((campo, index) => (
-                                    <Box sx={{ pl: 2, pr: 2, mb: 2 }} key={index}>
+                                    <Box sx={{ pl: 2, pr: 2, my: 2 }} key={index}>
                                         <Grid container alignItems="center" justifyContent="space-between" borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, py: 1 }}>
                                             <Grid item xs={3}>
                                                 <Typography
                                                     variant="h5"
                                                     color="#000000"
-                                                    sx={{ 
-                                                        fontFamily: "Segoe UI", 
-                                                        fontWeight: "bold", 
-                                                        ml: 0.5 
+                                                    sx={{
+                                                        fontFamily: "Segoe UI",
+                                                        fontWeight: "bold",
+                                                        ml: 0.5
                                                     }}
                                                 >
                                                     {campo.titulo}
@@ -791,6 +828,7 @@ function Reporte() {
                                                                                     transform: "scale(1.05) translateY(-2px)",
                                                                                 },
                                                                             }}
+                                                                            disabled={editMode}
                                                                             startIcon={<BackupTableIcon />}
                                                                         >
                                                                             Ver Tabla
@@ -813,14 +851,14 @@ function Reporte() {
                                                             variant="outlined"
                                                             color={campo.autorizacion === true ? "secondary" : "primary"}
                                                             onClick={() => handleOpenAutorizarCampo(index)}
-                                                            disabled={campo.autorizacion === true}
+                                                            disabled={campo.autorizacion === true || editMode}
                                                             sx={{
                                                                 transition: "transform 0.2s",
                                                                 '&:hover': {
                                                                     transform: "scale(1.1) translateY(-2px)",
                                                                 },
                                                                 '&:disabled': { // Establece un estilo específico para cuando está deshabilitado.
-                                                                    color: "cuaternary.main",
+                                                                    color: campo.autorizacion ? "cuaternary.main" : "secondary.main",
                                                                     borderColor: "cuaternary.main",
                                                                 },
                                                             }}
@@ -841,7 +879,7 @@ function Reporte() {
                                                             variant="outlined"
                                                             color="primary"
                                                             onClick={() => handleVisualizarEvidenciaCampo(indexSeccion, index)}
-                                                            disabled={campo.evidencias.length === 0}
+                                                            disabled={campo.evidencias.length === 0 || editMode}
                                                             sx={{
                                                                 transition: "transform 0.2s",
                                                                 '&:hover': {
@@ -854,22 +892,24 @@ function Reporte() {
                                                     </span>
                                                 </Tooltip>
 
-
                                                 {campo.autorizacion !== true && (
                                                     <Tooltip title="Editar Campo" placement="bottom" arrow>
-                                                        <IconButton
-                                                            variant="outlined"
-                                                            color="primary"
-                                                            onClick={() => handleOpenEditDialog(campo, seccion, indexSeccion, index)}
-                                                            sx={{
-                                                                transition: "transform 0.2s",
-                                                                '&:hover': {
-                                                                    transform: "scale(1.1) translateY(-2px)",
-                                                                },
-                                                            }}
-                                                        >
-                                                            <EditIcon />
-                                                        </IconButton>
+                                                        <span>
+                                                            <IconButton
+                                                                variant="outlined"
+                                                                color="primary"
+                                                                onClick={() => handleOpenEditDialog(campo, seccion, indexSeccion, index)}
+                                                                disabled={editMode}
+                                                                sx={{
+                                                                    transition: "transform 0.2s",
+                                                                    '&:hover': {
+                                                                        transform: "scale(1.1) translateY(-2px)",
+                                                                    },
+                                                                }}
+                                                            >
+                                                                <EditIcon />
+                                                            </IconButton>
+                                                        </span>
                                                     </Tooltip>
                                                 )}
                                             </Grid>
@@ -878,7 +918,7 @@ function Reporte() {
                                             <Grid item xs={12}>
                                                 <Box sx={{ pl: 4, pr: 4 }}>
                                                     {campo.subCampos.map((subCampos, index) => (
-                                                        <Grid  alignItems="center" justifyContent="space-between" borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, mb: 1, py: 1 }} key={index}>
+                                                        <Grid container alignItems="center" justifyContent="space-between" borderBottom={2} borderColor={"secondary.main"} sx={{ mb: 1, py: 1 }} key={index}>
                                                             <Grid item xs={3}>
                                                                 <Typography variant="h6" color={"#000000"} sx={{ fontFamily: "Segoe UI", fontWeight: "normal" }}>
                                                                     {subCampos.titulo}
@@ -907,6 +947,7 @@ function Reporte() {
                                                                                         <Button
                                                                                             variant="text"
                                                                                             onClick={() => handleOpenVerTabla(subCampos.contenido)}
+                                                                                            disabled={editMode}
                                                                                             sx={{
                                                                                                 textTransform: "none",
                                                                                                 fontWeight: "bold",

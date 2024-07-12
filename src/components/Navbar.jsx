@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 function Navbar({ useSectionMode, secciones, seccionesRutas, seccionActual }) {
     const [openCollapse, setOpenCollapse] = useState(true);
     const [tabValue, setTabValue] = useState(secciones ? secciones.indexOf(seccionActual) : 0);
+    const [rol, setRol] = useState("Administrador");
 
     const toggleCollapse = () => {
         setOpenCollapse(!openCollapse);
@@ -54,11 +55,11 @@ function Navbar({ useSectionMode, secciones, seccionesRutas, seccionActual }) {
                                 xs: "none",
                                 md: "flex"
                             },
-                            fontStyle: "italic"
-                            ,
+                            fontStyle: "italic",
+                            pr: 1
                         }}
                     >
-                        Administrador GRC
+                       {rol}
                     </Typography>
                 </Toolbar>
                 <>{useSectionMode ?

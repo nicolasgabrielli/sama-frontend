@@ -31,16 +31,16 @@ function Login() {
     return (
         <>
             <Navbar seccionActual={seccionActual} useSectionMode={useSectionMode} secciones={secciones} seccionesRutas={seccionesRutas} />
-            <Container maxWidth="sm">
-                <Box 
-                    sx={{ 
-                        display: 'flex', 
-                        justifyContent: 'center', 
-                        alignItems: 'center', 
-                        minHeight: '100vh', 
-                        
-                    }}
-                >
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    minHeight: '100vh',
+                    marginTop: '-64px' // Ajusta este valor si la barra de navegación tiene un tamaño diferente
+                }}
+            >
+                <Container maxWidth="sm">
                     <Paper elevation={3} sx={{ padding: 4, width: '100%' }}>
                         <Typography variant="h4" gutterBottom>
                             Iniciar Sesión
@@ -56,6 +56,7 @@ function Login() {
                                     label="Correo Electrónico"
                                     variant="outlined"
                                     fullWidth
+                                    sx={{ mt: 2 }}
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                 />
@@ -82,11 +83,10 @@ function Login() {
                             </Grid>
                         </Grid>
                     </Paper>
-                </Box>
-            </Container>
+                </Container>
+            </Box>
         </>
     );
 }
 
 export default Login;
-
