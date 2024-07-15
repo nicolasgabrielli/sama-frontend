@@ -20,6 +20,8 @@ import NavbarEvidencia from './NavbarEvidencia';
 import Tabla from './Tabla';
 import VerTabla from './VerTabla';
 
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+
 function Reporte() {
 
     // ------------------------ BLOQUE DE CARGA DE DATOS DEL REPORTE ------------------------
@@ -674,6 +676,25 @@ function Reporte() {
         }
     };
 
+    const handleDragEnd = (result) => {
+        const { source, destination } = result;
+        console.log(source, destination);
+
+        if (!destination) return;
+
+        const sourceSectionIndex = parseInt(source.droppableId);
+        const destinationSectionIndex = parseInt(destination.droppableId);
+
+        const sourceIndex = source.index;
+        const destinationIndex = destination.index;
+
+        const newSecciones = Array.from(secciones);
+        const [movedItem] = newSecciones[sourceSectionIndex].campos.splice(sourceIndex, 1);
+        newSecciones[destinationSectionIndex].campos.splice(destinationIndex, 0, movedItem);
+
+        // Aquí puedes agregar lógica para actualizar el estado o enviar los cambios al backend
+    };
+
     return (
         <>
             {loading && (
@@ -724,182 +745,37 @@ function Reporte() {
                                 </Grid>
                             </Grid>
                         </Paper>
-                        {secciones.map((seccion, indexSeccion) => (
-                            <Paper sx={{ mt: 2, p: 2, flexGrow: 1 }} key={indexSeccion}>
-                                <Grid container>
-                                    <Grid item xs={6}>
-                                        <Typography variant="h4" color={"primary.main"} fontWeight={"bold"}>
-                                            {seccion.titulo}
-                                            <Tooltip
-                                                title="Editar Sección"
-                                                placement="bottom"
-                                                arrow
-                                            >
-                                                <span>
-                                                    <IconButton
-                                                        variant="outlined"
-                                                        onClick={() => handleOpenSectionEditDialog(indexSeccion)}
-                                                        disabled={editMode}
-                                                        sx={{
-                                                            ml: 1,
-                                                            transition: "transform 0.2s",
-                                                            '&:hover': {
-                                                                transform: "scale(1.1) translateY(-2px)",
-                                                            },
-                                                        }}
-                                                    >
-                                                        <EditIcon color={editMode ? 'secondary' : 'primary'} />
-                                                    </IconButton>
-                                                </span>
-                                            </Tooltip>
-                                            <Tooltip
-                                                title="Mover Campos"
-                                                placement="bottom"
-                                                arrow
-                                            >
-                                                <IconButton
-                                                    variant="outlined"
-                                                    onClick={() => handleEditMode(indexSeccion)}
-                                                    sx={{
-                                                        transition: "transform 0.2s",
-                                                        '&:hover': {
-                                                            transform: "scale(1.1) translateY(-2px)",
-                                                        },
-                                                    }}
-                                                >
-                                                    <ImportExportIcon color={editMode ? "cuaternary" : "primary"} />
-                                                </IconButton>
-                                            </Tooltip>
-                                        </Typography>
-                                    </Grid>
-                                    <Grid item xs={6}>
-                                        {editMode && (
-                                            <Typography variant="h6" color={"cuaternary.main"} fontWeight={"bold"}>
-                                                Modo cambio de estructura activado
-                                            </Typography>
-                                        )}
-                                    </Grid>
-                                </Grid>
-
-                                {seccion.campos.map((campo, index) => (
-                                    <Box sx={{ pl: 2, pr: 2, my: 2 }} key={index}>
-                                        <Grid container alignItems="center" justifyContent="space-between" borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, py: 1 }}>
-                                            <Grid item xs={3}>
-                                                <Typography
-                                                    variant="h5"
-                                                    color="#000000"
-                                                    sx={{
-                                                        fontFamily: "Segoe UI",
-                                                        fontWeight: "bold",
-                                                        ml: 0.5
-                                                    }}
-                                                >
-                                                    {campo.titulo}
-                                                </Typography>
-                                            </Grid>
-                                            <Grid item xs={7}>
-                                                <Typography variant="body1" color={"#000000"} sx={{
-                                                    fontFamily: "Segoe UI",
-                                                    fontStyle: "italic",
-                                                    fontSize: "1.125rem",
-                                                    color: campo.tipo === "Booleano" ? (campo.contenido ? "green" : "red") : undefined
-                                                }}>
-                                                    {(() => {
-                                                        if (campo.tipo) {
-                                                            if (campo.tipo.toLowerCase() === "texto") {
-                                                                return campo.contenido;
-                                                            } else if (campo.tipo.toLowerCase() === "numerico") {
-                                                                return campo.contenido;
-                                                            } else if (campo.tipo.toLowerCase() === "booleano") {
-                                                                return campo.contenido ? "Sí" : "No";
-                                                            } else if (campo.tipo.toLowerCase() === "tabla") {
-                                                                return (
-                                                                    <div style={{ justifyContent: 'center' }}>
-                                                                        <Button
-                                                                            variant="text"
-                                                                            onClick={() => handleOpenVerTabla(campo.contenido)}
-                                                                            sx={{
-                                                                                textTransform: "none",
-                                                                                fontWeight: "bold",
-                                                                                fontStyle: "italic",
-                                                                                fontSize: "1.125rem",
-                                                                                transition: "transform 0.2s",
-                                                                                '&:hover': {
-                                                                                    transform: "scale(1.05) translateY(-2px)",
-                                                                                },
-                                                                            }}
-                                                                            disabled={editMode}
-                                                                            startIcon={<BackupTableIcon />}
-                                                                        >
-                                                                            Ver Tabla
-                                                                        </Button>
-                                                                    </div>
-                                                                );
-                                                            }
-                                                        }
-                                                    })()}
-                                                </Typography>
-                                            </Grid>
-                                            <Grid item xs={2} container justifyContent={"flex-end"}>
-                                                <Tooltip
-                                                    title={campo.autorizacion === true ? "Campo Autorizado" : "Autorizar Campo"}
-                                                    placement="bottom"
-                                                    arrow
-                                                >
-                                                    <span>
-                                                        <IconButton
-                                                            variant="outlined"
-                                                            color={campo.autorizacion === true ? "secondary" : "primary"}
-                                                            onClick={() => handleOpenAutorizarCampo(index)}
-                                                            disabled={campo.autorizacion === true || editMode}
-                                                            sx={{
-                                                                transition: "transform 0.2s",
-                                                                '&:hover': {
-                                                                    transform: "scale(1.1) translateY(-2px)",
-                                                                },
-                                                                '&:disabled': { // Establece un estilo específico para cuando está deshabilitado.
-                                                                    color: campo.autorizacion ? "cuaternary.main" : "secondary.main",
-                                                                    borderColor: "cuaternary.main",
-                                                                },
-                                                            }}
-                                                        >
-                                                            {campo.autorizacion === true ? <DoneAllIcon /> : <CheckIcon />}
-                                                        </IconButton>
-                                                    </span>
-                                                </Tooltip>
-
-                                                <Tooltip
-                                                    title={campo.evidencias.length === 0 ? "No contiene evidencias" : "Visualizar Evidencias"}
-                                                    placement="bottom"
-                                                    arrow
-                                                    disableInteractive
-                                                >
-                                                    <span>
-                                                        <IconButton
-                                                            variant="outlined"
-                                                            color="primary"
-                                                            onClick={() => handleVisualizarEvidenciaCampo(indexSeccion, index)}
-                                                            disabled={campo.evidencias.length === 0 || editMode}
-                                                            sx={{
-                                                                transition: "transform 0.2s",
-                                                                '&:hover': {
-                                                                    transform: "scale(1.1) translateY(-2px)",
-                                                                },
-                                                            }}
-                                                        >
-                                                            <FindInPageIcon />
-                                                        </IconButton>
-                                                    </span>
-                                                </Tooltip>
-
-                                                {campo.autorizacion !== true && (
-                                                    <Tooltip title="Editar Campo" placement="bottom" arrow>
-                                                        <span>
+                        <DragDropContext onDragEnd={handleDragEnd}>
+                            {secciones.map((seccion, indexSeccion) => (
+                                <Droppable key={indexSeccion} droppableId={`${indexSeccion}`} isDropDisabled={!editMode}>
+                                    {(provided) => (
+                                        <Paper sx={{ mt: 2, p: 2, flexGrow: 1 }} ref={provided.innerRef} {...provided.droppableProps}>
+                                            <Grid container>
+                                                <Grid item xs={6}>
+                                                    <Typography variant="h4" color={"primary.main"} fontWeight={"bold"}>
+                                                        {seccion.titulo}
+                                                        <Tooltip title="Editar Sección" placement="bottom" arrow>
+                                                            <span>
+                                                                <IconButton
+                                                                    variant="outlined"
+                                                                    onClick={() => handleOpenSectionEditDialog(indexSeccion)}
+                                                                    disabled={editMode}
+                                                                    sx={{
+                                                                        ml: 1,
+                                                                        transition: "transform 0.2s",
+                                                                        '&:hover': {
+                                                                            transform: "scale(1.1) translateY(-2px)",
+                                                                        },
+                                                                    }}
+                                                                >
+                                                                    <EditIcon color={editMode ? 'secondary' : 'primary'} />
+                                                                </IconButton>
+                                                            </span>
+                                                        </Tooltip>
+                                                        <Tooltip title="Mover Campos" placement="bottom" arrow>
                                                             <IconButton
                                                                 variant="outlined"
-                                                                color="primary"
-                                                                onClick={() => handleOpenEditDialog(campo, seccion, indexSeccion, index)}
-                                                                disabled={editMode}
+                                                                onClick={() => handleEditMode(indexSeccion)}
                                                                 sx={{
                                                                     transition: "transform 0.2s",
                                                                     '&:hover': {
@@ -907,93 +783,241 @@ function Reporte() {
                                                                     },
                                                                 }}
                                                             >
-                                                                <EditIcon />
+                                                                <ImportExportIcon color={editMode ? "secondary" : "primary"} />
                                                             </IconButton>
-                                                        </span>
-                                                    </Tooltip>
-                                                )}
+                                                        </Tooltip>
+                                                    </Typography>
+                                                </Grid>
+                                                <Grid item xs={6}>
+                                                    {editMode && (
+                                                        <Typography variant="h6" color={"secondary.main"} fontWeight={"bold"}>
+                                                            Modo cambio de estructura activado
+                                                        </Typography>
+                                                    )}
+                                                </Grid>
                                             </Grid>
-                                        </Grid>
-                                        {(campo.subCampos && (campo.subCampos.length > 0)) && (
-                                            <Grid item xs={12}>
-                                                <Box sx={{ pl: 4, pr: 4 }}>
-                                                    {campo.subCampos.map((subCampos, index) => (
-                                                        <Grid container alignItems="center" justifyContent="space-between" borderBottom={2} borderColor={"secondary.main"} sx={{ mb: 1, py: 1 }} key={index}>
-                                                            <Grid item xs={3}>
-                                                                <Typography variant="h6" color={"#000000"} sx={{ fontFamily: "Segoe UI", fontWeight: "normal" }}>
-                                                                    {subCampos.titulo}
-                                                                </Typography>
-                                                            </Grid>
-                                                            <Grid item xs={9}>
-                                                                <Typography variant="body1" color={"#000000"} sx={{
-                                                                    fontFamily: "Segoe UI",
-                                                                    fontStyle: "italic",
-                                                                    fontSize: "1.05rem",
-                                                                    fontWeight: "normal",
-                                                                    ml: 2,
-                                                                    color: subCampos.tipo === "Booleano" ? (subCampos.contenido ? "green" : "red") : undefined
-                                                                }}>
-                                                                    {(() => {
-                                                                        if (subCampos.tipo) {
-                                                                            if (subCampos.tipo.toLowerCase() === "texto") {
-                                                                                return subCampos.contenido;
-                                                                            } else if (subCampos.tipo.toLowerCase() === "numerico") {
-                                                                                return subCampos.contenido;
-                                                                            } else if (subCampos.tipo.toLowerCase() === "booleano") {
-                                                                                return subCampos.contenido ? "Sí" : "No";
-                                                                            } else if (subCampos.tipo.toLowerCase() === "tabla") {
-                                                                                return (
-                                                                                    <div style={{ justifyContent: 'center' }}>
-                                                                                        <Button
-                                                                                            variant="text"
-                                                                                            onClick={() => handleOpenVerTabla(subCampos.contenido)}
-                                                                                            disabled={editMode}
-                                                                                            sx={{
-                                                                                                textTransform: "none",
-                                                                                                fontWeight: "bold",
-                                                                                                fontStyle: "italic",
-                                                                                                fontSize: "1.125rem",
-                                                                                                transition: "transform 0.2s",
-                                                                                                '&:hover': {
-                                                                                                    transform: "scale(1.05) translateY(-2px)",
-                                                                                                },
-                                                                                            }}
-                                                                                            startIcon={<BackupTableIcon />}
-                                                                                        >
-                                                                                            Ver Tabla
-                                                                                        </Button>
-                                                                                    </div>
-                                                                                );
+
+                                            {seccion.campos.map((campo, index) => (
+                                                <Draggable key={index} draggableId={`${indexSeccion}-${index}`} index={index} isDragDisabled={!editMode}>
+                                                    {(provided) => (
+                                                        <Box sx={{ pl: 2, pr: 2, my: 2 }} ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
+                                                            <Grid container alignItems="center" justifyContent="space-between" borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, py: 1 }}>
+                                                                <Grid item xs={3}>
+                                                                    <Typography
+                                                                        variant="h5"
+                                                                        color="#000000"
+                                                                        sx={{
+                                                                            fontFamily: "Segoe UI",
+                                                                            fontWeight: "bold",
+                                                                            ml: 0.5
+                                                                        }}
+                                                                    >
+                                                                        {campo.titulo}
+                                                                    </Typography>
+                                                                </Grid>
+                                                                <Grid item xs={7}>
+                                                                    <Typography variant="body1" color={"#000000"} sx={{
+                                                                        fontFamily: "Segoe UI",
+                                                                        fontStyle: "italic",
+                                                                        fontSize: "1.125rem",
+                                                                        color: campo.tipo === "Booleano" ? (campo.contenido ? "green" : "red") : undefined
+                                                                    }}>
+                                                                        {(() => {
+                                                                            if (campo.tipo) {
+                                                                                if (campo.tipo.toLowerCase() === "texto") {
+                                                                                    return campo.contenido;
+                                                                                } else if (campo.tipo.toLowerCase() === "numerico") {
+                                                                                    return campo.contenido;
+                                                                                } else if (campo.tipo.toLowerCase() === "booleano") {
+                                                                                    return campo.contenido ? "Sí" : "No";
+                                                                                } else if (campo.tipo.toLowerCase() === "tabla") {
+                                                                                    return (
+                                                                                        <div style={{ justifyContent: 'center' }}>
+                                                                                            <Button
+                                                                                                variant="text"
+                                                                                                onClick={() => handleOpenVerTabla(campo.contenido)}
+                                                                                                sx={{
+                                                                                                    textTransform: "none",
+                                                                                                    fontWeight: "bold",
+                                                                                                    fontStyle: "italic",
+                                                                                                    fontSize: "1.125rem",
+                                                                                                    transition: "transform 0.2s",
+                                                                                                    '&:hover': {
+                                                                                                        transform: "scale(1.05) translateY(-2px)",
+                                                                                                    },
+                                                                                                }}
+                                                                                                disabled={editMode}
+                                                                                                startIcon={<BackupTableIcon />}
+                                                                                            >
+                                                                                                Ver Tabla
+                                                                                            </Button>
+                                                                                        </div>
+                                                                                    );
+                                                                                }
                                                                             }
-                                                                        }
-                                                                    })()}
-                                                                </Typography>
+                                                                        })()}
+                                                                    </Typography>
+                                                                </Grid>
+                                                                <Grid item xs={2} container justifyContent={"flex-end"}>
+                                                                    <Tooltip
+                                                                        title={campo.autorizacion === true ? "Campo Autorizado" : "Autorizar Campo"}
+                                                                        placement="bottom"
+                                                                        arrow
+                                                                    >
+                                                                        <span>
+                                                                            <IconButton
+                                                                                variant="outlined"
+                                                                                color={campo.autorizacion === true ? "secondary" : "primary"}
+                                                                                onClick={() => handleOpenAutorizarCampo(index)}
+                                                                                disabled={campo.autorizacion === true || editMode}
+                                                                                sx={{
+                                                                                    transition: "transform 0.2s",
+                                                                                    '&:hover': {
+                                                                                        transform: "scale(1.1) translateY(-2px)",
+                                                                                    },
+                                                                                    '&:disabled': { // Establece un estilo específico para cuando está deshabilitado.
+                                                                                        color: campo.autorizacion ? "cuaternary.main" : "secondary.main",
+                                                                                        borderColor: "cuaternary.main",
+                                                                                    },
+                                                                                }}
+                                                                            >
+                                                                                {campo.autorizacion === true ? <DoneAllIcon /> : <CheckIcon />}
+                                                                            </IconButton>
+                                                                        </span>
+                                                                    </Tooltip>
+
+                                                                    <Tooltip
+                                                                        title={campo.evidencias.length === 0 ? "No contiene evidencias" : "Visualizar Evidencias"}
+                                                                        placement="bottom"
+                                                                        arrow
+                                                                        disableInteractive
+                                                                    >
+                                                                        <span>
+                                                                            <IconButton
+                                                                                variant="outlined"
+                                                                                color="primary"
+                                                                                onClick={() => handleVisualizarEvidenciaCampo(indexSeccion, index)}
+                                                                                disabled={campo.evidencias.length === 0 || editMode}
+                                                                                sx={{
+                                                                                    transition: "transform 0.2s",
+                                                                                    '&:hover': {
+                                                                                        transform: "scale(1.1) translateY(-2px)",
+                                                                                    },
+                                                                                }}
+                                                                            >
+                                                                                <FindInPageIcon />
+                                                                            </IconButton>
+                                                                        </span>
+                                                                    </Tooltip>
+
+                                                                    {campo.autorizacion !== true && (
+                                                                        <Tooltip title="Editar Campo" placement="bottom" arrow>
+                                                                            <span>
+                                                                                <IconButton
+                                                                                    variant="outlined"
+                                                                                    color="primary"
+                                                                                    onClick={() => handleOpenEditDialog(campo, seccion, indexSeccion, index)}
+                                                                                    disabled={editMode}
+                                                                                    sx={{
+                                                                                        transition: "transform 0.2s",
+                                                                                        '&:hover': {
+                                                                                            transform: "scale(1.1) translateY(-2px)",
+                                                                                        },
+                                                                                    }}
+                                                                                >
+                                                                                    <EditIcon />
+                                                                                </IconButton>
+                                                                            </span>
+                                                                        </Tooltip>
+                                                                    )}
+                                                                </Grid>
                                                             </Grid>
-                                                        </Grid>
-                                                    ))}
-                                                </Box>
+                                                            {(campo.subCampos && (campo.subCampos.length > 0)) && (
+                                                                <Grid item xs={12}>
+                                                                    <Box sx={{ pl: 4, pr: 4 }}>
+                                                                        {campo.subCampos.map((subCampos, subIndex) => (
+                                                                            <Grid container alignItems="center" justifyContent="space-between" borderBottom={2} borderColor={"secondary.main"} sx={{ mb: 1, py: 1 }} key={subIndex}>
+                                                                                <Grid item xs={3}>
+                                                                                    <Typography variant="h6" color={"#000000"} sx={{ fontFamily: "Segoe UI", fontWeight: "normal" }}>
+                                                                                        {subCampos.titulo}
+                                                                                    </Typography>
+                                                                                </Grid>
+                                                                                <Grid item xs={9}>
+                                                                                    <Typography variant="body1" color={"#000000"} sx={{
+                                                                                        fontFamily: "Segoe UI",
+                                                                                        fontStyle: "italic",
+                                                                                        fontSize: "1.05rem",
+                                                                                        fontWeight: "normal",
+                                                                                        ml: 2,
+                                                                                        color: subCampos.tipo === "Booleano" ? (subCampos.contenido ? "green" : "red") : undefined
+                                                                                    }}>
+                                                                                        {(() => {
+                                                                                            if (subCampos.tipo) {
+                                                                                                if (subCampos.tipo.toLowerCase() === "texto") {
+                                                                                                    return subCampos.contenido;
+                                                                                                } else if (subCampos.tipo.toLowerCase() === "numerico") {
+                                                                                                    return subCampos.contenido;
+                                                                                                } else if (subCampos.tipo.toLowerCase() === "booleano") {
+                                                                                                    return subCampos.contenido ? "Sí" : "No";
+                                                                                                } else if (subCampos.tipo.toLowerCase() === "tabla") {
+                                                                                                    return (
+                                                                                                        <div style={{ justifyContent: 'center' }}>
+                                                                                                            <Button
+                                                                                                                variant="text"
+                                                                                                                onClick={() => handleOpenVerTabla(subCampos.contenido)}
+                                                                                                                disabled={editMode}
+                                                                                                                sx={{
+                                                                                                                    textTransform: "none",
+                                                                                                                    fontWeight: "bold",
+                                                                                                                    fontStyle: "italic",
+                                                                                                                    fontSize: "1.125rem",
+                                                                                                                    transition: "transform 0.2s",
+                                                                                                                    '&:hover': {
+                                                                                                                        transform: "scale(1.05) translateY(-2px)",
+                                                                                                                    },
+                                                                                                                }}
+                                                                                                                startIcon={<BackupTableIcon />}
+                                                                                                            >
+                                                                                                                Ver Tabla
+                                                                                                            </Button>
+                                                                                                        </div>
+                                                                                                    );
+                                                                                                }
+                                                                                            }
+                                                                                        })()}
+                                                                                    </Typography>
+                                                                                </Grid>
+                                                                            </Grid>
+                                                                        ))}
+                                                                    </Box>
+                                                                </Grid>
+                                                            )}
+                                                        </Box>
+                                                    )}
+                                                </Draggable>
+                                            ))}
+                                            {provided.placeholder}
+                                            <Grid container justifyContent="center">
+                                                <Button
+                                                    variant="contained"
+                                                    color="primary"
+                                                    sx={{
+                                                        textTransform: "none",
+                                                        fontWeight: "bold",
+                                                        fontStyle: "italic",
+                                                        fontSize: "1.125rem",
+                                                    }}
+                                                    onClick={() => handleOpenEditDialog(null, seccion, indexSeccion, -1)}
+                                                    startIcon={<AddCircleIcon />}
+                                                >
+                                                    Agregar Campo
+                                                </Button>
                                             </Grid>
-                                        )}
-                                    </Box>
-                                ))}
-                                <Grid container justifyContent="center">
-                                    <Button
-                                        variant="contained"
-                                        color="primary"
-                                        sx={{
-                                            textTransform: "none",
-                                            fontWeight: "bold",
-                                            fontStyle: "italic",
-                                            fontSize: "1.125rem",
-                                        }}
-                                        onClick={() => handleOpenEditDialog(null, seccion, indexSeccion, -1)}
-                                        startIcon={<AddCircleIcon />}
-                                    >
-                                        Agregar Campo
-                                    </Button>
-                                </Grid>
-                            </Paper>
-                        ))}
+                                        </Paper>
+                                    )}
+                                </Droppable>
+                            ))}
+                        </DragDropContext>
                         <Button
                             variant="contained"
                             color="primary"
