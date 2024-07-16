@@ -1024,7 +1024,11 @@ function Reporte() {
                             sx={{
                                 textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1.5rem", mt: 2
                             }}
-                            onClick={() => setOpenSectionDialog(true)}
+                            onClick={() => 
+                                {
+                                    setEditedSection({ titulo: "" });
+                                    setOpenSectionDialog(true);
+                                }}
                             startIcon={<AddCircleIcon style={{ fontSize: "1.5rem" }} />}
                         >
                             Agregar Sección
@@ -1090,7 +1094,7 @@ function Reporte() {
                                                         >
                                                             <MenuItem value="texto">Texto</MenuItem>
                                                             <MenuItem value="numerico">Número</MenuItem>
-                                                            <MenuItem value="booleano">Booleano</MenuItem>
+                                                            <MenuItem value="booleano">Alternativa Única</MenuItem>
                                                             <MenuItem value="tabla">Tabla</MenuItem>
                                                         </Select>
                                                     </FormControl>
@@ -1183,7 +1187,7 @@ function Reporte() {
                                                                     >
                                                                         <MenuItem value="Texto">Texto</MenuItem>
                                                                         <MenuItem value="Numerico">Número</MenuItem>
-                                                                        <MenuItem value="Booleano">Booleano</MenuItem>
+                                                                        <MenuItem value="Booleano">Alternativa Única</MenuItem>
                                                                         <MenuItem value="Tabla">Tabla</MenuItem>
                                                                     </Select>
                                                                 </FormControl>

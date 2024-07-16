@@ -23,7 +23,7 @@ function ListaReportes() {
     const [openCrearReporte, setOpenCrearReporte] = useState(false);
     const [openUtilizarPreconfiguracion, setOpenUtilizarPreconfiguracion] = useState(false);
     const [openSinPreconfiguraciones, setOpenSinPreconfiguraciones] = useState(false);
-    const [preconfiguracionSeleccionadaId, setPreconfiguracionSeleccionadaId] = useState(null);
+    const [plantillaSeleccionadaId, setPlantillaSeleccionadaId] = useState(null);
     const [preconfiguraciones, setPreconfiguraciones] = useState([]);
     const [tituloReporte, setTituloReporte] = useState("");
     const [anioReporte, setAnioReporte] = useState(null);
@@ -56,11 +56,11 @@ function ListaReportes() {
         setOpenUtilizarPreconfiguracion(false);
         setAnioReporte(null);
         setTituloReporte("");
-        setPreconfiguracionSeleccionadaId(null);
+        setPlantillaSeleccionadaId(null);
     };
 
-    const handlePreconfiguracionSeleccionadaChange = (event) => {
-        setPreconfiguracionSeleccionadaId(event.target.value);
+    const handlePlantillaSeleccionadaChange = (event) => {
+        setPlantillaSeleccionadaId(event.target.value);
     };
 
     const handleOpenSinPreconfiguraciones = () => {
@@ -88,9 +88,9 @@ function ListaReportes() {
             setAnioReporteError(!anioReporte);
             return;
         }
-        // El preset seleccionado está en preconfiguracionSeleccionadaId
+        // El preset seleccionado está en plantillaSeleccionadaId
         // El titulo del reporte está en tituloReporte
-        reporteService.obtenerPreset(preconfiguracionSeleccionadaId)
+        reporteService.obtenerPreset(plantillaSeleccionadaId)
             .then(response => response.data)
             .then(data => {
                 const categorias = data.categorias;
@@ -359,7 +359,7 @@ function ListaReportes() {
                                 </Grid>
                                 <Grid item xs={12} container justifyContent={"center"}>
                                     <Typography variant="body1" borderColor={"secondary"}>
-                                        ¿Desea utilizar una preconfiguración para el reporte?
+                                        ¿Desea utilizar una plantilla para el reporte?
                                     </Typography>
                                 </Grid>
                                 <Grid item xs={12} container alignItems={"center"} justifyContent={"center"}>
@@ -427,16 +427,16 @@ function ListaReportes() {
                                 </Grid>
                                 <Grid item xs={12} container >
                                     <Typography variant="body1">
-                                        Seleccione una preconfiguración para el reporte:
+                                        Seleccione una plantilla para el reporte:
                                     </Typography>
                                 </Grid>
                                 <Grid item xs={12} container justifyContent="center" sx={{ mb: 2 }}>
                                     <FormControl fullWidth>
-                                        <InputLabel>Preconfiguración</InputLabel>
+                                        <InputLabel>Plantilla</InputLabel>
                                         <Select
                                             label="Preconfiguración"
-                                            value={preconfiguracionSeleccionadaId}
-                                            onChange={handlePreconfiguracionSeleccionadaChange}
+                                            value={plantillaSeleccionadaId}
+                                            onChange={handlePlantillaSeleccionadaChange}
                                             fullWidth
                                         >
                                             {preconfiguraciones && preconfiguraciones.length >= 1 && preconfiguraciones.map((preconfiguracion) => (
@@ -460,7 +460,7 @@ function ListaReportes() {
                                         color="primary"
                                         variant="contained"
                                         sx={{ textTransform: "none", fontStyle: "italic", fontSize: "1rem" }}
-                                        disabled={!tituloReporte || !anioReporte || !preconfiguracionSeleccionadaId}
+                                        disabled={!tituloReporte || !anioReporte || !plantillaSeleccionadaId}
                                     >
                                         Crear Reporte
                                     </Button>

@@ -1,6 +1,7 @@
 import './App.css';
 import { ThemeProvider, createTheme } from '@mui/material';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
 import Empresas from './components/Empresas';
 import Usuarios from './components/Usuarios';
 import CrearUsuario from './components/CrearUsuario';
@@ -28,6 +29,26 @@ const theme = createTheme({
 });
 
 function App() {
+
+  useEffect(() => {
+    window.addEventListener('error', e => {
+      if (e.message === 'ResizeObserver loop completed with undelivered notifications.') {
+        const resizeObserverErrDiv = document.getElementById(
+          'webpack-dev-server-client-overlay-div'
+        );
+        const resizeObserverErr = document.getElementById(
+          'webpack-dev-server-client-overlay'
+        );
+        if (resizeObserverErr) {
+          resizeObserverErr.setAttribute('style', 'display: none');
+        }
+        if (resizeObserverErrDiv) {
+          resizeObserverErrDiv.setAttribute('style', 'display: none');
+        }
+      }
+    });
+  }, []);
+
   return (
     <div style={{ backgroundColor: "#f0f0f0", minHeight: "100vh" }}>
       <ThemeProvider theme={theme}>

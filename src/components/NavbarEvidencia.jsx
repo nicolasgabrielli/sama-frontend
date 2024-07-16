@@ -197,11 +197,21 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
                         <Grid item>
                             <Button
                                 variant="contained"
-                                color="error"
+                                color="warning"
                                 sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", color: "white" }}
                                 onClick={() => handleOpenGuardarPreset()}
                             >
-                                Guardar Preset
+                                Guardar Plantilla
+                            </Button>
+                        </Grid>
+                        <Grid item>
+                            <Button
+                                variant="contained"
+                                color="error"
+                                sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", color: "white" }}
+                                onClick={() => console.log('Autorizar Reporte')}
+                            >
+                                Cerrar Reporte
                             </Button>
                         </Grid>
                     </Grid>
@@ -426,18 +436,18 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
                 <DialogContent>
                     <Grid container spacing={2}>
                         <Grid item xs={8}>
-                            <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Guardar Preset</Typography>
+                            <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Guardar Plantilla</Typography>
                         </Grid>
                         <Grid item xs={4} container justifyContent="flex-end" sx={{ mb: 2 }}>
                             <IconButton onClick={() => handleCloseGuardarPreset()} disableRipple><CloseIcon /></IconButton>
                         </Grid>
                     </Grid>
                     <Grid item xs={12} sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
-                        <Typography variant="h6">Ingrese el título del preset:</Typography>
+                        <Typography variant="h6">Ingrese el título de la plantilla:</Typography>
                     </Grid>
                     <Grid item xs={12} sx={{ display: 'flex', alignItems: 'center', mt: 2, ml: 2 }}>
                         <TextField
-                            label="Título del Preset"
+                            label="Título de la Plantilla"
                             variant="outlined"
                             value={tituloPreset}
                             sx={{ width: "90%" }}
