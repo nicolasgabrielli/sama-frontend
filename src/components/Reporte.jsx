@@ -887,7 +887,7 @@ function Reporte() {
                                                                     </Tooltip>
 
                                                                     <Tooltip
-                                                                        title={campo.evidencias.length === 0 ? "No contiene evidencias" : "Visualizar Evidencias"}
+                                                                        title={campo.evidencias ? (campo.evidencias.length === 0 ? "No contiene evidencias" : "Visualizar Evidencias") : "No contiene evidencias"}
                                                                         placement="bottom"
                                                                         arrow
                                                                         disableInteractive
@@ -897,7 +897,7 @@ function Reporte() {
                                                                                 variant="outlined"
                                                                                 color="primary"
                                                                                 onClick={() => handleVisualizarEvidenciaCampo(indexSeccion, index)}
-                                                                                disabled={campo.evidencias.length === 0 || editMode}
+                                                                                disabled={(campo.evidencias ? (campo.evidencias.length === 0) : false)|| editMode}
                                                                                 sx={{
                                                                                     transition: "transform 0.2s",
                                                                                     '&:hover': {
@@ -932,7 +932,7 @@ function Reporte() {
                                                                     )}
                                                                 </Grid>
                                                             </Grid>
-                                                            {(campo.subCampos && (campo.subCampos.length > 0)) && (
+                                                            {(campo.subCampos && (campo.subCampos.length > 0 || campo.subCampos != null)) && (
                                                                 <Grid item xs={12}>
                                                                     <Box sx={{ pl: 4, pr: 4 }}>
                                                                         {campo.subCampos.map((subCampos, subIndex) => (

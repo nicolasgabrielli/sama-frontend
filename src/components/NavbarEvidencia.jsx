@@ -207,11 +207,11 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
                         <Grid item>
                             <Button
                                 variant="contained"
-                                color="error"
+                                color="success"
                                 sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", color: "white" }}
                                 onClick={() => console.log('Autorizar Reporte')}
                             >
-                                Cerrar Reporte
+                                Autorizar Reporte
                             </Button>
                         </Grid>
                     </Grid>
