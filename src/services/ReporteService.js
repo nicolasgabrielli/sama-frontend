@@ -78,6 +78,10 @@ class ReporteService {
     crearPreset = (data) => {
         return axios.post(API_URL + "preset", data);
     }
+
+    reescribirReporte = (idReporte, data) => {
+        return axios.put(API_URL + "actualizar/reescribir/" + idReporte, data);
+    }
 }
 
 const reporteService = new ReporteService();

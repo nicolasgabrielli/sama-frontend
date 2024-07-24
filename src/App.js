@@ -54,7 +54,7 @@ function App() {
       <ThemeProvider theme={theme}>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Login />} />
+            <Route path="/" element={<Empresas />} />
             <Route path="/empresas" element={<Empresas />} />
             <Route path="/empresas/crear" element={<CrearEmpresa />} />
             <Route path="/empresas/:idEmpresa/reportes/:idReporte" element={<Reporte />} />

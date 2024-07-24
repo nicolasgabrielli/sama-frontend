@@ -667,18 +667,43 @@ function Reporte() {
     };
 
     // Función para activar modo de edición de estructura.
-    const handleEditMode = (indexSeccion) => {
-        setEditMode(!editMode);
-        if (editMode) {
-            setSeccionActualIndex(indexSeccion);
-        } else {
-            setSeccionActualIndex(0);
-        }
+    const handleEditMode = (guardado) => {
+        setEditMode((prevEditMode) => {
+            const newEditMode = !prevEditMode;
+            if (!newEditMode) {                          // Si se desactiva el modo de edición.
+                fetchData();
+            }
+            if (guardado) {                             // Si se guardaron los cambios.
+                const nuevoReporte = reporteService.obtenerReporte(idReporte);
+                nuevoReporte.categorias = categorias.map((categoria, index) => {
+                    return {
+                        titulo: categoria,
+                        secciones: secciones.map((seccion, index) => {
+                            return {
+                                titulo: seccion.titulo,
+                                campos: seccion.campos.map((campo, index) => {
+                                    return {
+                                        titulo: campo.titulo,
+                                        contenido: campo.contenido,
+                                        tipo: campo.tipo,
+                                        subCampos: campo.subCampos,
+                                        evidencias: campo.evidencias,
+                                        autorizacion: campo.autorizacion
+                                    }
+                                })
+                            }
+                        })
+                    }
+                });
+                reporteService.reescribirReporte(idReporte, nuevoReporte);
+                fetchData();
+            }
+            return newEditMode;
+        });
     };
 
     const handleDragEnd = (result) => {
         const { source, destination } = result;
-        console.log(source, destination);
 
         if (!destination) return;
 
@@ -772,20 +797,59 @@ function Reporte() {
                                                                 </IconButton>
                                                             </span>
                                                         </Tooltip>
-                                                        <Tooltip title="Mover Campos" placement="bottom" arrow>
-                                                            <IconButton
-                                                                variant="outlined"
-                                                                onClick={() => handleEditMode(indexSeccion)}
-                                                                sx={{
-                                                                    transition: "transform 0.2s",
-                                                                    '&:hover': {
-                                                                        transform: "scale(1.1) translateY(-2px)",
-                                                                    },
-                                                                }}
-                                                            >
-                                                                <ImportExportIcon color={editMode ? "secondary" : "primary"} />
-                                                            </IconButton>
-                                                        </Tooltip>
+                                                        {editMode && (
+                                                            <>
+                                                                <Tooltip title="Descartar Cambios" placement="bottom" arrow>
+                                                                    <span>
+                                                                        <IconButton
+                                                                            variant="outlined"
+                                                                            onClick={() => handleEditMode(false)}
+                                                                            sx={{
+                                                                                transition: "transform 0.2s",
+                                                                                '&:hover': {
+                                                                                    transform: "scale(1.1) translateY(-2px)",
+                                                                                },
+                                                                            }}
+                                                                        >
+                                                                            <CloseIcon color="error" />
+                                                                        </IconButton>
+                                                                    </span>
+                                                                </Tooltip>
+                                                                <Tooltip title="Guardar Cambios" placement="bottom" arrow>
+                                                                    <span>
+                                                                        <IconButton
+                                                                            variant="outlined"
+                                                                            onClick={() => handleEditMode(true)}
+                                                                            sx={{
+                                                                                transition: "transform 0.2s",
+                                                                                '&:hover': {
+                                                                                    transform: "scale(1.1) translateY(-2px)",
+                                                                                },
+                                                                            }}
+                                                                        >
+                                                                            <CheckIcon color="cuaternary" />
+                                                                        </IconButton>
+                                                                    </span>
+                                                                </Tooltip>
+                                                            </>
+
+                                                        )}
+                                                        {!editMode && (
+                                                            <Tooltip title="Mover Campos" placement="bottom" arrow>
+                                                                <IconButton
+                                                                    variant="outlined"
+                                                                    onClick={() => handleEditMode(false)}
+                                                                    sx={{
+                                                                        transition: "transform 0.2s",
+                                                                        '&:hover': {
+                                                                            transform: "scale(1.1) translateY(-2px)",
+                                                                        },
+                                                                    }}
+                                                                >
+                                                                    <ImportExportIcon color={editMode ? "secondary" : "primary"} />
+                                                                </IconButton>
+                                                            </Tooltip>
+                                                        )}
                                                     </Typography>
                                                 </Grid>
                                                 <Grid item xs={6}>
@@ -897,7 +961,7 @@ function Reporte() {
                                                                                 variant="outlined"
                                                                                 color="primary"
                                                                                 onClick={() => handleVisualizarEvidenciaCampo(indexSeccion, index)}
-                                                                                disabled={(campo.evidencias ? (campo.evidencias.length === 0) : false)|| editMode}
+                                                                                disabled={(campo.evidencias ? (campo.evidencias.length === 0) : false) || editMode}
                                                                                 sx={{
                                                                                     transition: "transform 0.2s",
                                                                                     '&:hover': {
@@ -1024,11 +1088,10 @@ function Reporte() {
                             sx={{
                                 textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1.5rem", mt: 2
                             }}
-                            onClick={() => 
-                                {
-                                    setEditedSection({ titulo: "" });
-                                    setOpenSectionDialog(true);
-                                }}
+                            onClick={() => {
+                                setEditedSection({ titulo: "" });
+                                setOpenSectionDialog(true);
+                            }}
                             startIcon={<AddCircleIcon style={{ fontSize: "1.5rem" }} />}
                         >
                             Agregar Sección
