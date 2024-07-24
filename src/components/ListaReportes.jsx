@@ -1,15 +1,13 @@
 import CloseIcon from '@mui/icons-material/Close';
 import { Box, Button, Container, Dialog, DialogActions, DialogContent, FormControl, Grid, IconButton, InputLabel, MenuItem, Paper, Select, TextField, Typography } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Navbar from "./Navbar";
-
 import { Link, useParams } from "react-router-dom";
 import empresaService from "../services/EmpresaService";
 import reporteService from "../services/ReporteService";
 import InformacionEmpresa from "./InformacionEmpresa";
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import CircularProgress from '@mui/material/CircularProgress';
 import Loading from './Loading';
 
 function ListaReportes() {
@@ -25,9 +23,8 @@ function ListaReportes() {
     const [openCrearReporte, setOpenCrearReporte] = useState(false);
     const [openUtilizarPreconfiguracion, setOpenUtilizarPreconfiguracion] = useState(false);
     const [openSinPreconfiguraciones, setOpenSinPreconfiguraciones] = useState(false);
-    const [preconfiguracionSeleccionadaId, setPreconfiguracionSeleccionadaId] = useState(null);
+    const [plantillaSeleccionadaId, setPlantillaSeleccionadaId] = useState(null);
     const [preconfiguraciones, setPreconfiguraciones] = useState([]);
-    const [categorias, setCategorias] = useState([]);
     const [tituloReporte, setTituloReporte] = useState("");
     const [anioReporte, setAnioReporte] = useState(null);
     const [tituloReporteError, setTituloReporteError] = useState(false);
@@ -38,12 +35,10 @@ function ListaReportes() {
 
     const handleOpenCrearReporte = () => {
         setOpenCrearReporte(true);
-        setCategorias([]);
     };
 
     const handleCloseCrearReporte = () => {
         setOpenCrearReporte(false);
-        setCategorias([]);
         setAnioReporte(null);
         setTituloReporte("");
     };
@@ -61,11 +56,11 @@ function ListaReportes() {
         setOpenUtilizarPreconfiguracion(false);
         setAnioReporte(null);
         setTituloReporte("");
-        setPreconfiguracionSeleccionadaId(null);
+        setPlantillaSeleccionadaId(null);
     };
 
-    const handlePreconfiguracionSeleccionadaChange = (event) => {
-        setPreconfiguracionSeleccionadaId(event.target.value);
+    const handlePlantillaSeleccionadaChange = (event) => {
+        setPlantillaSeleccionadaId(event.target.value);
     };
 
     const handleOpenSinPreconfiguraciones = () => {
@@ -93,9 +88,9 @@ function ListaReportes() {
             setAnioReporteError(!anioReporte);
             return;
         }
-        // El preset seleccionado está en preconfiguracionSeleccionadaId
+        // El preset seleccionado está en plantillaSeleccionadaId
         // El titulo del reporte está en tituloReporte
-        reporteService.obtenerPreset(preconfiguracionSeleccionadaId)
+        reporteService.obtenerPreset(plantillaSeleccionadaId)
             .then(response => response.data)
             .then(data => {
                 const categorias = data.categorias;
@@ -148,6 +143,7 @@ function ListaReportes() {
         await reporteService.eliminarReporte(idReporte);
         await fetchData();
         setOpenEliminarReporte(false);
+        window.location.reload();
     };
 
     // Función para descargar el reporte en un formato específico.
@@ -206,26 +202,32 @@ function ListaReportes() {
         setIdReporte(null);
     };
 
-    const sleep = async (milliseconds) => {
-        await new Promise(resolve => {
-            return setTimeout(resolve, milliseconds)
-        });
-    };
-
     // Función para obtener la lista de reportes, preconfiguraciones y la información de la empresa
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         setLoading(true);
         try {
             await reporteService.obtenerListaReportes(idEmpresa)
                 .then(response => response.data)
-                .then(data => setReportes(data))
+                .then(data => {
+                    if (data) {
+                        setReportes(data);
+                    } else {
+                        setReportes([]);
+                    }
+                })
                 .catch(error => console.error('Error al obtener la lista de reportes:', error));
-
+    
             await reporteService.obtenerPresets()
                 .then(response => response.data)
-                .then(data => setPreconfiguraciones(data))
+                .then(data => {
+                    if (data) {
+                        setPreconfiguraciones(data);
+                    } else {
+                        setPreconfiguraciones([]);
+                    }
+                })
                 .catch(error => console.error('Error al obtener la lista de preconfiguraciones:', error));
-
+    
             await empresaService.getEmpresa(idEmpresa)
                 .then(response => response.data)
                 .then(data => setInfoEmpresa(data))
@@ -234,7 +236,8 @@ function ListaReportes() {
             console.error('Error al obtener la información:', error);
         }
         setLoading(false);
-    };
+    }, [idEmpresa]);
+    
 
     // Cargar la lista de reportes, preconfiguraciones y la información de la empresa al cargar el componente
     useEffect(() => {
@@ -243,7 +246,7 @@ function ListaReportes() {
             await fetchData();
             setLoading(false);
         })();
-    }, []);
+    }, [fetchData]);
 
     return (
         <>
@@ -356,7 +359,7 @@ function ListaReportes() {
                                 </Grid>
                                 <Grid item xs={12} container justifyContent={"center"}>
                                     <Typography variant="body1" borderColor={"secondary"}>
-                                        ¿Desea utilizar una preconfiguración para el reporte?
+                                        ¿Desea utilizar una plantilla para el reporte?
                                     </Typography>
                                 </Grid>
                                 <Grid item xs={12} container alignItems={"center"} justifyContent={"center"}>
@@ -424,19 +427,19 @@ function ListaReportes() {
                                 </Grid>
                                 <Grid item xs={12} container >
                                     <Typography variant="body1">
-                                        Seleccione una preconfiguración para el reporte:
+                                        Seleccione una plantilla para el reporte:
                                     </Typography>
                                 </Grid>
                                 <Grid item xs={12} container justifyContent="center" sx={{ mb: 2 }}>
                                     <FormControl fullWidth>
-                                        <InputLabel>Preconfiguración</InputLabel>
+                                        <InputLabel>Plantilla</InputLabel>
                                         <Select
                                             label="Preconfiguración"
-                                            value={preconfiguracionSeleccionadaId}
-                                            onChange={handlePreconfiguracionSeleccionadaChange}
+                                            value={plantillaSeleccionadaId}
+                                            onChange={handlePlantillaSeleccionadaChange}
                                             fullWidth
                                         >
-                                            {Array.isArray(preconfiguraciones) && preconfiguraciones.map((preconfiguracion) => (
+                                            {preconfiguraciones && preconfiguraciones.length >= 1 && preconfiguraciones.map((preconfiguracion) => (
                                                 <MenuItem value={preconfiguracion.id}>{preconfiguracion.titulo}</MenuItem>
                                             ))}
                                         </Select>
@@ -457,7 +460,7 @@ function ListaReportes() {
                                         color="primary"
                                         variant="contained"
                                         sx={{ textTransform: "none", fontStyle: "italic", fontSize: "1rem" }}
-                                        disabled={!tituloReporte || !anioReporte || !preconfiguracionSeleccionadaId}
+                                        disabled={!tituloReporte || !anioReporte || !plantillaSeleccionadaId}
                                     >
                                         Crear Reporte
                                     </Button>

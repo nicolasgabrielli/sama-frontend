@@ -1,10 +1,12 @@
-import { Grid, Box, Button, Dialog, DialogContent, DialogActions, Typography, TextField, Select, MenuItem } from "@mui/material";
-import { Link, useParams } from "react-router-dom";
+import { Grid, Box, Button, Dialog, DialogContent, DialogActions, Typography, TextField, Tooltip, Select, MenuItem } from "@mui/material";
+import { useParams } from "react-router-dom";
 import CloseIcon from '@mui/icons-material/Close';
 import IconButton from '@mui/material/IconButton';
+import DeleteIcon from '@mui/icons-material/Delete';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
-import React, { useEffect } from "react";
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import React from "react";
 import reporteService from "../services/ReporteService";
 
 function NavbarEvidencia({ evidencias, refreshEvidencias }) {
@@ -16,6 +18,34 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
     const [paginaEvidencia, setPaginaEvidencia] = React.useState('');
     const [nombreEvidencia, setNombreEvidencia] = React.useState('');
     const [openDescargarReporteDialog, setOpenDescargarReporteDialog] = React.useState(false);
+    const [openGuardarPresetDialog, setOpenGuardarPresetDialog] = React.useState(false);
+    const [tituloPreset, setTituloPreset] = React.useState('');
+
+
+
+    const handleOpenGuardarPreset = () => {
+        setOpenGuardarPresetDialog(true);
+    };
+
+    const handleCloseGuardarPreset = () => {
+        setOpenGuardarPresetDialog(false);
+        setTituloPreset('');
+    };
+
+    const handleGuardarPreset = async () => {
+        try {
+            const response = await reporteService.crearPreset({ id: idReporte, nombre: tituloPreset });
+            if (response.status === 200) {
+                console.log('Preset guardado exitosamente:', response.data);
+                refreshEvidencias(); // Asumiendo que quieres refrescar las evidencias después de guardar el preset
+                handleCloseGuardarPreset();
+            } else {
+                console.error('Error al guardar el preset:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Error al guardar el preset:', error);
+        }
+    };
 
     const handleFileChange = (event) => {
         const file = event.target.files[0];
@@ -167,11 +197,21 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
                         <Grid item>
                             <Button
                                 variant="contained"
-                                color="error"
+                                color="warning"
                                 sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", color: "white" }}
-                                //onClick={() => setOpenDescargarCrearPresetDialog(true)}
+                                onClick={() => handleOpenGuardarPreset()}
                             >
-                                Guardar Preset
+                                Guardar Plantilla
+                            </Button>
+                        </Grid>
+                        <Grid item>
+                            <Button
+                                variant="contained"
+                                color="success"
+                                sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", color: "white" }}
+                                onClick={() => console.log('Autorizar Reporte')}
+                            >
+                                Autorizar Reporte
                             </Button>
                         </Grid>
                     </Grid>
@@ -206,28 +246,30 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
                                         <Typography variant="h6" color={"primary"} sx={{
                                             fontFamily: "Segoe UI",
                                             fontStyle: "italic",
-                                            fontWeight: "bold"
+                                            fontWeight: "normal"
                                         }}>
                                             {evidencia.tipo.toLowerCase() === 'archivo' ? evidencia.nombreOriginal : formatUrl(evidencia.url)}
                                         </Typography>
                                     </Grid>
                                     <Grid item xs={6} container justifyContent={"flex-end"}>
-                                        <Button
-                                            variant="contained"
-                                            color="error"
-                                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", mr: 1 }}
-                                            onClick={() => handleEliminarEvidencia(evidencia.id)}
-                                        >
-                                            Eliminar
-                                        </Button>
-                                        <Button
-                                            variant="contained"
-                                            color="cuaternary"
-                                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", color: "white" }}
-                                            onClick={() => accederEvidencia(evidencia)}
-                                        >
-                                            {evidencia.tipo.toLowerCase() === 'archivo' ? "Descargar" : "Abrir"}
-                                        </Button>
+                                        <Tooltip title="Eliminar" placement="bottom" arrow>
+                                            <IconButton
+                                                variant="outlined"
+                                                color="error"
+                                                onClick={() => handleEliminarEvidencia(evidencia)}
+                                            >
+                                                <DeleteIcon />
+                                            </IconButton>
+                                        </Tooltip>
+                                        <Tooltip title={evidencia.tipo.toLowerCase() === 'archivo' ? "Descargar" : "Abrir"} placement="bottom" arrow>
+                                            <IconButton
+                                                variant="outlined"
+                                                color="primary"
+                                                onClick={() => () => accederEvidencia(evidencia)}
+                                            >
+                                                {evidencia.tipo.toLowerCase() === 'archivo' ? <CloudDownloadIcon /> : <OpenInNewIcon />}
+                                            </IconButton>
+                                        </Tooltip>
                                     </Grid>
                                 </Grid>
                             </Box>
@@ -270,7 +312,7 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
                             label="Nombre de la Evidencia"
                             variant="outlined"
                             value={nombreEvidencia}
-                            sx={{ width: "90%"}}
+                            sx={{ width: "90%" }}
                             onChange={(e) => setNombreEvidencia(e.target.value)}
                         />
                     </Grid>
@@ -390,6 +432,43 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
                     </Grid>
                 </DialogActions>
             </Dialog>
+            <Dialog open={openGuardarPresetDialog} onClose={() => handleCloseGuardarPreset()} maxWidth="sm" fullWidth>
+                <DialogContent>
+                    <Grid container spacing={2}>
+                        <Grid item xs={8}>
+                            <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Guardar Plantilla</Typography>
+                        </Grid>
+                        <Grid item xs={4} container justifyContent="flex-end" sx={{ mb: 2 }}>
+                            <IconButton onClick={() => handleCloseGuardarPreset()} disableRipple><CloseIcon /></IconButton>
+                        </Grid>
+                    </Grid>
+                    <Grid item xs={12} sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
+                        <Typography variant="h6">Ingrese el título de la plantilla:</Typography>
+                    </Grid>
+                    <Grid item xs={12} sx={{ display: 'flex', alignItems: 'center', mt: 2, ml: 2 }}>
+                        <TextField
+                            label="Título de la Plantilla"
+                            variant="outlined"
+                            value={tituloPreset}
+                            sx={{ width: "90%" }}
+                            onChange={(e) => setTituloPreset(e.target.value)}
+                        />
+                    </Grid>
+                </DialogContent>
+                <DialogActions>
+                    <Grid container>
+                        <Grid item xs={12} container justifyContent="flex-end">
+                            <Button color="secondary" variant="text" onClick={() => handleCloseGuardarPreset()}>
+                                Cancelar
+                            </Button>
+                            <Button color="primary" variant="text" onClick={() => handleGuardarPreset()}>
+                                Guardar
+                            </Button>
+                        </Grid>
+                    </Grid>
+                </DialogActions>
+            </Dialog>
+
         </React.Fragment>
     );
 }

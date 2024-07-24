@@ -53,10 +53,6 @@ class ReporteService {
         return axios.get(API_URL2 + "evidencia/" + idReporte);
     }
 
-    obtenerEvidencias(idReporte, coordenadas) {
-        return axios.get(API_URL2 + "evidencia/" + idReporte, coordenadas);
-    }
-
     crearEvidencia(idReporte, evidencia) {
         return axios.post(API_URL2 + "evidencia/" + idReporte, evidencia);
     }
@@ -74,6 +70,14 @@ class ReporteService {
             responseType: 'blob',  // Asegura que la respuesta sea manejada como un blob
         });
     };
+
+    autorizarCampo = (idReporte, coordenadas) => {
+        return axios.put(API_URL + "autorizar/campo/" + idReporte, coordenadas);
+    }
+
+    crearPreset = (data) => {
+        return axios.post(API_URL + "preset", data);
+    }
 }
 
 const reporteService = new ReporteService();

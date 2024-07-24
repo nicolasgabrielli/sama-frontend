@@ -173,7 +173,7 @@ function Empresas() {
                             <Button onClick={handleCloseDialog} color="primary" variant="outlined">
                                 Cancelar
                             </Button>
-                            <Button onClick={handleConfirmarEliminacion} color="error" variant="contained">
+                            <Button onClick={handleConfirmarEliminacion} color="error" variant="outlined">
                                 Eliminar <DeleteIcon sx={{ ml: 0.5, mr: -0.5 }} />
                             </Button>
                         </DialogActions>

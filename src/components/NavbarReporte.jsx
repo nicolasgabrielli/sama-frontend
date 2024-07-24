@@ -1,4 +1,4 @@
-import AddCircleOutlinedIcon from '@mui/icons-material/AddCircleOutlined';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
 import CloseIcon from '@mui/icons-material/Close';
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -68,12 +68,12 @@ function NavbarReporte({ useSectionMode, categorias, categoriaActualIndex, onCat
                             <KeyboardArrowDownIcon />
                         </IconButton>
                     )}
-                    <Typography variant="h4" component="div" sx={{ mr: 2, fontFamily: "Copperplate Gothic", fontWeight: "bold" }}>
+                    <Typography variant="h4" component="div" sx={{ mr: 2, ml: 2, fontFamily: "Copperplate Gothic", fontWeight: "bold" }}>
                         SAMA
                     </Typography>
-                    <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "center" }}>
+                    <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "center", ml: -20 }}>
                         <Typography variant="h5" component="div" noWrap sx={{ display: { xs: "none", md: "flex" }, fontStyle: "italic", p: 1 }}>
-                            Reporte {tituloReporte} - {anioReporte}
+                            {tituloReporte} - {anioReporte}
                         </Typography>
                     </Box>
                 </Toolbar>
@@ -105,17 +105,24 @@ function NavbarReporte({ useSectionMode, categorias, categoriaActualIndex, onCat
                             <Button
                                 variant="contained"
                                 onClick={() => handleOpenDialog()}
-                                sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "normal", fontSize: "1rem", m: 0.5, width: "250px" }}
-                                startIcon={<AddCircleOutlinedIcon />}
+                                sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", m: 0.5, width: "250px" }}
+                                startIcon={<AddCircleIcon />}
                             >
                                 Agregar Categoría
                             </Button>
                             <Link to={-1}>
                                 <Button
                                     variant="contained"
-                                    sx={{ textTransform: "none", fontSize: "1rem", fontStyle: "normal", fontWeight: "bold", mr: 1 }}
+                                    sx={{
+                                        textTransform: "none",
+                                        fontSize: "1rem",
+                                        fontStyle: "italic",
+                                        fontWeight: "bold",
+                                        mr: 1,
+                                    }}
                                     startIcon={<ArrowBackIcon />}
                                 >
+
                                     Volver
                                 </Button>
                             </Link>
@@ -123,7 +130,7 @@ function NavbarReporte({ useSectionMode, categorias, categoriaActualIndex, onCat
                     </Collapse>
                 )}
             </AppBar>
-            <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+            <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="md" fullWidth>
                 <DialogContent>
                     <Grid container spacing={2}>
                         <Grid item xs={8}>
@@ -132,17 +139,19 @@ function NavbarReporte({ useSectionMode, categorias, categoriaActualIndex, onCat
                         <Grid item xs={4} container justifyContent="flex-end" sx={{ mb: 2 }}>
                             <IconButton onClick={() => setOpenDialog(false)} disableRipple><CloseIcon /></IconButton>
                         </Grid>
-                        <Grid item xs={12} container>
-                            <Typography variant="h7">Introduzca el título de la categoría:</Typography>
-                        </Grid>
                         <Grid item xs={12}>
-                            <TextField
-                                label="Título de la Categoría"
-                                variant="outlined"
-                                fullWidth
-                                value={tituloCategoria}
-                                onChange={handleTituloCategoriaChange}
-                            />
+                            <Typography variant="body1" sx={{ px: 2, mb: 2, mt: -1 }}>
+                                Introduzca el título de la categoría:
+                            </Typography>
+                            <Box sx={{ px: 2 }}>
+                                <TextField
+                                    label="Título de la Categoría"
+                                    variant="outlined"
+                                    fullWidth
+                                    value={tituloCategoria}
+                                    onChange={(event) => handleTituloCategoriaChange(event)}
+                                />
+                            </Box>
                         </Grid>
                     </Grid>
                 </DialogContent>
@@ -152,7 +161,7 @@ function NavbarReporte({ useSectionMode, categorias, categoriaActualIndex, onCat
                             <Button color="secondary" variant="text" onClick={() => setOpenDialog(false)}>
                                 Cancelar
                             </Button>
-                            <Button color="primary" variant="text" onClick={handleAgregarCategoria}>
+                            <Button color="cuaternary" variant="text" onClick={() => handleAgregarCategoria()}>
                                 Agregar
                             </Button>
                         </Grid>
