@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { TextField, Button, Grid, Box, Typography, Paper, Container } from '@mui/material';
 import Navbar from './Navbar';
+import LoginService from "../services/LoginService";
 
 function Login() {
     const [email, setEmail] = useState('');
@@ -15,6 +16,7 @@ function Login() {
         } else {
             setError('');
             console.log('Iniciando sesión con:', { email, password });
+            LoginService.login({ correo: email, contrasenia: password })
         }
     };
 

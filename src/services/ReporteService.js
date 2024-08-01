@@ -1,88 +1,26 @@
-import axios from 'axios';
-const API_URL = 'http://localhost:8081/api/reporte/';
-const API_URL2 = 'http://localhost:8081/api/';
+import axiosInstance from './AxiosConfig';
 
-class ReporteService {
-    obtenerListaReportes(idEmpresa) {
-        return axios.get(API_URL + "por-empresa/" + idEmpresa);
-    }
+const API_URL = '/api/reporte/';
+const API_URL2 = '/api/';
 
-    obtenerReporte(id) {
-        return axios.get(API_URL + "por-id/" + id);
-    }
-
-    crearReporte(idEmpresa, reporte) {
-        return axios.post(API_URL + "crear/" + idEmpresa, reporte);
-    }
-
-    actualizarReporte(reporte, idReporte) {
-        return axios.put(API_URL + "actualizar/" + idReporte, reporte);
-    }
-
-    eliminarReporte(id) {
-        return axios.delete(API_URL +"eliminar/" + id);
-    }
-
-    obtenerPresets() {
-        return axios.get(API_URL + "preset");
-    }
-
-    obtenerPreset(id) {
-        return axios.get(API_URL + "preset/" + id);
-    }
-
-    eliminarContenido(idReporte, coordenadas) {
-        return axios.delete(API_URL + "eliminar-contenido/" + idReporte, {
-            data: coordenadas
-        });
-    }
-
-    obtenerCategorias(idReporte) {
-        return axios.get(API_URL + "categorias/" + idReporte);
-    }
-
-    obtenerSecciones(idReporte, coordenadas) {
-        return axios.get(API_URL + "secciones/" + idReporte, coordenadas);
-    }
-
-    obtenerCampos(idReporte, coordenadas) {
-        return axios.get(API_URL + "campos/" + idReporte, coordenadas);
-    }
-
-    obtenerEvidencias(idReporte) {
-        return axios.get(API_URL2 + "evidencia/" + idReporte);
-    }
-
-    crearEvidencia(idReporte, evidencia) {
-        return axios.post(API_URL2 + "evidencia/" + idReporte, evidencia);
-    }
-
-    eliminarEvidencia(idEvidencia) {
-        return axios.delete(API_URL2 + "evidencia/" + idEvidencia);
-    }
-
-    obtenerUrlS3(idEvidencia) {
-        return axios.get(API_URL2 + "evidencia/url/" + idEvidencia);
-    }
-
-    descargarReporte = (idReporte, formato) => {
-        return axios.get(API_URL + formato + "/" + idReporte, {
-            responseType: 'blob',  // Asegura que la respuesta sea manejada como un blob
-        });
-    };
-
-    autorizarCampo = (idReporte, coordenadas) => {
-        return axios.put(API_URL + "autorizar/campo/" + idReporte, coordenadas);
-    }
-
-    crearPreset = (data) => {
-        return axios.post(API_URL + "preset", data);
-    }
-
-    reescribirReporte = (idReporte, data) => {
-        return axios.put(API_URL + "actualizar/reescribir/" + idReporte, data);
-    }
-}
-
-const reporteService = new ReporteService();
-export default reporteService;
+export default {
+    obtenerListaReportes: (idEmpresa) => axiosInstance.get(`${API_URL}por-empresa/${idEmpresa}`),
+    obtenerReporte: (id) => axiosInstance.get(`${API_URL}por-id/${id}`),
+    crearReporte: (idEmpresa, reporte) => axiosInstance.post(`${API_URL}crear/${idEmpresa}`, reporte),
+    actualizarReporte: (reporte, idReporte) => axiosInstance.put(`${API_URL}actualizar/${idReporte}`, reporte),
+    eliminarReporte: (id) => axiosInstance.delete(`${API_URL}eliminar/${id}`),
+    obtenerPresets: () => axiosInstance.get(`${API_URL}preset`),
+    obtenerPreset: (id) => axiosInstance.get(`${API_URL}preset/${id}`),
+    eliminarContenido: (idReporte, coordenadas) => axiosInstance.delete(`${API_URL}eliminar-contenido/${idReporte}`, { data: coordenadas }),
+    obtenerCategorias: (idReporte) => axiosInstance.get(`${API_URL}categorias/${idReporte}`),
+    obtenerSecciones: (idReporte, coordenadas) => axiosInstance.get(`${API_URL}secciones/${idReporte}`, coordenadas),
+    obtenerCampos: (idReporte, coordenadas) => axiosInstance.get(`${API_URL}campos/${idReporte}`, coordenadas),
+    obtenerEvidencias: (idReporte) => axiosInstance.get(`${API_URL2}evidencia/${idReporte}`),
+    crearEvidencia: (idReporte, evidencia) => axiosInstance.post(`${API_URL2}evidencia/${idReporte}`, evidencia),
+    eliminarEvidencia: (idEvidencia) => axiosInstance.delete(`${API_URL2}evidencia/${idEvidencia}`),
+    obtenerUrlS3: (idEvidencia) => axiosInstance.get(`${API_URL2}evidencia/url/${idEvidencia}`),
+    descargarReporte: (idReporte, formato) => axiosInstance.get(`${API_URL}${formato}/${idReporte}`, { responseType: 'blob' }),
+    autorizarCampo: (idReporte, coordenadas) => axiosInstance.put(`${API_URL}autorizar/campo/${idReporte}`, coordenadas),
+    crearPreset: (data) => axiosInstance.post(`${API_URL}preset`, data),
+    reescribirReporte: (idReporte, data) => axiosInstance.put(`${API_URL}actualizar/reescribir/${idReporte}`, data)
+};

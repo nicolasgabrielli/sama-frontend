@@ -22,6 +22,9 @@ FROM nginx:alpine
 # Copiar los archivos construidos de React desde la etapa de construcción
 COPY --from=build /app/build /usr/share/nginx/html
 
+# Copiar la configuración de NGINX
+COPY default.conf /etc/nginx/conf.d/default.conf
+
 # Exponer el puerto 80
 EXPOSE 80
 
