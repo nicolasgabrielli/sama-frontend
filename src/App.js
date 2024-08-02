@@ -1,7 +1,7 @@
 import './App.css';
 import { ThemeProvider, createTheme } from '@mui/material';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Empresas from './components/Empresas';
 import Usuarios from './components/Usuarios';
 import CrearUsuario from './components/CrearUsuario';
@@ -9,6 +9,7 @@ import Reporte from './components/Reporte';
 import ListaReportes from './components/ListaReportes';
 import CrearEmpresa from './components/CrearEmpresa';
 import Login from './components/Login';
+import usuarioService from './services/UsuarioService';
 
 
 const theme = createTheme({
@@ -30,6 +31,8 @@ const theme = createTheme({
 
 function App() {
 
+  const [usuarioLogeado, setUsuarioLogeado] = useState(null);
+
   useEffect(() => {
     window.addEventListener('error', e => {
       if (e.message === 'ResizeObserver loop completed with undelivered notifications.') {
@@ -49,19 +52,30 @@ function App() {
     });
   }, []);
 
+  useEffect(() => {
+    (async () => {
+      try {
+        const response = await usuarioService.getUsuarioLogueado();
+        setUsuarioLogeado(response.data);
+      } catch (error) {
+        console.error('Error al obtener el usuario logueado:', error);
+      }
+    })();
+  }, []);
+
   return (
     <div style={{ backgroundColor: "#f0f0f0", minHeight: "100vh" }}>
       <ThemeProvider theme={theme}>
         <BrowserRouter>
           <Routes>
+            <Route path="/" element={usuarioLogeado ? <Empresas /> : <Login />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/" element={<Empresas />} />
-            <Route path="/empresas" element={<Empresas />} />
-            <Route path="/empresas/crear" element={<CrearEmpresa />} />
-            <Route path="/empresas/:idEmpresa/reportes/:idReporte" element={<Reporte />} />
-            <Route path="/empresas/:idEmpresa/reportes" element={<ListaReportes />} />
-            <Route path="/usuarios" element={<Usuarios />} />
-            <Route path="/usuarios/crear" element={<CrearUsuario />} />
+            <Route path="/empresas" element={usuarioLogeado ? <Empresas /> : <Login />} />
+            <Route path="/empresas/crear" element={usuarioLogeado ? <CrearEmpresa /> : <Login />} />
+            <Route path="/empresas/:idEmpresa/reportes/:idReporte" element={usuarioLogeado ? <Reporte /> : <Login />} />
+            <Route path="/empresas/:idEmpresa/reportes" element={usuarioLogeado ? <ListaReportes /> : <Login />} />
+            <Route path="/usuarios" element={usuarioLogeado ? <Usuarios /> : <Login />} />
+            <Route path="/usuarios/crear" element={usuarioLogeado ? <CrearUsuario /> : <Login />} />
           </Routes>
         </BrowserRouter>
       </ThemeProvider>

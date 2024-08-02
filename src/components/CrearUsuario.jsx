@@ -16,8 +16,6 @@ function CrearUsuario() {
     const [listaEmpresas, setListaEmpresas] = useState([]);
     const [openDialog, setOpenDialog] = useState(false);
 
-    const listaRoles = ["Administrador", "Autorizador de Reporte", "Autorizador de Registro", "Editor de Reporte"];
-
     useEffect(() => {
         empresaService.getListaEmpresas()
             .then(response => response.data)
@@ -157,7 +155,7 @@ function CrearUsuario() {
                                         value={rol}
                                         onChange={(event) => setRol(event.target.value)}
                                     >
-                                        {listaRoles.map((rol, index) => (
+                                        {usuarioService.listaRoles.map((rol, index) => (
                                             <MenuItem key={index} value={rol}>{rol}</MenuItem>
                                         ))}
                                     </Select>

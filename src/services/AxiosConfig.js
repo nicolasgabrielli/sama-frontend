@@ -20,6 +20,7 @@ axiosInstance.interceptors.response.use(
     response => response,
     error => {
         if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+            localStorage.clear();   // En caso de error se limpia la sesión.
             window.location.href = '/login';
         }
         return Promise.reject(error);

@@ -30,8 +30,7 @@ function Usuarios() {
 
     // Listas de usuarios y roles
     const [listaUsuarios, setListaUsuarios] = useState([]);
-    const listaRoles = ["Administrador", "Editor de Reporte", "Autorizador de Reporte", "Autorizador de Registro"];
-
+    
     // Estado para el estado de carga
     const [loading, setLoading] = useState(true);
 
@@ -174,7 +173,7 @@ function Usuarios() {
                                             </Grid>
                                             <Grid item xs={3}>
                                                 <Typography variant="h6" color={"#000000"} sx={{ fontFamily: "Segoe UI", fontStyle: "italic" }}>
-                                                    {listaRoles[usuario.rol]}
+                                                    {usuarioService.listaRoles[usuario.rol]}
                                                 </Typography>
                                             </Grid>
                                             <Grid item xs={6} container justifyContent="flex-end" spacing={1}>

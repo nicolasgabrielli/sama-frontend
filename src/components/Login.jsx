@@ -17,6 +17,14 @@ function Login() {
             setError('');
             console.log('Iniciando sesión con:', { email, password });
             LoginService.login({ correo: email, contrasenia: password })
+                .then(() => {
+                    console.log('Sesión iniciada correctamente.');
+                    window.location.href = '/';
+                })
+                .catch((error) => {
+                    console.error('Error durante el login:', error);
+                    setError('Error durante el login. Por favor, intenta de nuevo.');
+                });
         }
     };
 
