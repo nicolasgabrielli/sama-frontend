@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
-import { TextField, Button, Grid, Box, Typography, Paper, Container } from '@mui/material';
+import { TextField, Button, Grid, Box, Typography, Paper, Container, IconButton, InputAdornment } from '@mui/material';
 import Navbar from './Navbar';
 import LoginService from "../services/LoginService";
+import LockPersonIcon from '@mui/icons-material/LockPerson';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
 
     const handleLogin = () => {
@@ -22,8 +26,8 @@ function Login() {
                     window.location.href = '/';
                 })
                 .catch((error) => {
-                    console.error('Error durante el login:', error);
-                    setError('Error durante el login. Por favor, intenta de nuevo.');
+                    console.error('Error durante el inicio de sesión:', error);
+                    setError('Error durante el inicio de sesión. Por favor, intenta de nuevo.');
                 });
         }
     };
@@ -31,6 +35,14 @@ function Login() {
     const validateEmail = (email) => {
         const re = /\S+@\S+\.\S+/;
         return re.test(email);
+    };
+
+    const handleClickShowPassword = () => {
+        setShowPassword(!showPassword);
+    };
+
+    const handleMouseDownPassword = (event) => {
+        event.preventDefault();
     };
 
     const useSectionMode = false;
@@ -51,7 +63,8 @@ function Login() {
                 }}
             >
                 <Container maxWidth="sm">
-                    <Paper elevation={3} sx={{ padding: 4, width: '100%' }}>
+                    <Paper elevation={3} sx={{ padding: 4, width: '100%', textAlign: 'center' }}>
+                        <LockPersonIcon fontSize="large" sx={{ fontSize: 120, marginBottom: 2, color: "rgb(212 169 43 / 87%)" }} />
                         <Typography variant="h4" gutterBottom>
                             Iniciar Sesión
                         </Typography>
@@ -68,6 +81,7 @@ function Login() {
                                     fullWidth
                                     sx={{ mt: 2 }}
                                     value={email}
+                                    helperText="Ingrese su correo electrónico"
                                     onChange={(e) => setEmail(e.target.value)}
                                 />
                             </Grid>
@@ -76,9 +90,23 @@ function Login() {
                                     label="Contraseña"
                                     variant="outlined"
                                     fullWidth
-                                    type="password"
+                                    type={showPassword ? 'text' : 'password'}
                                     value={password}
+                                    helperText="Ingrese su contraseña"
                                     onChange={(e) => setPassword(e.target.value)}
+                                    InputProps={{
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton
+                                                    aria-label="toggle password visibility"
+                                                    onClick={handleClickShowPassword}
+                                                    onMouseDown={handleMouseDownPassword}
+                                                >
+                                                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        ),
+                                    }}
                                 />
                             </Grid>
                             <Grid item xs={12}>

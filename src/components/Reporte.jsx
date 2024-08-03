@@ -1761,7 +1761,7 @@ function Reporte() {
                                                         <IconButton
                                                             variant="outlined"
                                                             color="primary"
-                                                            onClick={() => () => accederEvidencia(evidencia)}
+                                                            onClick={() => accederEvidencia(evidencia)}
                                                         >
                                                             {evidencia.tipo.toLowerCase() === 'archivo' ? <CloudDownloadIcon /> : <OpenInNewIcon />}
                                                         </IconButton>

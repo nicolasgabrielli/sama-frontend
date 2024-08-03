@@ -9,6 +9,7 @@ import InformacionEmpresa from "./InformacionEmpresa";
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import Loading from './Loading';
+import usuarioService from '../services/UsuarioService';
 
 function ListaReportes() {
     const useSectionMode = false;
@@ -32,6 +33,8 @@ function ListaReportes() {
     const [openDescargarReporteDialog, setOpenDescargarReporteDialog] = useState(false);
     const [idReporte, setIdReporte] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [usuarioLogeado, setUsuarioLogeado] = useState(null);
+
 
     const handleOpenCrearReporte = () => {
         setOpenCrearReporte(true);
@@ -206,6 +209,17 @@ function ListaReportes() {
     const fetchData = useCallback(async () => {
         setLoading(true);
         try {
+            await usuarioService.getUsuarioLogueado()
+                .then(response => response.data)
+                .then(data => {
+                    setUsuarioLogeado(data);
+                    if (data.empresas && !data.empresas.includes(idEmpresa) && parseInt(data ? data.rol : 2) != 0) {
+                        window.location.href = '/';
+                    }
+                    return data;
+                })
+                .catch(error => console.error('Error al obtener el usuario logueado:', error));
+
             await reporteService.obtenerListaReportes(idEmpresa)
                 .then(response => response.data)
                 .then(data => {
@@ -216,7 +230,7 @@ function ListaReportes() {
                     }
                 })
                 .catch(error => console.error('Error al obtener la lista de reportes:', error));
-    
+
             await reporteService.obtenerPresets()
                 .then(response => response.data)
                 .then(data => {
@@ -227,17 +241,18 @@ function ListaReportes() {
                     }
                 })
                 .catch(error => console.error('Error al obtener la lista de preconfiguraciones:', error));
-    
+
             await empresaService.getEmpresa(idEmpresa)
                 .then(response => response.data)
                 .then(data => setInfoEmpresa(data))
                 .catch(error => console.error('Error al obtener la información de la empresa:', error));
+
         } catch (error) {
             console.error('Error al obtener la información:', error);
         }
         setLoading(false);
     }, [idEmpresa]);
-    
+
 
     // Cargar la lista de reportes, preconfiguraciones y la información de la empresa al cargar el componente
     useEffect(() => {
@@ -289,17 +304,25 @@ function ListaReportes() {
                                                     <Typography variant="body2">Estado: {reporte.estado}</Typography>
                                                 </Grid>
                                                 <Grid item xs={8} container justifyContent="flex-end" spacing={1}>
-                                                    <Button variant="outlined" color="error" value={reporte.id} onClick={() => handleOpenEliminarReporte(reporte.id)} sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}>
-                                                        Eliminar Reporte
-                                                    </Button>
-                                                    <Button
-                                                        variant="outlined"
-                                                        color="cuaternary"
-                                                        sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}
-                                                        onClick={() => handleOpenDescargarReporteDialog(reporte.id)}
-                                                    >
-                                                        Descargar Reporte
-                                                    </Button>
+                                                    {usuarioLogeado && parseInt(usuarioLogeado.rol) === 0 && (
+                                                        <Button variant="outlined" color="error" value={reporte.id} onClick={() => handleOpenEliminarReporte(reporte.id)} sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}>
+                                                            Eliminar Reporte
+                                                        </Button>
+                                                    )}
+                                                    {usuarioLogeado &&
+                                                        (() => {
+                                                            const roles = [0, 1, 3, 4, 5];
+                                                            return roles.includes(parseInt(usuarioLogeado.rol));
+                                                        })() && (
+                                                            <Button
+                                                                variant="outlined"
+                                                                color="cuaternary"
+                                                                sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}
+                                                                onClick={() => handleOpenDescargarReporteDialog(reporte.id)}
+                                                            >
+                                                                Descargar Reporte
+                                                            </Button>
+                                                        )}
                                                     <Link to={`${reporte.id}`}>
                                                         <Button variant="outlined" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}>
                                                             Abrir Reporte
@@ -314,13 +337,18 @@ function ListaReportes() {
                         </Grid>
                     </Container>
 
-                    <Box bgcolor="#fff" sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, boxShadow: "0px -4px 6px rgba(0, 0, 0, 0.1)", height: '80px' }}>
-                        <Box sx={{ display: "flex", justifyContent: "center", mt: 2, mb: 2 }}>
-                            <Button variant="contained" onClick={handleOpenCrearReporte} sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1, fontSize: "1.2rem" }}>
-                                Crear Reporte
-                            </Button>
+                    {usuarioLogeado && (() => {
+                        const roles = [0, 4];
+                        return roles.includes(parseInt(usuarioLogeado.rol));
+                    })() && (
+                        <Box bgcolor="#fff" sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, boxShadow: "0px -4px 6px rgba(0, 0, 0, 0.1)", height: '80px' }}>
+                            <Box sx={{ display: "flex", justifyContent: "center", mt: 2, mb: 2 }}>
+                                <Button variant="contained" onClick={handleOpenCrearReporte} sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1, fontSize: "1.2rem" }}>
+                                    Crear Reporte
+                                </Button>
+                            </Box>
                         </Box>
-                    </Box>
+                    )}
 
                     {/* Diálogo de confirmación de eliminación */}
                     <Dialog open={openEliminarReporte} onClose={() => setOpenEliminarReporte(false)}>

@@ -12,7 +12,7 @@ function CrearUsuario() {
     const [nombre, setNombre] = useState("");
     const [correo, setCorreo] = useState("");
     const [contrasenia, setContrasenia] = useState("");
-    const [rol, setRol] = useState("");
+    const [rol, setRol] = useState(2); // Por defecto, el rol es "Visualizador de Reporte"
     const [listaEmpresas, setListaEmpresas] = useState([]);
     const [openDialog, setOpenDialog] = useState(false);
 
@@ -156,7 +156,7 @@ function CrearUsuario() {
                                         onChange={(event) => setRol(event.target.value)}
                                     >
                                         {usuarioService.listaRoles.map((rol, index) => (
-                                            <MenuItem key={index} value={rol}>{rol}</MenuItem>
+                                            <MenuItem key={index} value={index}>{rol}</MenuItem>
                                         ))}
                                     </Select>
                                 </FormControl>

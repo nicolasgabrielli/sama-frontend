@@ -255,7 +255,7 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
                                         <Tooltip title="Eliminar" placement="bottom" arrow>
                                             <IconButton
                                                 variant="outlined"
-                                                color="error"
+                                                color="secondary"
                                                 onClick={() => handleEliminarEvidencia(evidencia)}
                                             >
                                                 <DeleteIcon />
@@ -265,7 +265,7 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
                                             <IconButton
                                                 variant="outlined"
                                                 color="primary"
-                                                onClick={() => () => accederEvidencia(evidencia)}
+                                                onClick={() => accederEvidencia(evidencia)}
                                             >
                                                 {evidencia.tipo.toLowerCase() === 'archivo' ? <CloudDownloadIcon /> : <OpenInNewIcon />}
                                             </IconButton>

@@ -5,6 +5,7 @@ import Navbar from "./Navbar";
 import empresaService from "../services/EmpresaService";
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Link } from "react-router-dom";
+import usuarioService from "../services/UsuarioService";
 
 function Empresas() {
     const useSectionMode = true;
@@ -17,10 +18,11 @@ function Empresas() {
     const [openDialog, setOpenDialog] = useState(false);
     const [empresaAEliminar, setEmpresaAEliminar] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [usuarioLogeado, setUsuarioLogeado] = useState(null);
 
     // Estado para almacenar el nombre ingresado para confirmar la eliminación
     const [nombreIngresado, setNombreIngresado] = useState("");
-    
+
     // Cargar la lista de empresas al cargar el componente
     useEffect(() => {
         setLoading(true);
@@ -29,17 +31,20 @@ function Empresas() {
             setLoading(false);
         })();
     }, []);
-    
+
     // Función para obtener la lista de empresas
     const fetchData = async () => {
         try {
-            const response = await empresaService.getListaEmpresas();
-            setListaEmpresas(response.data);
+            const empresasResponse = await empresaService.getListaEmpresas();
+            setListaEmpresas(empresasResponse.data);
+
+            const usuarioResponse = await usuarioService.getUsuarioLogueado();
+            setUsuarioLogeado(usuarioResponse.data);
         } catch (error) {
             console.error('Error al obtener la lista de empresas:', error);
         }
     };
-    
+
     // Función para manejar cambios en el campo de búsqueda
     const handleSearchChange = (event) => {
         setSearchTerm(event.target.value);
@@ -74,13 +79,15 @@ function Empresas() {
     };
 
     // Filtrar la lista de empresas según el término de búsqueda
-    const filteredEmpresas = listaEmpresas.filter(empresa =>
-        empresa.nombre.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredEmpresas = listaEmpresas.filter(empresa => {
+        const empresasUsuario = usuarioLogeado?.empresas || [];
+        const rolUsuario = usuarioLogeado?.rol || -1;
+        return empresa.nombre.toLowerCase().includes(searchTerm.toLowerCase()) && (parseInt(rolUsuario) === 0 || empresasUsuario.includes(empresa.id));
+    });
 
     return (
         <>
-            <Navbar seccionActual={seccionActual} useSectionMode={useSectionMode} secciones={secciones} seccionesRutas={seccionesRutas} />
+            <Navbar seccionActual={seccionActual} useSectionMode={parseInt(usuarioLogeado ? usuarioLogeado.rol : "2") === 0} secciones={secciones} seccionesRutas={seccionesRutas} />
             {loading && (
                 <>
                     <Box
@@ -95,7 +102,7 @@ function Empresas() {
                             alignItems: 'center',
                             flexDirection: 'column',
                             bgcolor: 'background.default',
-                          }}
+                        }}
                     >
                         <CircularProgress size={80} />
                         <Typography variant="h6" sx={{ mt: 2 }}>
@@ -117,7 +124,7 @@ function Empresas() {
                                 onChange={handleSearchChange}
                                 sx={{ mb: 2 }}
                             />
-                            {filteredEmpresas.map((empresa, index) => {
+                            {filteredEmpresas && filteredEmpresas.length != 0 && filteredEmpresas.map((empresa, index) => {
                                 return (
                                     <Box sx={{ pl: 2, pr: 2 }} key={index}>
                                         <Grid container alignItems="center" justifyContent="space-between" key={index} borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, mb: 1, py: 1 }}>
@@ -127,9 +134,11 @@ function Empresas() {
                                                 </Typography>
                                             </Grid>
                                             <Grid item xs={6} container justifyContent="flex-end" spacing={1}>
-                                                <Button variant="outlined" color="error" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }} onClick={() => handleOpenDialog(empresa)}>
-                                                    Eliminar
-                                                </Button>
+                                                {parseInt(usuarioLogeado ? usuarioLogeado.rol : '2') === 0 && (
+                                                    <Button variant="outlined" color="error" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }} onClick={() => handleOpenDialog(empresa)}>
+                                                        Eliminar
+                                                    </Button>
+                                                )}
                                                 <Button variant="outlined" color="primary" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic" }}
                                                     component={Link}
                                                     to={`/empresas/${empresa.id}/reportes`}>
@@ -140,17 +149,24 @@ function Empresas() {
                                     </Box>
                                 );
                             })}
+                            {filteredEmpresas && filteredEmpresas.length == 0 && (
+                                <Typography variant="body1" color="textSecondary" sx={{ fontStyle: "italic" }}>
+                                    No se encontraron empresas. (Puede que no tenga acceso a ninguna empresa)
+                                </Typography>
+                            )}
                         </Paper>
                     </Container>
-                    <Box bgcolor="#fff" sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, boxShadow: "0px -4px 6px rgba(0, 0, 0, 0.1)", height: '80px' }}>
-                        <Box sx={{ display: "flex", justifyContent: "center", mt: 2, mb: 2 }}>
-                            <Link to="/empresas/crear" style={{ textDecoration: "none" }}>
-                                <Button variant="contained" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1, fontSize: "1.2rem" }}>
-                                    Agregar Empresa
-                                </Button>
-                            </Link>
+                    {parseInt(usuarioLogeado ? usuarioLogeado.rol : '2') === 0 && (
+                        <Box bgcolor="#fff" sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, boxShadow: "0px -4px 6px rgba(0, 0, 0, 0.1)", height: '80px' }}>
+                            <Box sx={{ display: "flex", justifyContent: "center", mt: 2, mb: 2 }}>
+                                <Link to="/empresas/crear" style={{ textDecoration: "none" }}>
+                                    <Button variant="contained" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1, fontSize: "1.2rem" }}>
+                                        Agregar Empresa
+                                    </Button>
+                                </Link>
+                            </Box>
                         </Box>
-                    </Box>
+                    )}
 
                     {/* Diálogo de confirmación de eliminación */}
                     <Dialog open={openDialog} onClose={handleCloseDialog}>

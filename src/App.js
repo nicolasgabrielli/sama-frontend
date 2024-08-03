@@ -1,6 +1,6 @@
 import './App.css';
 import { ThemeProvider, createTheme } from '@mui/material';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import Empresas from './components/Empresas';
 import Usuarios from './components/Usuarios';
@@ -10,7 +10,6 @@ import ListaReportes from './components/ListaReportes';
 import CrearEmpresa from './components/CrearEmpresa';
 import Login from './components/Login';
 import usuarioService from './services/UsuarioService';
-
 
 const theme = createTheme({
   palette: {
@@ -32,6 +31,7 @@ const theme = createTheme({
 function App() {
 
   const [usuarioLogeado, setUsuarioLogeado] = useState(null);
+  const [rol, setRol] = useState(2);
 
   useEffect(() => {
     window.addEventListener('error', e => {
@@ -57,6 +57,7 @@ function App() {
       try {
         const response = await usuarioService.getUsuarioLogueado();
         setUsuarioLogeado(response.data);
+        setRol(response.data.rol);
       } catch (error) {
         console.error('Error al obtener el usuario logueado:', error);
       }
@@ -71,11 +72,11 @@ function App() {
             <Route path="/" element={usuarioLogeado ? <Empresas /> : <Login />} />
             <Route path="/login" element={<Login />} />
             <Route path="/empresas" element={usuarioLogeado ? <Empresas /> : <Login />} />
-            <Route path="/empresas/crear" element={usuarioLogeado ? <CrearEmpresa /> : <Login />} />
+            <Route path="/empresas/crear" element={(parseInt(rol) === 0) ? <CrearEmpresa /> : <Navigate to="/" />} />
             <Route path="/empresas/:idEmpresa/reportes/:idReporte" element={usuarioLogeado ? <Reporte /> : <Login />} />
             <Route path="/empresas/:idEmpresa/reportes" element={usuarioLogeado ? <ListaReportes /> : <Login />} />
-            <Route path="/usuarios" element={usuarioLogeado ? <Usuarios /> : <Login />} />
-            <Route path="/usuarios/crear" element={usuarioLogeado ? <CrearUsuario /> : <Login />} />
+            <Route path="/usuarios" element={(parseInt(rol) === 0) ? <Usuarios /> : <Navigate to="/" />} />
+            <Route path="/usuarios/crear" element={(parseInt(rol) === 0) ? <CrearUsuario /> : <Navigate to="/" />} />
           </Routes>
         </BrowserRouter>
       </ThemeProvider>
