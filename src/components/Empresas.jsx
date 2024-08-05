@@ -8,7 +8,6 @@ import { Link } from "react-router-dom";
 import usuarioService from "../services/UsuarioService";
 
 function Empresas() {
-    const useSectionMode = true;
     const secciones = ["Empresas", "Usuarios"];
     const seccionesRutas = ["/empresas", "/usuarios"];
     const seccionActual = "Empresas";
@@ -35,11 +34,12 @@ function Empresas() {
     // Función para obtener la lista de empresas
     const fetchData = async () => {
         try {
-            const empresasResponse = await empresaService.getListaEmpresas();
-            setListaEmpresas(empresasResponse.data);
-
             const usuarioResponse = await usuarioService.getUsuarioLogueado();
             setUsuarioLogeado(usuarioResponse.data);
+            localStorage.setItem('userName', usuarioResponse.data.nombre);
+
+            const empresasResponse = await empresaService.getListaEmpresas();
+            setListaEmpresas(empresasResponse.data);
         } catch (error) {
             console.error('Error al obtener la lista de empresas:', error);
         }
@@ -85,9 +85,11 @@ function Empresas() {
         return empresa.nombre.toLowerCase().includes(searchTerm.toLowerCase()) && (parseInt(rolUsuario) === 0 || empresasUsuario.includes(empresa.id));
     });
 
+    const usuarioAdministrador = usuarioLogeado ? parseInt(usuarioLogeado.rol) === 0 : false;
+
     return (
         <>
-            <Navbar seccionActual={seccionActual} useSectionMode={parseInt(usuarioLogeado ? usuarioLogeado.rol : "2") === 0} secciones={secciones} seccionesRutas={seccionesRutas} />
+            <Navbar seccionActual={seccionActual} useSectionMode={usuarioAdministrador} secciones={secciones} seccionesRutas={seccionesRutas} />
             {loading && (
                 <>
                     <Box
@@ -156,7 +158,7 @@ function Empresas() {
                             )}
                         </Paper>
                     </Container>
-                    {parseInt(usuarioLogeado ? usuarioLogeado.rol : '2') === 0 && (
+                    {usuarioAdministrador && (
                         <Box bgcolor="#fff" sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, boxShadow: "0px -4px 6px rgba(0, 0, 0, 0.1)", height: '80px' }}>
                             <Box sx={{ display: "flex", justifyContent: "center", mt: 2, mb: 2 }}>
                                 <Link to="/empresas/crear" style={{ textDecoration: "none" }}>

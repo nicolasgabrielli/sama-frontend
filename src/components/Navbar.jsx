@@ -16,17 +16,21 @@ function Navbar({ useSectionMode, secciones, seccionesRutas, seccionActual }) {
     const open = Boolean(anchorEl);
 
     const [usuarioLogeado, setUsuarioLogeado] = useState(null);
-
+    
     useEffect(() => {
         (async () => {
             try {
                 const response = await usuarioService.getUsuarioLogueado();
                 setUsuarioLogeado(response.data);
+                localStorage.setItem('userName', response.data.nombre);
+
             } catch (error) {
                 console.error('Error al obtener el usuario logueado:', error);
             }
         })();
     }, []);
+    
+    let userName = localStorage.getItem('userName') ? localStorage.getItem('userName') : "";
 
     const toggleCollapse = () => {
         setOpenCollapse(!openCollapse);
@@ -92,7 +96,7 @@ function Navbar({ useSectionMode, secciones, seccionesRutas, seccionActual }) {
                             pr: 1
                         }}
                     >
-                        {usuarioLogeado ? usuarioLogeado.nombre : "Usuario no registrado"}
+                        {userName}
                     </Typography>
                     {/* Espacio flexible para empujar el botón al final */}
                     <Box sx={{ flexGrow: 1 }} />
