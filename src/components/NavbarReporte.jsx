@@ -2,18 +2,26 @@ import AddCircleIcon from '@mui/icons-material/AddCircle';
 import CloseIcon from '@mui/icons-material/Close';
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { AppBar, Box, Button, Collapse, Dialog, DialogActions, DialogContent, Grid, IconButton, Tab, Tabs, TextField, Toolbar, Typography } from "@mui/material";
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import LogoutIcon from '@mui/icons-material/Logout';
+import { AppBar, Box, Button, Collapse, Dialog, DialogActions, DialogContent, Divider, Grid, IconButton, ListItemIcon, Tab, Tabs, TextField, Toolbar, Typography, Avatar, Tooltip, Menu, MenuItem } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import reporteService from "../services/ReporteService";
+import usuarioService from "../services/UsuarioService";
 
-function NavbarReporte({ useSectionMode, categorias, categoriaActualIndex, onCategoriaChange, tituloReporte, anioReporte, refreshReporte }) {
+
+function NavbarReporte({ useSectionMode, categorias, categoriaActualIndex, onCategoriaChange, tituloReporte, anioReporte, refreshReporte, usuarioLogeado, rolesEditarReporte }) {
     const [openCollapse, setOpenCollapse] = useState(true);
     const [tabValue, setTabValue] = useState(categoriaActualIndex);
     const [openDialog, setOpenDialog] = useState(false);
     const [tituloCategoria, setTituloCategoria] = useState("");
     const { idReporte } = useParams();
-
+    const userName = localStorage.getItem('userName') ? localStorage.getItem('userName') : "";
+    const [anchorEl, setAnchorEl] = React.useState(null);
+    const open = Boolean(anchorEl);
+    const rol = localStorage.getItem('userRol') ? usuarioService.listaRoles[localStorage.getItem('userRol')] : "Usuario no autorizado";
+    
     useEffect(() => {
         setTabValue(categoriaActualIndex);
         refreshReporte();
@@ -54,6 +62,19 @@ function NavbarReporte({ useSectionMode, categorias, categoriaActualIndex, onCat
         fontSize: "1.2rem",
     };
 
+    const handleClick = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
+    
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+
+    const handleLogout = () => {
+        localStorage.clear();
+        window.location.href = "/";
+    };
+
     return (
         <React.Fragment>
             <AppBar position="sticky">
@@ -71,11 +92,85 @@ function NavbarReporte({ useSectionMode, categorias, categoriaActualIndex, onCat
                     <Typography variant="h4" component="div" sx={{ mr: 2, ml: 2, fontFamily: "Copperplate Gothic", fontWeight: "bold" }}>
                         SAMA
                     </Typography>
-                    <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "center", ml: -20 }}>
+                    <Typography
+                        variant="h5"
+                        component="div"
+                        noWrap
+                        sx={{
+                            display: {
+                                xs: "none",
+                                md: "flex"
+                            },
+                            fontStyle: "italic",
+                            pr: 1
+                        }}
+                    >
+                        {rol}
+                    </Typography>
+                    <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "center", ml: 38 }}>
                         <Typography variant="h5" component="div" noWrap sx={{ display: { xs: "none", md: "flex" }, fontStyle: "italic", p: 1 }}>
                             {tituloReporte} - {anioReporte}
                         </Typography>
                     </Box>
+                    <Box sx={{ flexGrow: 1 }} />
+                    {usuarioLogeado ? (
+                        <>
+                            <Typography
+                                variant="h5"
+                                component="div"
+                                noWrap
+                                sx={{
+                                    display: {
+                                        xs: "none",
+                                        md: "flex"
+                                    },
+                                    fontStyle: "italic",
+                                    pr: 1,
+                                    mr: 1,
+                                }}
+                            >
+                                    {usuarioLogeado ? userName : ""}
+                            </Typography>
+                            {/* Botón al final de la Navbar */}
+                            <Tooltip title={"Configuración"} placement="bottom" arrow>
+                                <IconButton
+                                    onClick={handleClick}
+                                    size="small"
+                                    sx={{ ml: 2 }}
+                                    aria-controls={open ? 'account-menu' : undefined}
+                                    aria-haspopup="true"
+                                    aria-expanded={open ? 'true' : undefined}
+                                >
+                                    <Avatar sx={{ width: 32, height: 32 }}>
+                                        {usuarioLogeado.nombre ? usuarioLogeado.nombre.charAt(0) : "U"}
+                                    </Avatar>
+                                </IconButton>
+                            </Tooltip>
+                        </>
+                    ) : <></>}
+                    <Menu
+                        id="account-menu"
+                        anchorEl={anchorEl}
+                        open={open}
+                        onClose={handleClose}
+                        MenuListProps={{
+                            'aria-labelledby': 'basic-button',
+                        }}
+                    >
+                        <MenuItem onClick={handleClose}>
+                            <ListItemIcon>
+                                <AccountCircleIcon fontSize="small" />
+                            </ListItemIcon>
+                            Mi cuenta
+                        </MenuItem>
+                        <Divider />
+                        <MenuItem onClick={handleLogout}>
+                            <ListItemIcon>
+                                <LogoutIcon fontSize="small" />
+                            </ListItemIcon>
+                            Cerrar Sesión
+                        </MenuItem>
+                    </Menu>
                 </Toolbar>
                 {useSectionMode && (
                     <Collapse in={openCollapse} timeout="auto" unmountOnExit>
@@ -102,14 +197,16 @@ function NavbarReporte({ useSectionMode, categorias, categoriaActualIndex, onCat
                                     />
                                 ))}
                             </Tabs>
-                            <Button
-                                variant="contained"
-                                onClick={() => handleOpenDialog()}
-                                sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", m: 0.5, width: "250px" }}
-                                startIcon={<AddCircleIcon />}
-                            >
-                                Agregar Categoría
-                            </Button>
+                            {usuarioLogeado && rolesEditarReporte && rolesEditarReporte.includes(parseInt(usuarioLogeado.rol)) && (
+                                <Button
+                                    variant="contained"
+                                    onClick={() => handleOpenDialog()}
+                                    sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1rem", m: 0.5, width: "250px" }}
+                                    startIcon={<AddCircleIcon />}
+                                >
+                                    Agregar Categoría
+                                </Button>
+                            )}
                             <Link to={-1}>
                                 <Button
                                     variant="contained"

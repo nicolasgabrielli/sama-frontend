@@ -19,10 +19,38 @@ import NavbarReporte from "./NavbarReporte";
 import NavbarEvidencia from './NavbarEvidencia';
 import Tabla from './Tabla';
 import VerTabla from './VerTabla';
+import usuarioService from '../services/UsuarioService';
 
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 function Reporte() {
+    // ------------------------ BLOQUE DE CARGA DE DATOS DEL USUARIO ------------------------
+
+    // -------------------------------- ESTADOS --------------------------------
+
+    const [usuarioLogeado, setUsuarioLogeado] = useState(null);
+    const rolesEditarReporte = [0, 1, 3, 4];
+    const rolesEditarCampos = [0, 1, 2, 3, 4];
+    const rolesAutorizarRegistros = [0, 3, 4];
+    const rolesVerEvidencias = [0, 1, 2, 3, 4, 5];
+    const rolesNavbarEvidencia = [0, 1, 2, 3, 4, 5];
+    const rolesGestionarEvidencias = [0, 1, 2, 3, 4];
+    const rolesDescargarReporte = [0, 1, 3, 4, 5];
+    const rolesGuardarPlantilla = [0, 4];
+    const rolesAutorizarReporte = [0, 4];
+
+    // ------------------------ FUNCIONES DE REFRESH ------------------------
+
+    // Función para obtener los datos del usuario logeado.
+    const fetchUsuarioLogeado = useCallback(async () => {
+        try {
+            const usuario = await usuarioService.getUsuarioLogueado();
+            setUsuarioLogeado(usuario.data);
+            localStorage.setItem('userName', usuario.data.nombre);
+        } catch (error) {
+            console.error('Error fetching user data:', error);
+        }
+    }, []);
 
     // ------------------------ BLOQUE DE CARGA DE DATOS DEL REPORTE ------------------------
 
@@ -70,6 +98,7 @@ function Reporte() {
     const fetchData = useCallback(async () => {
         setLoading(true);
         try {
+            await fetchUsuarioLogeado();
             await refreshReporte();
             await refreshEvidencia();
         } catch (error) {
@@ -738,6 +767,8 @@ function Reporte() {
                         tituloReporte={tituloReporte}
                         anioReporte={anioReporte}
                         refreshReporte={refreshReporte}
+                        usuarioLogeado={usuarioLogeado}
+                        rolesEditarReporte={rolesEditarReporte}
                     />
                     <Container maxWidth="xl" sx={{ display: 'flex', flexDirection: 'column', minWidth: '80vw', pb: '100px' }}>
                         <Paper sx={{ mt: 2, p: 2, flexGrow: 1 }}>
@@ -747,27 +778,29 @@ function Reporte() {
                                         {categorias[categoriaActualIndex]}
                                     </Typography>
                                 </Grid>
-                                <Grid item xs={4} container justifyContent="flex-end">
-                                    <Button
-                                        variant="text"
-                                        color="primary"
-                                        sx={{
-                                            textTransform: "none",
-                                            fontWeight: "bold",
-                                            fontStyle: "italic",
-                                            fontSize: "1.1rem",
-                                            width: "200px",
-                                            transition: "transform 0.2s",
-                                            '&:hover': {
-                                                transform: "scale(1.02)",
-                                            },
-                                        }}
-                                        onClick={handleOpenCategoryEditDialog}
-                                        endIcon={<EditIcon style={{ fontSize: "1.1rem" }} />}
-                                    >
-                                        Editar Categoría
-                                    </Button>
-                                </Grid>
+                                {usuarioLogeado && rolesEditarReporte.includes(parseInt(usuarioLogeado.rol)) && (
+                                        <Grid item xs={4} container justifyContent="flex-end">
+                                            <Button
+                                                variant="text"
+                                                color="primary"
+                                                sx={{
+                                                    textTransform: "none",
+                                                    fontWeight: "bold",
+                                                    fontStyle: "italic",
+                                                    fontSize: "1.1rem",
+                                                    width: "200px",
+                                                    transition: "transform 0.2s",
+                                                    '&:hover': {
+                                                        transform: "scale(1.02)",
+                                                    },
+                                                }}
+                                                onClick={handleOpenCategoryEditDialog}
+                                                endIcon={<EditIcon style={{ fontSize: "1.1rem" }} />}
+                                            >
+                                                Editar Categoría
+                                            </Button>
+                                        </Grid>
+                                    )}
                             </Grid>
                         </Paper>
                         <DragDropContext onDragEnd={handleDragEnd}>
@@ -779,24 +812,42 @@ function Reporte() {
                                                 <Grid item xs={6}>
                                                     <Typography variant="h4" color={"primary.main"} fontWeight={"bold"}>
                                                         {seccion.titulo}
-                                                        <Tooltip title="Editar Sección" placement="bottom" arrow>
-                                                            <span>
-                                                                <IconButton
-                                                                    variant="outlined"
-                                                                    onClick={() => handleOpenSectionEditDialog(indexSeccion)}
-                                                                    disabled={editMode}
-                                                                    sx={{
-                                                                        ml: 1,
-                                                                        transition: "transform 0.2s",
-                                                                        '&:hover': {
-                                                                            transform: "scale(1.1) translateY(-2px)",
-                                                                        },
-                                                                    }}
-                                                                >
-                                                                    <EditIcon color={editMode ? 'secondary' : 'primary'} />
-                                                                </IconButton>
-                                                            </span>
-                                                        </Tooltip>
+                                                        {usuarioLogeado && rolesEditarReporte.includes(parseInt(usuarioLogeado.rol)) && (
+                                                                <Tooltip title="Editar Sección" placement="bottom" arrow>
+                                                                    <span>
+                                                                        <IconButton
+                                                                            variant="outlined"
+                                                                            onClick={() => handleOpenSectionEditDialog(indexSeccion)}
+                                                                            disabled={editMode}
+                                                                            sx={{
+                                                                                ml: 1,
+                                                                                transition: "transform 0.2s",
+                                                                                '&:hover': {
+                                                                                    transform: "scale(1.1) translateY(-2px)",
+                                                                                },
+                                                                            }}
+                                                                        >
+                                                                            <EditIcon color={editMode ? 'secondary' : 'primary'} />
+                                                                        </IconButton>
+                                                                    </span>
+                                                                </Tooltip>
+                                                            )}
+                                                        {usuarioLogeado && rolesEditarReporte.includes(parseInt(usuarioLogeado.rol)) && !editMode && (
+                                                                <Tooltip title="Mover Campos" placement="bottom" arrow>
+                                                                    <IconButton
+                                                                        variant="outlined"
+                                                                        onClick={() => handleEditMode(false)}
+                                                                        sx={{
+                                                                            transition: "transform 0.2s",
+                                                                            '&:hover': {
+                                                                                transform: "scale(1.1) translateY(-2px)",
+                                                                            },
+                                                                        }}
+                                                                    >
+                                                                        <ImportExportIcon color={editMode ? "secondary" : "primary"} />
+                                                                    </IconButton>
+                                                                </Tooltip>
+                                                            )}
                                                         {editMode && (
                                                             <>
                                                                 <Tooltip title="Descartar Cambios" placement="bottom" arrow>
@@ -832,23 +883,6 @@ function Reporte() {
                                                                     </span>
                                                                 </Tooltip>
                                                             </>
-
-                                                        )}
-                                                        {!editMode && (
-                                                            <Tooltip title="Mover Campos" placement="bottom" arrow>
-                                                                <IconButton
-                                                                    variant="outlined"
-                                                                    onClick={() => handleEditMode(false)}
-                                                                    sx={{
-                                                                        transition: "transform 0.2s",
-                                                                        '&:hover': {
-                                                                            transform: "scale(1.1) translateY(-2px)",
-                                                                        },
-                                                                    }}
-                                                                >
-                                                                    <ImportExportIcon color={editMode ? "secondary" : "primary"} />
-                                                                </IconButton>
-                                                            </Tooltip>
                                                         )}
                                                     </Typography>
                                                 </Grid>
@@ -923,77 +957,80 @@ function Reporte() {
                                                                     </Typography>
                                                                 </Grid>
                                                                 <Grid item xs={2} container justifyContent={"flex-end"}>
-                                                                    <Tooltip
-                                                                        title={campo.autorizacion === true ? "Campo Autorizado" : "Autorizar Campo"}
-                                                                        placement="bottom"
-                                                                        arrow
-                                                                    >
-                                                                        <span>
-                                                                            <IconButton
-                                                                                variant="outlined"
-                                                                                color={campo.autorizacion === true ? "secondary" : "primary"}
-                                                                                onClick={() => handleOpenAutorizarCampo(index)}
-                                                                                disabled={campo.autorizacion === true || editMode}
-                                                                                sx={{
-                                                                                    transition: "transform 0.2s",
-                                                                                    '&:hover': {
-                                                                                        transform: "scale(1.1) translateY(-2px)",
-                                                                                    },
-                                                                                    '&:disabled': { // Establece un estilo específico para cuando está deshabilitado.
-                                                                                        color: campo.autorizacion ? "cuaternary.main" : "secondary.main",
-                                                                                        borderColor: "cuaternary.main",
-                                                                                    },
-                                                                                }}
+                                                                    {/* Botón de autorizar campo */}
+                                                                    {usuarioLogeado && rolesAutorizarRegistros.includes(parseInt(usuarioLogeado.rol)) && (
+                                                                            <Tooltip
+                                                                                title={campo.autorizacion === true ? "Campo Autorizado" : "Autorizar Campo"}
+                                                                                placement="bottom"
+                                                                                arrow
                                                                             >
-                                                                                {campo.autorizacion === true ? <DoneAllIcon /> : <CheckIcon />}
-                                                                            </IconButton>
-                                                                        </span>
-                                                                    </Tooltip>
+                                                                                <span>
+                                                                                    <IconButton
+                                                                                        variant="outlined"
+                                                                                        color={campo.autorizacion === true ? "secondary" : "primary"}
+                                                                                        onClick={() => handleOpenAutorizarCampo(index)}
+                                                                                        sx={{
+                                                                                            transition: "transform 0.2s",
+                                                                                            '&:hover': {
+                                                                                                transform: "scale(1.1) translateY(-2px)",
+                                                                                            },
+                                                                                            color: campo.autorizacion === true ? "cuaternary" : "primary"
+                                                                                        }}
+                                                                                    >
+                                                                                        {campo.autorizacion === true ? <DoneAllIcon /> : <CheckIcon />}
+                                                                                    </IconButton>
+                                                                                </span>
+                                                                            </Tooltip>
+                                                                        )}
 
-                                                                    <Tooltip
-                                                                        title={campo.evidencias ? (campo.evidencias.length === 0 ? "No contiene evidencias" : "Visualizar Evidencias") : "No contiene evidencias"}
-                                                                        placement="bottom"
-                                                                        arrow
-                                                                        disableInteractive
-                                                                    >
-                                                                        <span>
-                                                                            <IconButton
-                                                                                variant="outlined"
-                                                                                color="primary"
-                                                                                onClick={() => handleVisualizarEvidenciaCampo(indexSeccion, index)}
-                                                                                disabled={(campo.evidencias ? (campo.evidencias.length === 0) : false) || editMode}
-                                                                                sx={{
-                                                                                    transition: "transform 0.2s",
-                                                                                    '&:hover': {
-                                                                                        transform: "scale(1.1) translateY(-2px)",
-                                                                                    },
-                                                                                }}
+                                                                    {/* Botón de ver evidencias asociadas al campo */}
+                                                                    {usuarioLogeado && rolesVerEvidencias.includes(parseInt(usuarioLogeado.rol)) && (
+                                                                            <Tooltip
+                                                                                title={campo.evidencias ? (campo.evidencias.length === 0 ? "No contiene evidencias" : "Visualizar Evidencias") : "No contiene evidencias"}
+                                                                                placement="bottom"
+                                                                                arrow
+                                                                                disableInteractive
                                                                             >
-                                                                                <FindInPageIcon />
-                                                                            </IconButton>
-                                                                        </span>
-                                                                    </Tooltip>
+                                                                                <span>
+                                                                                    <IconButton
+                                                                                        variant="outlined"
+                                                                                        color="primary"
+                                                                                        onClick={() => handleVisualizarEvidenciaCampo(indexSeccion, index)}
+                                                                                        disabled={(campo.evidencias ? (campo.evidencias.length === 0) : false) || editMode}
+                                                                                        sx={{
+                                                                                            transition: "transform 0.2s",
+                                                                                            '&:hover': {
+                                                                                                transform: "scale(1.1) translateY(-2px)",
+                                                                                            },
+                                                                                        }}
+                                                                                    >
+                                                                                        <FindInPageIcon />
+                                                                                    </IconButton>
+                                                                                </span>
+                                                                            </Tooltip>
+                                                                        )}
 
-                                                                    {campo.autorizacion !== true && (
-                                                                        <Tooltip title="Editar Campo" placement="bottom" arrow>
-                                                                            <span>
-                                                                                <IconButton
-                                                                                    variant="outlined"
-                                                                                    color="primary"
-                                                                                    onClick={() => handleOpenEditDialog(campo, seccion, indexSeccion, index)}
-                                                                                    disabled={editMode}
-                                                                                    sx={{
-                                                                                        transition: "transform 0.2s",
-                                                                                        '&:hover': {
-                                                                                            transform: "scale(1.1) translateY(-2px)",
-                                                                                        },
-                                                                                    }}
-                                                                                >
-                                                                                    <EditIcon />
-                                                                                </IconButton>
-                                                                            </span>
-                                                                        </Tooltip>
-                                                                    )}
+                                                                    {/* Botón de editar campo */}
+                                                                    {campo.autorizacion !== true && usuarioLogeado && rolesEditarCampos.includes(parseInt(usuarioLogeado.rol)) && (
+                                                                            <Tooltip title="Editar Campo" placement="bottom" arrow>
+                                                                                <span>
+                                                                                    <IconButton
+                                                                                        variant="outlined"
+                                                                                        color="primary"
+                                                                                        onClick={() => handleOpenEditDialog(campo, seccion, indexSeccion, index)}
+                                                                                        disabled={editMode}
+                                                                                        sx={{
+                                                                                            transition: "transform 0.2s",
+                                                                                            '&:hover': {
+                                                                                                transform: "scale(1.1) translateY(-2px)",
+                                                                                            },
+                                                                                        }}
+                                                                                    >
+                                                                                        <EditIcon />
+                                                                                    </IconButton>
+                                                                                </span>
+                                                                            </Tooltip>
+                                                                        )}
                                                                 </Grid>
                                                             </Grid>
                                                             {(campo.subCampos && (campo.subCampos.length > 0 || campo.subCampos != null)) && (
@@ -1061,45 +1098,61 @@ function Reporte() {
                                                 </Draggable>
                                             ))}
                                             {provided.placeholder}
-                                            <Grid container justifyContent="center">
-                                                <Button
-                                                    variant="contained"
-                                                    color="primary"
-                                                    sx={{
-                                                        textTransform: "none",
-                                                        fontWeight: "bold",
-                                                        fontStyle: "italic",
-                                                        fontSize: "1.125rem",
-                                                    }}
-                                                    onClick={() => handleOpenEditDialog(null, seccion, indexSeccion, -1)}
-                                                    startIcon={<AddCircleIcon />}
-                                                >
-                                                    Agregar Campo
-                                                </Button>
-                                            </Grid>
+                                            {/* Agregar Campo */}
+                                            {usuarioLogeado && rolesEditarReporte.includes(parseInt(usuarioLogeado.rol)) && !editMode && (
+                                                <Grid container justifyContent="center">
+                                                    <Button
+                                                        variant="contained"
+                                                        color="primary"
+                                                        sx={{
+                                                            textTransform: "none",
+                                                            fontWeight: "bold",
+                                                            fontStyle: "italic",
+                                                            fontSize: "1.125rem",
+                                                        }}
+                                                        onClick={() => handleOpenEditDialog(null, seccion, indexSeccion, -1)}
+                                                        startIcon={<AddCircleIcon />}
+                                                    >
+                                                        Agregar Campo
+                                                    </Button>
+                                                </Grid>
+                                            )}
                                         </Paper>
                                     )}
                                 </Droppable>
                             ))}
                         </DragDropContext>
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            sx={{
-                                textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1.5rem", mt: 2
-                            }}
-                            onClick={() => {
-                                setEditedSection({ titulo: "" });
-                                setOpenSectionDialog(true);
-                            }}
-                            startIcon={<AddCircleIcon style={{ fontSize: "1.5rem" }} />}
-                        >
-                            Agregar Sección
-                        </Button>
-                        <NavbarEvidencia
-                            evidencias={evidencias}
-                            refreshEvidencias={refreshEvidencia}
-                        />
+
+                        {/* Agregar Sección */}
+                        {usuarioLogeado && rolesEditarReporte.includes(parseInt(usuarioLogeado.rol)) && (
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    sx={{
+                                        textTransform: "none", fontWeight: "bold", fontStyle: "italic", fontSize: "1.5rem", mt: 2
+                                    }}
+                                    onClick={() => {
+                                        setEditedSection({ titulo: "" });
+                                        setOpenSectionDialog(true);
+                                    }}
+                                    startIcon={<AddCircleIcon style={{ fontSize: "1.5rem" }} />}
+                                >
+                                    Agregar Sección
+                                </Button>
+                            )}
+                        
+                        {/* Navbar Evidencias, Descargar Reporte, Guardar Plantilla, Autorizar Reporte */}
+                        {usuarioLogeado && rolesNavbarEvidencia.includes(parseInt(usuarioLogeado.rol)) && (
+                                <NavbarEvidencia
+                                    evidencias={evidencias}
+                                    refreshEvidencias={refreshEvidencia}
+                                    usuarioLogeado={usuarioLogeado}
+                                    rolesGestionarEvidencias={rolesGestionarEvidencias}
+                                    rolesDescargarReporte={rolesDescargarReporte}
+                                    rolesGuardarPlantilla={rolesGuardarPlantilla}
+                                    rolesAutorizarReporte={rolesAutorizarReporte}
+                                />
+                            )}
                     </Container>
 
                     {/* Diálogo de edición de campo */}
@@ -1714,15 +1767,23 @@ function Reporte() {
                         </DialogTitle>
                         <DialogContent>
                             <Typography variant="body1" sx={{ p: 2 }}>
-                                ¿Está seguro de que desea autorizar el campo "{secciones[seccionActualIndex] && secciones[seccionActualIndex].campos[campoActualIndex] ? secciones[seccionActualIndex].campos[campoActualIndex].titulo : ''}"? Una vez autorizado, el campo no podrá ser modificado.
+                                {() => {
+                                    if (secciones[seccionActualIndex] && secciones[seccionActualIndex].campos[campoActualIndex]) {
+                                        if (secciones[seccionActualIndex].campos[campoActualIndex].autorizacion === true) {
+                                            return "El campo ya ha sido autorizado. ¿Está seguro de que desea revocar la autorización del campo?";
+                                        } else {
+                                            return "¿Está seguro de que desea autorizar el campo? Una vez autorizado, no podrá realizar cambios en el campo.";
+                                        }
+                                    }
+                                }}
                             </Typography>
                         </DialogContent>
                         <DialogActions>
                             <Button color="secondary" variant="text" onClick={() => setOpenAutorizarCampoDialog(false)} >
                                 Cancelar
                             </Button>
-                            <Button color="cuaternary" variant="text" onClick={() => handleAutorizarCampo()}>
-                                Autorizar
+                            <Button color="primary" variant="text" onClick={() => handleAutorizarCampo()}>
+                                {secciones[seccionActualIndex] && secciones[seccionActualIndex].campos[campoActualIndex] && secciones[seccionActualIndex].campos[campoActualIndex].autorizacion === true ? "Revocar Autorización" : "Autorizar"}
                             </Button>
                         </DialogActions>
                     </Dialog>

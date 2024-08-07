@@ -9,7 +9,7 @@ const usuarioService = {
     crearUsuario: (usuario) => axiosInstance.post(API_URL, usuario),
     actualizarUsuario: (usuario) => axiosInstance.put(API_URL, usuario),
     deleteUsuario: (id) => axiosInstance.delete(`${API_URL}/${id}`),
-    listaRoles: ["Administrador", "Editor de Reporte", "Visualizador de Reporte", "Autorizador de Registro", "Autorizador de Reporte", "Auditor"],
+    listaRoles: ["Administrador", "Editor de Reporte", "Usuario Indicador", "Autorizador de Registro", "Autorizador de Reporte", "Auditor"],
     getUsuarioLogueado: () => {
         const token = localStorage.getItem('token');
         const userId = localStorage.getItem('userId');

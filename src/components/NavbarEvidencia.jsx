@@ -8,8 +8,9 @@ import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import React from "react";
 import reporteService from "../services/ReporteService";
+import usuarioService from "../services/UsuarioService";
 
-function NavbarEvidencia({ evidencias, refreshEvidencias }) {
+function NavbarEvidencia({ evidencias, refreshEvidencias, usuarioLogeado, rolesGestionarEvidencias, rolesDescargarReporte, rolesGuardarPlantilla, rolesAutorizarReporte }) {
     const { idReporte } = useParams();
     const [openDialog, setOpenDialog] = React.useState(false);
     const [openDialogAdjuntarEvidencia, setOpenDialogAdjuntarEvidencia] = React.useState(false);
@@ -20,8 +21,7 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
     const [openDescargarReporteDialog, setOpenDescargarReporteDialog] = React.useState(false);
     const [openGuardarPresetDialog, setOpenGuardarPresetDialog] = React.useState(false);
     const [tituloPreset, setTituloPreset] = React.useState('');
-
-
+    const rol = localStorage.getItem('userRol') ? usuarioService.listaRoles[localStorage.getItem('userRol')] : "Usuario no autorizado";
 
     const handleOpenGuardarPreset = () => {
         setOpenGuardarPresetDialog(true);
@@ -174,46 +174,54 @@ function NavbarEvidencia({ evidencias, refreshEvidencias }) {
             <Box bgcolor="#fff" sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, boxShadow: "0px -4px 6px rgba(0, 0, 0, 0.1)", height: '80px' }}>
                 <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: '100%' }}>
                     <Grid container spacing={2} justifyContent="center">
-                        <Grid item>
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}
-                                onClick={() => setOpenDialog(true)}
-                            >
-                                Gestionar Evidencias
-                            </Button>
-                        </Grid>
-                        <Grid item>
-                            <Button
-                                variant="contained"
-                                color="cuaternary"
-                                sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", color: "white" }}
-                                onClick={() => setOpenDescargarReporteDialog(true)}
-                            >
-                                Descargar Reporte
-                            </Button>
-                        </Grid>
-                        <Grid item>
-                            <Button
-                                variant="contained"
-                                color="warning"
-                                sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", color: "white" }}
-                                onClick={() => handleOpenGuardarPreset()}
-                            >
-                                Guardar Plantilla
-                            </Button>
-                        </Grid>
-                        <Grid item>
-                            <Button
-                                variant="contained"
-                                color="success"
-                                sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", color: "white" }}
-                                onClick={() => console.log('Autorizar Reporte')}
-                            >
-                                Autorizar Reporte
-                            </Button>
-                        </Grid>
+                        {usuarioLogeado && rolesGestionarEvidencias.includes(parseInt(usuarioLogeado.rol)) && (
+                            <Grid item>
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}
+                                    onClick={() => setOpenDialog(true)}
+                                >
+                                    Gestionar Evidencias
+                                </Button>
+                            </Grid>    
+                        )}
+                        {usuarioLogeado && rolesDescargarReporte.includes(parseInt(usuarioLogeado.rol)) && (
+                            <Grid item>
+                                <Button
+                                    variant="contained"
+                                    color="cuaternary"
+                                    sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", color: "white" }}
+                                    onClick={() => setOpenDescargarReporteDialog(true)}
+                                >
+                                    Descargar Reporte
+                                </Button>
+                            </Grid>
+                        )}
+                        {usuarioLogeado && rolesGuardarPlantilla.includes(parseInt(usuarioLogeado.rol)) && (
+                            <Grid item>
+                                <Button
+                                    variant="contained"
+                                    color="warning"
+                                    sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", color: "white" }}
+                                    onClick={() => handleOpenGuardarPreset()}
+                                >
+                                    Guardar Plantilla
+                                </Button>
+                            </Grid>
+                        )}
+                        {usuarioLogeado && rolesAutorizarReporte.includes(parseInt(usuarioLogeado.rol)) && (
+                            <Grid item>
+                                <Button
+                                    variant="contained"
+                                    color="success"
+                                    sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", color: "white" }}
+                                    onClick={() => console.log('Autorizar Reporte')}
+                                >
+                                    Autorizar Reporte
+                                </Button>
+                            </Grid>
+                        )}
                     </Grid>
                 </Box>
             </Box>

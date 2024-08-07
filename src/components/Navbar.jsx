@@ -96,9 +96,8 @@ function Navbar({ useSectionMode, secciones, seccionesRutas, seccionActual }) {
                             pr: 1
                         }}
                     >
-                        {userName}
+                        {rol}
                     </Typography>
-                    {/* Espacio flexible para empujar el botón al final */}
                     <Box sx={{ flexGrow: 1 }} />
                     {usuarioLogeado ? (
                         <>
@@ -116,7 +115,7 @@ function Navbar({ useSectionMode, secciones, seccionesRutas, seccionActual }) {
                                     mr: 1,
                                 }}
                             >
-                                    {usuarioLogeado ? rol : ""}
+                                    {usuarioLogeado ? userName : ""}
                             </Typography>
                             {/* Botón al final de la Navbar */}
                             <Tooltip title={"Configuración"} placement="bottom" arrow>
