@@ -21,6 +21,7 @@ export default {
     obtenerUrlS3: (idEvidencia) => axiosInstance.get(`${API_URL2}evidencia/url/${idEvidencia}`),
     descargarReporte: (idReporte, formato) => axiosInstance.get(`${API_URL}${formato}/${idReporte}`, { responseType: 'blob' }),
     autorizarCampo: (idReporte, coordenadas) => axiosInstance.put(`${API_URL}autorizar/campo/${idReporte}`, coordenadas),
+    autorizarReporte: (idReporte) => axiosInstance.put(`${API_URL}autorizar/all-campos/${idReporte}`),
     crearPreset: (data) => axiosInstance.post(`${API_URL}preset`, data),
-    reescribirReporte: (idReporte, data) => axiosInstance.put(`${API_URL}actualizar/reescribir/${idReporte}`, data)
+    reescribirReporte: (idReporte, data) => axiosInstance.put(`${API_URL}actualizar/reescribir/${idReporte}`, data),
 };

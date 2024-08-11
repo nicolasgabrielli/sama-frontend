@@ -10,7 +10,7 @@ import React from "react";
 import reporteService from "../services/ReporteService";
 import usuarioService from "../services/UsuarioService";
 
-function NavbarEvidencia({ evidencias, refreshEvidencias, usuarioLogeado, rolesGestionarEvidencias, rolesDescargarReporte, rolesGuardarPlantilla, rolesAutorizarReporte }) {
+function NavbarEvidencia({ evidencias, refreshEvidencias, usuarioLogeado, rolesGestionarEvidencias, rolesDescargarReporte, rolesGuardarPlantilla, rolesAutorizarReporte, fetchData, reporteAutorizado }) {
     const { idReporte } = useParams();
     const [openDialog, setOpenDialog] = React.useState(false);
     const [openDialogAdjuntarEvidencia, setOpenDialogAdjuntarEvidencia] = React.useState(false);
@@ -20,6 +20,7 @@ function NavbarEvidencia({ evidencias, refreshEvidencias, usuarioLogeado, rolesG
     const [nombreEvidencia, setNombreEvidencia] = React.useState('');
     const [openDescargarReporteDialog, setOpenDescargarReporteDialog] = React.useState(false);
     const [openGuardarPresetDialog, setOpenGuardarPresetDialog] = React.useState(false);
+    const [openDialogAutorizarReporte, setOpenDialogAutorizarReporte] = React.useState(false);
     const [tituloPreset, setTituloPreset] = React.useState('');
     const rol = localStorage.getItem('userRol') ? usuarioService.listaRoles[localStorage.getItem('userRol')] : "Usuario no autorizado";
 
@@ -168,6 +169,20 @@ function NavbarEvidencia({ evidencias, refreshEvidencias, usuarioLogeado, rolesG
         }
     };
 
+    const handleAutorizacion = async () => {
+        try {
+            const response = await reporteService.autorizarReporte(idReporte);
+            if (response.status === 200) {
+                console.log('Reporte autorizado con exito:', response.data);
+                fetchData();
+                setOpenDialogAutorizarReporte(false);
+            } else {
+                console.error('Error al autorizar el reporte:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Error al autorizar el reporte:', error);
+        }
+    }
 
     return (
         <React.Fragment>
@@ -216,7 +231,7 @@ function NavbarEvidencia({ evidencias, refreshEvidencias, usuarioLogeado, rolesG
                                     variant="contained"
                                     color="success"
                                     sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", color: "white" }}
-                                    onClick={() => console.log('Autorizar Reporte')}
+                                    onClick={() => setOpenDialogAutorizarReporte(true)}
                                 >
                                     Autorizar Reporte
                                 </Button>
@@ -283,6 +298,11 @@ function NavbarEvidencia({ evidencias, refreshEvidencias, usuarioLogeado, rolesG
                             </Box>
                         </>
                     ))}
+                    {evidencias.length === 0 && (
+                        <Box sx={{ pl: 2, pr: 2, mb: 2 }}>
+                            <Typography variant="h6" color="secondary" fontWeight="bold" sx={{ mt: 1 }}>No se encontraron evidencias en el reporte.</Typography>
+                        </Box>
+                    )}
                 </DialogContent>
                 <DialogActions>
                     <Grid container>
@@ -440,6 +460,7 @@ function NavbarEvidencia({ evidencias, refreshEvidencias, usuarioLogeado, rolesG
                     </Grid>
                 </DialogActions>
             </Dialog>
+            {/* Diálogo de guardar preset */}
             <Dialog open={openGuardarPresetDialog} onClose={() => handleCloseGuardarPreset()} maxWidth="sm" fullWidth>
                 <DialogContent>
                     <Grid container spacing={2}>
@@ -471,6 +492,36 @@ function NavbarEvidencia({ evidencias, refreshEvidencias, usuarioLogeado, rolesG
                             </Button>
                             <Button color="primary" variant="text" onClick={() => handleGuardarPreset()}>
                                 Guardar
+                            </Button>
+                        </Grid>
+                    </Grid>
+                </DialogActions>
+            </Dialog>
+
+            {/* Diálogo de autorizar reporte */}
+            <Dialog open={openDialogAutorizarReporte} onClose={() => setOpenDialogAutorizarReporte(false)} maxWidth="md" fullWidth>
+                {/* Contenido del diálogo */}
+                <DialogContent>
+                    <Grid container spacing={2}>
+                        <Grid item xs={8}>
+                            <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mt: 1 }}>Autorizar Reporte</Typography>
+                        </Grid>
+                        <Grid item xs={4} container justifyContent="flex-end" sx={{ mb: 2 }}>
+                            <IconButton onClick={() => setOpenDialogAutorizarReporte(false)} disableRipple><CloseIcon /></IconButton>
+                        </Grid>
+                    </Grid>
+                    <Grid item xs={12} sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
+                        <Typography variant="h6">{reporteAutorizado ? "Usted está a punto de quitar la autorización al reporte. ¿Desea continuar?" : "Usted está a punto de autorizar el reporte. ¿Autorizar?"}</Typography>
+                    </Grid>
+                </DialogContent>
+                <DialogActions>
+                    <Grid container>
+                        <Grid item xs={12} container justifyContent="flex-end">
+                            <Button color="secondary" variant="text" onClick={() => setOpenDialogAutorizarReporte(false)}>
+                                Cancelar
+                            </Button>
+                            <Button color={reporteAutorizado ? "error" : "cuaternary"} variant="text" onClick={() => handleAutorizacion()}>
+                                {reporteAutorizado ? "Quitar Autorización" : "Autorizar"}	
                             </Button>
                         </Grid>
                     </Grid>
