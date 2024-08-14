@@ -10,6 +10,7 @@ import ListaReportes from './components/ListaReportes';
 import CrearEmpresa from './components/CrearEmpresa';
 import Login from './components/Login';
 import usuarioService from './services/UsuarioService';
+import PerfilUsuario from './components/PerfilUsuario';
 
 const theme = createTheme({
   palette: {
@@ -77,6 +78,7 @@ function App() {
             <Route path="/empresas/:idEmpresa/reportes" element={usuarioLogeado ? <ListaReportes /> : <Login />} />
             <Route path="/usuarios" element={(parseInt(rol) === 0) ? <Usuarios /> : <Navigate to="/" />} />
             <Route path="/usuarios/crear" element={(parseInt(rol) === 0) ? <CrearUsuario /> : <Navigate to="/" />} />
+            <Route path="/usuarios/:id" element={<PerfilUsuario />} />
           </Routes>
         </BrowserRouter>
       </ThemeProvider>

@@ -30,7 +30,7 @@ function Usuarios() {
 
     // Listas de usuarios y roles
     const [listaUsuarios, setListaUsuarios] = useState([]);
-    
+
     // Estado para el estado de carga
     const [loading, setLoading] = useState(true);
 
@@ -180,7 +180,10 @@ function Usuarios() {
                                                 <Button variant="outlined" color="error" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }} onClick={() => handleOpenDialog(usuario)}>
                                                     Eliminar
                                                 </Button>
-                                                <Button variant="outlined" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}>
+                                                <Button variant="outlined"
+                                                    sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}
+                                                    component={Link}
+                                                    to={`/usuarios/${usuario.id}`}>
                                                     Ver Detalles
                                                 </Button>
                                             </Grid>

@@ -16,7 +16,7 @@ function Navbar({ useSectionMode, secciones, seccionesRutas, seccionActual }) {
     const open = Boolean(anchorEl);
 
     const [usuarioLogeado, setUsuarioLogeado] = useState(null);
-    
+
     useEffect(() => {
         (async () => {
             try {
@@ -29,7 +29,7 @@ function Navbar({ useSectionMode, secciones, seccionesRutas, seccionActual }) {
             }
         })();
     }, []);
-    
+
     let userName = localStorage.getItem('userName') ? localStorage.getItem('userName') : "";
 
     const toggleCollapse = () => {
@@ -48,7 +48,7 @@ function Navbar({ useSectionMode, secciones, seccionesRutas, seccionActual }) {
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);
     };
-    
+
     const handleClose = () => {
         setAnchorEl(null);
     };
@@ -115,7 +115,7 @@ function Navbar({ useSectionMode, secciones, seccionesRutas, seccionActual }) {
                                     mr: 1,
                                 }}
                             >
-                                    {usuarioLogeado ? userName : ""}
+                                {usuarioLogeado ? userName : ""}
                             </Typography>
                             {/* Botón al final de la Navbar */}
                             <Tooltip title={"Configuración"} placement="bottom" arrow>
@@ -143,7 +143,7 @@ function Navbar({ useSectionMode, secciones, seccionesRutas, seccionActual }) {
                             'aria-labelledby': 'basic-button',
                         }}
                     >
-                        <MenuItem onClick={handleClose}>
+                        <MenuItem component={Link} to={`/usuarios/${usuarioLogeado?.id}`} onClick={handleClose}>
                             <ListItemIcon>
                                 <AccountCircleIcon fontSize="small" />
                             </ListItemIcon>
