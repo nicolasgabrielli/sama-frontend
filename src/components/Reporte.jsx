@@ -484,7 +484,7 @@ function Reporte() {
             tipo: editedField.tipo,
             subCampos: editedField.subCampos,
             evidencias: selectedEvidencias,   // Se envían solo los IDs de las evidencias.
-            autorizacion: false
+            autorizado: false
         };
 
         let campoIndex = 0;                                             // Se define el índice del campo.
@@ -689,9 +689,12 @@ function Reporte() {
     // Función para autorizar el campo y cerrar el pop up.
     const handleAutorizarCampo = async () => {
         let coordenadas = {
-            indexCategoria: categoriaActualIndex,
-            indexSeccion: seccionActualIndex,
-            indexCampo: campoActualIndex
+            idUsuario: usuarioLogeado.id,
+            coordenadas: {
+                indexCategoria: categoriaActualIndex,
+                indexSeccion: seccionActualIndex,
+                indexCampo: campoActualIndex,
+            },
         }
         await reporteService.autorizarCampo(idReporte, coordenadas);
         setOpenAutorizarCampoDialog(false);
@@ -703,18 +706,18 @@ function Reporte() {
         setEditMode((prevEditMode) => {
             const newEditMode = !prevEditMode;
             const categoriaIndex = categoriaActualIndex;
-            
+
             if (!newEditMode) {
                 fetchData(); // Ejecuta fetchData si se desactiva el modo de edición.
             }
-            
+
             if (guardado) {
                 // Obtiene el reporte y lo actualiza.
                 reporteService.obtenerReporte(idReporte)
                     .then((nuevoReporte) => {
                         nuevoReporte = nuevoReporte.data;
                         console.log('Reporte obtenido:', nuevoReporte);
-    
+
                         nuevoReporte.categorias = nuevoReporte.categorias.map((categoria, index) => {
                             if (index === categoriaIndex) { // Solo actualiza la categoría especificada
                                 return {
@@ -728,7 +731,7 @@ function Reporte() {
                                             tipo: campo.tipo,
                                             subCampos: campo.subCampos,
                                             evidencias: campo.evidencias,
-                                            autorizacion: campo.autorizacion,
+                                            autorizado: campo.autorizado,
                                         }))
                                     }))
                                 };
@@ -748,13 +751,10 @@ function Reporte() {
                         console.error('Error al actualizar el reporte:', error);
                     });
             }
-            
+
             return newEditMode;
         });
     };
-    
-    
-    
 
     const handleDragEnd = (result) => {
         const { source, destination } = result;
@@ -772,6 +772,21 @@ function Reporte() {
         newSecciones[destinationSectionIndex].campos.splice(destinationIndex, 0, movedItem);
 
     };
+
+    // Función para cambiar el formato de la fecha.
+    function formatearFecha(fecha) {
+        const nuevaFecha = new Date(fecha);
+
+        const dia = String(nuevaFecha.getDate()).padStart(2, '0');
+        const mes = String(nuevaFecha.getMonth() + 1).padStart(2, '0'); // Los meses empiezan en 0
+        const año = String(nuevaFecha.getFullYear()).slice(2); // Solo los últimos 2 dígitos
+
+        const horas = String(nuevaFecha.getHours()).padStart(2, '0');
+        const minutos = String(nuevaFecha.getMinutes()).padStart(2, '0');
+        const segundos = String(nuevaFecha.getSeconds()).padStart(2, '0');
+
+        return `${dia}/${mes}/${año} ${horas}:${minutos}:${segundos}`;
+    }
 
     return (
         <>
@@ -984,24 +999,39 @@ function Reporte() {
                                                                     {/* Botón de autorizar campo */}
                                                                     {usuarioLogeado && rolesAutorizarRegistros.includes(parseInt(usuarioLogeado.rol)) && (
                                                                         <Tooltip
-                                                                            title={campo.autorizacion === true ? "Campo Autorizado" : "Autorizar Campo"}
+                                                                            title={
+                                                                                campo.autorizado === true ? (
+                                                                                    <div style={{ textAlign: 'center', lineHeight: '1' }}>
+                                                                                        <div>Campo autorizado por:</div>
+                                                                                        <br />
+                                                                                        <div>{campo.nombreAutorizador}</div>
+                                                                                        <br />
+                                                                                        <div>{formatearFecha(campo.fechaAutorizacion)}</div>
+                                                                                    </div>
+                                                                                ) : (
+                                                                                    "Autorizar Campo"
+                                                                                )
+                                                                            }
                                                                             placement="bottom"
                                                                             arrow
+                                                                            PopperProps={{
+                                                                                style: { textAlign: 'center' }
+                                                                            }}
                                                                         >
                                                                             <span>
                                                                                 <IconButton
                                                                                     variant="outlined"
-                                                                                    color={campo.autorizacion === true ? "cuaternary" : "primary"}
+                                                                                    color={campo.autorizado === true ? "cuaternary" : "primary"}
                                                                                     onClick={() => handleOpenAutorizarCampo(index, indexSeccion)}
                                                                                     sx={{
                                                                                         transition: "transform 0.2s",
                                                                                         '&:hover': {
                                                                                             transform: "scale(1.1) translateY(-2px)",
                                                                                         },
-                                                                                        color: campo.autorizacion === true ? "cuaternary" : "primary"
+                                                                                        color: campo.autorizado === true ? "cuaternary" : "primary"
                                                                                     }}
                                                                                 >
-                                                                                    {campo.autorizacion === true ? <DoneAllIcon /> : <CheckIcon />}
+                                                                                    {campo.autorizado === true ? <DoneAllIcon /> : <CheckIcon />}
                                                                                 </IconButton>
                                                                             </span>
                                                                         </Tooltip>
@@ -1012,7 +1042,7 @@ function Reporte() {
                                                                             <>
                                                                                 {/* Indicador de Campo Autorizado */}
                                                                                 <Tooltip
-                                                                                    title={campo.autorizacion === true ? "Campo Autorizado" : "Campo aún no autorizado"}
+                                                                                    title={campo.autorizado === true ? "Campo Autorizado" : "Campo aún no autorizado"}
                                                                                     placement="bottom"
                                                                                     arrow
                                                                                 >
@@ -1022,20 +1052,20 @@ function Reporte() {
                                                                                             color="inherit"  // Usa 'inherit' para aplicar color personalizado
                                                                                             disabled
                                                                                             sx={{
-                                                                                                color: campo.autorizacion === true ? "cuaternary.main" : "secondary.main",
+                                                                                                color: campo.autorizado === true ? "cuaternary.main" : "secondary.main",
                                                                                                 transition: "transform 0.2s",
                                                                                                 '&:hover': {
                                                                                                     transform: "scale(1.1) translateY(-2px)",
                                                                                                     backgroundColor: 'transparent', // Evita el color de fondo en hover
                                                                                                 },
                                                                                                 '&.Mui-disabled': {
-                                                                                                    color: campo.autorizacion === true ? "cuaternary.main" : "secondary.main",
+                                                                                                    color: campo.autorizado === true ? "cuaternary.main" : "secondary.main",
                                                                                                     cursor: "default",
                                                                                                     backgroundColor: 'transparent' // Asegúrate de que el fondo también se mantenga transparente
                                                                                                 }
                                                                                             }}
                                                                                         >
-                                                                                            {campo.autorizacion === true ? <DoneAllIcon /> : <CheckIcon />}
+                                                                                            {campo.autorizado === true ? <DoneAllIcon /> : <CheckIcon />}
                                                                                         </IconButton>
                                                                                     </span>
                                                                                 </Tooltip>
@@ -1070,7 +1100,7 @@ function Reporte() {
                                                                     )}
 
                                                                     {/* Botón de editar campo */}
-                                                                    {campo.autorizacion !== true && usuarioLogeado && rolesEditarCampos.includes(parseInt(usuarioLogeado.rol)) && (
+                                                                    {campo.autorizado !== true && usuarioLogeado && rolesEditarCampos.includes(parseInt(usuarioLogeado.rol)) && (
                                                                         <Tooltip title="Editar Campo" placement="bottom" arrow>
                                                                             <span>
                                                                                 <IconButton
@@ -1828,10 +1858,10 @@ function Reporte() {
                         </DialogTitle>
                         <DialogContent>
                             <Typography variant="body1" sx={{ p: 2 }}>
-                                {secciones[seccionActualIndex] 
-                                    && secciones[seccionActualIndex].campos[campoActualIndex] 
-                                    && secciones[seccionActualIndex].campos[campoActualIndex].autorizacion === true 
-                                    ? "El campo ya ha sido autorizado. ¿Está seguro de que desea revocar la autorización del campo y habilitarlo para la edición?" 
+                                {secciones[seccionActualIndex]
+                                    && secciones[seccionActualIndex].campos[campoActualIndex]
+                                    && secciones[seccionActualIndex].campos[campoActualIndex].autorizado === true
+                                    ? "El campo ya ha sido autorizado. ¿Está seguro de que desea revocar la autorización del campo y habilitarlo para la edición?"
                                     : "¿Está seguro de que desea autorizar el campo? Una vez autorizado, no podrá realizar cambios en el campo."
                                 }
                             </Typography>
@@ -1840,15 +1870,15 @@ function Reporte() {
                             <Button color="secondary" variant="text" onClick={() => setOpenAutorizarCampoDialog(false)} >
                                 Cancelar
                             </Button>
-                            <Button color={secciones[seccionActualIndex] 
-                                    && secciones[seccionActualIndex].campos[campoActualIndex] 
-                                    && secciones[seccionActualIndex].campos[campoActualIndex].autorizacion === true
-                                    ? "error"
-                                    : "cuaternary"} variant="text" onClick={() => handleAutorizarCampo()}>
-                                {secciones[seccionActualIndex] 
-                                    && secciones[seccionActualIndex].campos[campoActualIndex] 
-                                    && secciones[seccionActualIndex].campos[campoActualIndex].autorizacion === true 
-                                    ? "Revocar Autorización" 
+                            <Button color={secciones[seccionActualIndex]
+                                && secciones[seccionActualIndex].campos[campoActualIndex]
+                                && secciones[seccionActualIndex].campos[campoActualIndex].autorizado === true
+                                ? "error"
+                                : "cuaternary"} variant="text" onClick={() => handleAutorizarCampo()}>
+                                {secciones[seccionActualIndex]
+                                    && secciones[seccionActualIndex].campos[campoActualIndex]
+                                    && secciones[seccionActualIndex].campos[campoActualIndex].autorizado === true
+                                    ? "Revocar Autorización"
                                     : "Autorizar"
                                 }
                             </Button>

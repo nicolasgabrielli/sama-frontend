@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import {
   Container,
   Grid,
@@ -11,32 +11,55 @@ import {
   CircularProgress,
   TextField,
   IconButton,
+  Autocomplete,
+  Checkbox,
+  Select,
+  MenuItem,
+  ListItemText
 } from "@mui/material";
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
-import usuarioService from "../services/UsuarioService";
-import Navbar from "./Navbar";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import Search from '@mui/icons-material/Search';
+import Check from '@mui/icons-material/Check';
+import usuarioService from "../services/UsuarioService";
+import empresaService from "../services/EmpresaService";
+import Navbar from "./Navbar";
 
 function PerfilUsuario() {
-  const { id } = useParams(); // Obtener el id del usuario desde la URL
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [usuario, setUsuario] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [editMode, setEditMode] = useState({}); // Track which fields are in edit mode
+  const [editMode, setEditMode] = useState({});
+  const [listaEmpresas, setListaEmpresas] = useState([]);
+  const [selectedEmpresas, setSelectedEmpresas] = useState([]);
+  const [filteredEmpresas, setFilteredEmpresas] = useState([]);
 
   useEffect(() => {
     const fetchUsuario = async () => {
       try {
         const response = await usuarioService.getUsuario(id);
         setUsuario(response.data);
+        setSelectedEmpresas(response.data.empresas || []);
       } catch (error) {
         console.error("Error al obtener los detalles del usuario:", error);
       } finally {
         setLoading(false);
       }
     };
-
     fetchUsuario();
+
+    const fetchEmpresas = async () => {
+      try {
+        const response = await empresaService.getListaEmpresas();
+        setListaEmpresas(response.data);
+        setFilteredEmpresas(response.data);
+      } catch (error) {
+        console.error("Error al obtener la lista de empresas:", error);
+      }
+    };
+    fetchEmpresas();
   }, [id]);
 
   const handleEditToggle = (field) => {
@@ -54,10 +77,33 @@ function PerfilUsuario() {
   };
 
   const saveChanges = async (field) => {
-    // Aquí puedes implementar la lógica para guardar los cambios en el servidor.
-    // Por ahora, solo cambiamos el modo de edición.
-    handleEditToggle(field);
+    try {
+      await usuarioService.actualizarUsuario(usuario);
+    } catch (error) {
+      console.error("Error al actualizar el usuario:", error);
+    } finally {
+      handleEditToggle(field);
+    }
   };
+
+  const handleSelectAll = () => {
+    setSelectedEmpresas(filteredEmpresas.sort((a, b) => a.nombre.localeCompare(b.nombre)));
+  };
+
+  const handleSearchChange = (event) => {
+    const query = event.target.value.toLowerCase();
+    setFilteredEmpresas(listaEmpresas.filter(empresa => empresa.nombre.toLowerCase().includes(query)));
+  };
+
+  const handleEmpresaToggle = (empresa) => {
+    setSelectedEmpresas((prevSelected) =>
+      prevSelected.some(e => e.nombre === empresa.nombre)
+        ? prevSelected.filter(e => e.nombre !== empresa.nombre)
+        : [...prevSelected, empresa].sort((a, b) => a.nombre.localeCompare(b.nombre))
+    );
+  };
+  
+  const isSelected = (empresa) => selectedEmpresas.some(e => e.nombre === empresa.nombre);
 
   return (
     <>
@@ -84,25 +130,32 @@ function PerfilUsuario() {
         </Box>
       ) : (
         <Container sx={{ mt: 4 }}>
-          <Grid item xs={6} container justifyContent="flex-end">
-            <Link to="/usuarios">
-              <Button
-                variant="contained"
-                sx={{
-                  textTransform: "none",
-                  fontWeight: "bold",
-                  fontStyle: "italic",
-                  mr: 1,
-                  fontSize: "1.1rem",
-                  maxHeight: 0.7,
-                }}
-                startIcon={<ArrowBackIcon />}
-              >
-                Volver
-              </Button>
-            </Link>
-          </Grid>
-          <Paper sx={{ p: 4, mt: 2 }}>
+          <Paper sx={{ p: 4, mt: 2, position: "relative" }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "flex-end",
+                position: "absolute",
+                top: 16,
+                right: 16,
+              }}
+            >
+              
+                <Button
+                  variant="contained"
+                  sx={{
+                    textTransform: "none",
+                    fontWeight: "bold",
+                    fontStyle: "italic",
+                    fontSize: "1.1rem",
+                  }}
+                  startIcon={<ArrowBackIcon />}
+                  onClick={() => navigate(-1)}
+                >
+                  Volver
+                </Button>
+              
+            </Box>
             <Box
               sx={{
                 display: "flex",
@@ -134,6 +187,7 @@ function PerfilUsuario() {
             >
               Información del Usuario
             </Typography>
+            {/* Nombre */}
             <Grid
               container
               alignItems="center"
@@ -162,6 +216,7 @@ function PerfilUsuario() {
                 {editMode.nombre ? <SaveIcon /> : <EditIcon />}
               </IconButton>
             </Grid>
+            {/* Correo */}
             <Grid
               container
               alignItems="center"
@@ -190,6 +245,7 @@ function PerfilUsuario() {
                 {editMode.correo ? <SaveIcon /> : <EditIcon />}
               </IconButton>
             </Grid>
+            {/* Rol */}
             <Grid
               container
               alignItems="center"
@@ -199,12 +255,18 @@ function PerfilUsuario() {
               sx={{ mx: 0, mb: 1, py: 1 }}
             >
               {editMode.rol ? (
-                <TextField
+                <Select
                   variant="standard"
                   value={usuario.rol}
                   onChange={(e) => handleInputChange("rol", e.target.value)}
                   sx={{ flexGrow: 1 }}
-                />
+                >
+                  {Object.entries(usuarioService.listaRoles).map(([key, value]) => (
+                    <MenuItem key={key} value={key}>
+                      {value}
+                    </MenuItem>
+                  ))}
+                </Select>
               ) : (
                 <Typography variant="body1">
                   <strong>Rol:</strong> {usuarioService.listaRoles[usuario.rol]}
@@ -217,6 +279,61 @@ function PerfilUsuario() {
               >
                 {editMode.rol ? <SaveIcon /> : <EditIcon />}
               </IconButton>
+            </Grid>
+            {/* Empresas */}
+            <Grid item xs={12} sx={{ p: 1 }}>
+              <Typography variant="h6" color={"primary.main"} fontWeight={"bold"} sx={{ mb: 2 }}>Acceso a empresas:</Typography>
+              <Autocomplete
+                disablePortal
+                fullWidth
+                multiple
+                options={filteredEmpresas}
+                getOptionLabel={(empresa) => empresa.nombre}
+                value={selectedEmpresas}
+                onChange={(event, newValue) => {
+                  setSelectedEmpresas(newValue.sort((a, b) => a.nombre.localeCompare(b.nombre)));
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Empresas"
+                    variant="outlined"
+                    InputProps={{
+                      ...params.InputProps,
+                      startAdornment: (
+                        <>
+                          <Search />
+                          {params.InputProps.startAdornment}
+                        </>
+                      ),
+                      endAdornment: (
+                        <>
+                          <Button
+                            onClick={handleSelectAll}
+                            color="primary"
+                            startIcon={<Check />}
+                          >
+                            Seleccionar Todo
+                          </Button>
+                          {params.InputProps.endAdornment}
+                        </>
+                      )
+                    }}
+                    onChange={handleSearchChange}
+                  />
+                )}
+                renderOption={(props, option, { selected }) => (
+                  <li key={option.nombre} {...props}>
+                    <Checkbox
+                      icon={<span className="MuiBox-root" />}
+                      checkedIcon={<span className="MuiBox-root" />}
+                      checked={isSelected(option)}
+                      onClick={() => handleEmpresaToggle(option)}
+                    />
+                    <ListItemText primary={option.nombre} />
+                  </li>
+                )}
+              />
             </Grid>
           </Paper>
         </Container>

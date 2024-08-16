@@ -157,7 +157,7 @@ function NavbarReporte({ useSectionMode, categorias, categoriaActualIndex, onCat
                             'aria-labelledby': 'basic-button',
                         }}
                     >
-                        <MenuItem onClick={handleClose}>
+                        <MenuItem component={Link} to={`/usuarios/${usuarioLogeado?.id}`} onClick={handleClose}>
                             <ListItemIcon>
                                 <AccountCircleIcon fontSize="small" />
                             </ListItemIcon>

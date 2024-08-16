@@ -155,9 +155,17 @@ function NavbarEvidencia({ evidencias, refreshEvidencias, usuarioLogeado, rolesG
     const accederEvidencia = async (evidencia) => {
         try {
             if (evidencia.tipo.toLowerCase() === 'archivo') {
-                let url = await reporteService.obtenerUrlS3(evidencia.id).then(response => response.data);
-                if (url) {
-                    window.open(url, '_blank');
+                let response = await reporteService.descargarEvidencia(evidencia.id).then(response => response.data);
+                if (response) {
+                    const url = window.URL.createObjectURL(new Blob([response.data]));
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.setAttribute('download', response.headers['content-disposition'].split('filename=')[1].replace(/"/g, ''));
+                    document.body.appendChild(link);
+                    link.click();
+              
+                    // Limpiar el enlace
+                    document.body.removeChild(link);
                 } else {
                     console.error('La URL obtenida del servicio S3 es nula o no válida.');
                 }
@@ -171,7 +179,10 @@ function NavbarEvidencia({ evidencias, refreshEvidencias, usuarioLogeado, rolesG
 
     const handleAutorizacion = async () => {
         try {
-            const response = await reporteService.autorizarReporte(idReporte);
+            let coordenadas = {
+                idUsuario: usuarioLogeado.id,
+            };
+            const response = await reporteService.autorizarReporte(idReporte, coordenadas);
             if (response.status === 200) {
                 console.log('Reporte autorizado con exito:', response.data);
                 fetchData();
@@ -511,7 +522,7 @@ function NavbarEvidencia({ evidencias, refreshEvidencias, usuarioLogeado, rolesG
                         </Grid>
                     </Grid>
                     <Grid item xs={12} sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
-                        <Typography variant="h6">{reporteAutorizado ? "Usted está a punto de quitar la autorización al reporte. ¿Desea continuar?" : "Usted está a punto de autorizar el reporte. ¿Autorizar?"}</Typography>
+                        <Typography variant="h6">{reporteAutorizado ? "El reporte ya se encuentra autorizado." : "Usted está a punto de autorizar el reporte. Es decir autorizar TODOS los campos del reporte. ¿Autorizar el reporte?"}</Typography>
                     </Grid>
                 </DialogContent>
                 <DialogActions>
@@ -520,9 +531,11 @@ function NavbarEvidencia({ evidencias, refreshEvidencias, usuarioLogeado, rolesG
                             <Button color="secondary" variant="text" onClick={() => setOpenDialogAutorizarReporte(false)}>
                                 Cancelar
                             </Button>
-                            <Button color={reporteAutorizado ? "error" : "cuaternary"} variant="text" onClick={() => handleAutorizacion()}>
-                                {reporteAutorizado ? "Quitar Autorización" : "Autorizar"}	
-                            </Button>
+                            {!reporteAutorizado && (
+                                <Button color={reporteAutorizado ? "error" : "cuaternary"} variant="text" onClick={() => handleAutorizacion()}>
+                                    Autorizar
+                                </Button>    
+                            )}
                         </Grid>
                     </Grid>
                 </DialogActions>
