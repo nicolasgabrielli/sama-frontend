@@ -10,6 +10,7 @@ import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import Loading from './Loading';
 import usuarioService from '../services/UsuarioService';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 function ListaReportes() {
     const useSectionMode = false;
@@ -34,6 +35,23 @@ function ListaReportes() {
     const [idReporte, setIdReporte] = useState(null);
     const [loading, setLoading] = useState(true);
     const [usuarioLogeado, setUsuarioLogeado] = useState(null);
+    const [openConfirmDelete, setOpenConfirmDelete] = useState(false); // Nuevo estado para el diálogo de confirmación
+    const [plantillaAEliminar, setPlantillaAEliminar] = useState(null); // Plantilla a eliminar
+
+    const handleOpenConfirmDelete = (plantillaId) => {
+        setPlantillaAEliminar(plantillaId);
+        setOpenConfirmDelete(true);
+    };
+
+    const handleCloseConfirmDelete = () => {
+        setPlantillaAEliminar(null);
+        setOpenConfirmDelete(false);
+    };
+
+    const handleDeleteConfirmed = () => {
+        handleEliminarPreconfiguracion(plantillaAEliminar);
+        handleCloseConfirmDelete();
+    };
 
 
     const handleOpenCrearReporte = () => {
@@ -148,6 +166,18 @@ function ListaReportes() {
         setOpenEliminarReporte(false);
         window.location.reload();
     };
+
+    const handleEliminarPreconfiguracion = async (id) => {
+        await reporteService.eliminarReporte(id)
+            .then(() => {
+                // Actualizar la lista de preconfiguraciones después de eliminar
+                setPreconfiguraciones(preconfiguraciones.filter(preconfiguracion => preconfiguracion.id !== id));
+            })
+            .catch((error) => {
+                console.error("Error al eliminar la preconfiguración:", error);
+            });
+    };
+
 
     // Función para descargar el reporte en un formato específico.
     const handleDescargarReporte = async (formato) => {
@@ -346,14 +376,14 @@ function ListaReportes() {
                         const roles = [0, 4];
                         return roles.includes(parseInt(usuarioLogeado.rol));
                     })() && (
-                        <Box bgcolor="#fff" sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, boxShadow: "0px -4px 6px rgba(0, 0, 0, 0.1)", height: '80px' }}>
-                            <Box sx={{ display: "flex", justifyContent: "center", mt: 2, mb: 2 }}>
-                                <Button variant="contained" onClick={handleOpenCrearReporte} sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1, fontSize: "1.2rem" }}>
-                                    Crear Reporte
-                                </Button>
+                            <Box bgcolor="#fff" sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, boxShadow: "0px -4px 6px rgba(0, 0, 0, 0.1)", height: '80px' }}>
+                                <Box sx={{ display: "flex", justifyContent: "center", mt: 2, mb: 2 }}>
+                                    <Button variant="contained" onClick={handleOpenCrearReporte} sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1, fontSize: "1.2rem" }}>
+                                        Crear Reporte
+                                    </Button>
+                                </Box>
                             </Box>
-                        </Box>
-                    )}
+                        )}
 
                     {/* Diálogo de confirmación de eliminación */}
                     <Dialog open={openEliminarReporte} onClose={() => setOpenEliminarReporte(false)}>
@@ -473,7 +503,22 @@ function ListaReportes() {
                                             fullWidth
                                         >
                                             {preconfiguraciones && preconfiguraciones.length >= 1 && preconfiguraciones.map((preconfiguracion) => (
-                                                <MenuItem value={preconfiguracion.id}>{preconfiguracion.titulo}</MenuItem>
+                                                <MenuItem key={preconfiguracion.id} value={preconfiguracion.id}>
+                                                    <Grid container alignItems="center" justifyContent="space-between">
+                                                        <Grid item>
+                                                            {preconfiguracion.titulo}
+                                                        </Grid>
+                                                        <Grid item>
+                                                            {/* Mostrar el icono solo si la plantilla no está seleccionada */}
+                                                            {plantillaSeleccionadaId !== preconfiguracion.id && (
+                                                                <IconButton onClick={() => handleOpenConfirmDelete(preconfiguracion.id)} color="error" size="small">
+                                                                    <DeleteIcon />
+                                                                </IconButton>
+                                                            )}
+                                                        </Grid>
+                                                    </Grid>
+                                                </MenuItem>
+
                                             ))}
                                         </Select>
                                     </FormControl>
@@ -501,7 +546,20 @@ function ListaReportes() {
                             </Grid>
                         </DialogActions>
                     </Dialog>
-
+                    {/* Diálogo de confirmación de eliminación */}
+                    <Dialog open={openConfirmDelete} onClose={handleCloseConfirmDelete}>
+                        <DialogContent>
+                            <Typography variant="h6">¿Está seguro que desea eliminar esta plantilla?</Typography>
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={handleDeleteConfirmed} color="error" variant="contained">
+                                Confirmar
+                            </Button>
+                            <Button onClick={handleCloseConfirmDelete} color="primary" variant="outlined">
+                                Cancelar
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
                     {/* Diálogo sin Preconfiguraciones */}
                     <Dialog open={openSinPreconfiguraciones} onClose={handleCloseSinPreconfiguraciones}>
                         <DialogContent>
