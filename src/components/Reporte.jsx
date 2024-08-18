@@ -10,7 +10,11 @@ import BackupTableIcon from '@mui/icons-material/BackupTable';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import ImportExportIcon from '@mui/icons-material/ImportExport';
-import { Alert, Box, Button, Collapse, Container, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid, IconButton, InputLabel, MenuItem, Paper, Select, TextField, Tooltip, Typography } from "@mui/material";
+import { Alert, Box, Button, Checkbox, Collapse, Container, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, Grid, IconButton, InputAdornment, InputLabel, MenuItem, Paper, Select, TextField, Tooltip, Typography } from "@mui/material";
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
+import { es } from 'date-fns/locale/es';
 import Loading from './Loading';
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
@@ -83,6 +87,7 @@ function Reporte() {
                 if (categoriasObtenidas.length > 0) {
                     setSecciones(categoriasObtenidas[categoriaActualIndex].secciones || []);
                 }
+                console.log('Reporte obtenido:', data)
             })
             .catch(error => console.error('Error al obtener el reporte:', error));
     };
@@ -122,7 +127,7 @@ function Reporte() {
     const [openSectionDialog, setOpenSectionDialog] = useState(false);
     const [openSectionEditDialog, setOpenSectionEditDialog] = useState(false);
     const [openCategoryEditDialog, setOpenCategoryEditDialog] = useState(false);
-    const [editedField, setEditedField] = useState({ titulo: "", contenido: "", tipo: "Texto", subCampos: [] });
+    const [editedField, setEditedField] = useState({ titulo: "", contenido: "", tipo: "Texto", subCampos: [], porcentaje: false });
     const [currentField, setCurrentField] = useState({ titulo: "", contenido: "", tipo: "Texto", subCampos: [] });
     const [alerta, setAlerta] = useState(false);
     const [alertaTexto, setAlertaTexto] = useState("");
@@ -143,7 +148,6 @@ function Reporte() {
     const [openAutorizarCampoDialog, setOpenAutorizarCampoDialog] = useState(false);
     const [openEvidenciaDialog, setOpenEvidenciaDialog] = useState(false);
     const [editMode, setEditMode] = useState(false);    // Modo de edición de estructura.
-
 
     // ------------------------ FUNCIONES ------------------------
 
@@ -461,31 +465,33 @@ function Reporte() {
     const handleSaveField = async () => {
         // Validación Campo
         const campo = editedField;
-        if (campo.contenido === "" || campo.contenido === null || campo.contenido === undefined) {
+
+        // Validación Campo
+        if (!campo.contenido) {
             handleOpenAlert("Por favor, complete el contenido del campo.");
             return;
         }
-
+    
         // Validación Subcampos
-        if (campo.subCampos != null && campo.subCampos.length > 0) {
-            const subCampos = campo.subCampos;
-            for (let i = 0; i < subCampos.length; i++) {
-                if (subCampos[i].contenido === "" || subCampos[i].contenido === null || subCampos[i].contenido === undefined) {
-                    handleOpenAlert("Por favor, complete el contenido de los subcampos.");
-                    return;
-                }
+        const subCampos = campo.subCampos || [];
+        for (let i = 0; i < subCampos.length; i++) {
+            if (!subCampos[i].contenido) {
+                handleOpenAlert("Por favor, complete el contenido de los subcampos.");
+                return;
             }
         }
 
         // Se crea un objeto con los datos del campo editado.
-        let campoEditado = {
-            titulo: editedField.titulo,
-            contenido: editedField.contenido,
-            tipo: editedField.tipo,
-            subCampos: editedField.subCampos,
-            evidencias: selectedEvidencias,   // Se envían solo los IDs de las evidencias.
+        const campoEditado = {
+            titulo: campo.titulo,
+            contenido: campo.contenido,
+            tipo: campo.tipo,
+            porcentaje: campo.porcentaje || false,
+            subCampos: subCampos,
+            evidencias: selectedEvidencias, // Se envían solo los IDs de las evidencias.
             autorizado: false
         };
+    
 
         let campoIndex = 0;                                             // Se define el índice del campo.
         let seccionIndex = seccionActualIndex;                          // Se define el índice de la sección.
@@ -628,16 +634,20 @@ function Reporte() {
     };
 
 
-    // Cambiar un subcampo.
+    // Modificar un subcampo o campo.
     const handleFieldChange = (event) => {
         const { name, value } = event.target;
-        if (name.startsWith('subCampos')) {                             // Si se está editando un subcampo.
-            const subcampoIndex = parseInt(name.split('-')[2]);         // Se obtiene el índice del subcampo.
-            const newSubCampos = [...editedField.subCampos];            // Se clona la lista de subcampos.
-            newSubCampos[subcampoIndex][name.split('-')[1]] = value;    // Se actualiza el subcampo.
-            setEditedField({ ...editedField, subCampos: newSubCampos });    // Se actualiza el campo.
+
+        if (name.startsWith('subCampos')) {
+            const subcampoIndex = parseInt(name.split('-')[2]);
+            const newSubCampos = [...editedField.subCampos];
+            newSubCampos[subcampoIndex][name.split('-')[1]] = value;
+            setEditedField({ ...editedField, subCampos: newSubCampos });
         } else {
-            setEditedField({ ...editedField, [name]: value });          // Se actualiza el campo.
+            setEditedField((prevState) => ({
+                ...prevState,
+                contenido: value,
+            }));
         }
     };
 
@@ -756,6 +766,7 @@ function Reporte() {
         });
     };
 
+    // Función para manejar el arrastre de campos.
     const handleDragEnd = (result) => {
         const { source, destination } = result;
 
@@ -774,19 +785,50 @@ function Reporte() {
     };
 
     // Función para cambiar el formato de la fecha.
-    function formatearFecha(fecha) {
+    function formatearFecha(fecha, mostrarHoras) {
         const nuevaFecha = new Date(fecha);
 
         const dia = String(nuevaFecha.getDate()).padStart(2, '0');
         const mes = String(nuevaFecha.getMonth() + 1).padStart(2, '0'); // Los meses empiezan en 0
         const año = String(nuevaFecha.getFullYear()).slice(2); // Solo los últimos 2 dígitos
 
-        const horas = String(nuevaFecha.getHours()).padStart(2, '0');
-        const minutos = String(nuevaFecha.getMinutes()).padStart(2, '0');
-        const segundos = String(nuevaFecha.getSeconds()).padStart(2, '0');
-
-        return `${dia}/${mes}/${año} ${horas}:${minutos}:${segundos}`;
+        if (!mostrarHoras) {
+            return `${dia}/${mes}/${año}`;
+        }
+        else {
+            const horas = String(nuevaFecha.getHours()).padStart(2, '0');
+            const minutos = String(nuevaFecha.getMinutes()).padStart(2, '0');
+            const segundos = String(nuevaFecha.getSeconds()).padStart(2, '0');
+            return `${dia}/${mes}/${año} ${horas}:${minutos}:${segundos}`;
+        }
     }
+
+    // Formatea el número con separadores de miles y decimales
+    const formatearNumero = (value, porcentaje) => {
+        let number = value;
+
+        // Verifica si el último carácter es '%'
+        if (number.charAt(number.length - 1) === '%') {
+            porcentaje = true;
+            number = number.slice(0, -1); // Elimina el '%'
+        }
+
+        // Convierte el valor a un número flotante
+        number = parseFloat(number.replace(',', '.'));
+
+        // Si el valor no es un número, retorna una cadena vacía
+        if (isNaN(number)) return '';
+
+        // Formatea el número con separadores de miles y decimales
+        const formattedNumber = new Intl.NumberFormat('es-ES', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 20,
+        }).format(number);
+
+        // Si es un porcentaje, añade el '%' al final
+        return porcentaje ? `${formattedNumber}%` : formattedNumber;
+    };
+
 
     return (
         <>
@@ -963,8 +1005,10 @@ function Reporte() {
                                                                             if (campo.tipo) {
                                                                                 if (campo.tipo.toLowerCase() === "texto") {
                                                                                     return campo.contenido;
+                                                                                } else if (campo.tipo.toLowerCase() === "fecha") {
+                                                                                    return formatearFecha(campo.contenido, false);
                                                                                 } else if (campo.tipo.toLowerCase() === "numerico") {
-                                                                                    return campo.contenido;
+                                                                                    return formatearNumero(campo.contenido, campo.porcentaje ? true : false);
                                                                                 } else if (campo.tipo.toLowerCase() === "booleano") {
                                                                                     return campo.contenido ? "Sí" : "No";
                                                                                 } else if (campo.tipo.toLowerCase() === "tabla") {
@@ -1006,7 +1050,7 @@ function Reporte() {
                                                                                         <br />
                                                                                         <div>{campo.nombreAutorizador}</div>
                                                                                         <br />
-                                                                                        <div>{formatearFecha(campo.fechaAutorizacion)}</div>
+                                                                                        <div>{formatearFecha(campo.fechaAutorizacion, true)}</div>
                                                                                     </div>
                                                                                 ) : (
                                                                                     "Autorizar Campo"
@@ -1145,8 +1189,10 @@ function Reporte() {
                                                                                             if (subCampos.tipo) {
                                                                                                 if (subCampos.tipo.toLowerCase() === "texto") {
                                                                                                     return subCampos.contenido;
+                                                                                                } else if (subCampos.tipo.toLowerCase() === "fecha") {
+                                                                                                    return formatearFecha(subCampos.contenido, false);
                                                                                                 } else if (subCampos.tipo.toLowerCase() === "numerico") {
-                                                                                                    return subCampos.contenido;
+                                                                                                    return formatearNumero(subCampos.contenido, subCampos.porcentaje ? true : false);
                                                                                                 } else if (subCampos.tipo.toLowerCase() === "booleano") {
                                                                                                     return subCampos.contenido ? "Sí" : "No";
                                                                                                 } else if (subCampos.tipo.toLowerCase() === "tabla") {
@@ -1262,6 +1308,7 @@ function Reporte() {
                                                     <TextField
                                                         label="Título del Campo"
                                                         name="titulo"
+                                                        autoComplete="off"
                                                         variant="outlined"
                                                         fullWidth
                                                         margin="normal"
@@ -1282,18 +1329,23 @@ function Reporte() {
                                                                 const newTipo = event.target.value;
                                                                 const newCampo = { ...editedField };
 
-                                                                if (newCampo.tipo && newCampo.tipo.toLowerCase() === "booleano") {
-                                                                    newCampo.contenido = "";
-                                                                }
-
-                                                                if ((newCampo.tipo && (newCampo.tipo.toLowerCase() === "texto" || newCampo.tipo.toLowerCase() === "numerico")) && newTipo.toLowerCase() === "booleano") {
+                                                                if ((newCampo.tipo &&
+                                                                    (newCampo.tipo.toLowerCase() === "texto"
+                                                                        || newCampo.tipo.toLowerCase() === "numerico"
+                                                                        || newCampo.tipo.toLowerCase() === "fecha"
+                                                                    ))
+                                                                    && newTipo.toLowerCase() === "booleano") {
                                                                     newCampo.contenido = true;
-                                                                }
-
-                                                                if (newTipo.toLowerCase() === "tabla") {
+                                                                } else if (newCampo.tipo && newCampo.tipo.toLowerCase() === "tabla" || newCampo.tipo.toLowerCase() === "booleano" || newCampo.tipo.toLowerCase() === "fecha") {
                                                                     newCampo.contenido = "";
+                                                                } else if ((newCampo.tipo &&
+                                                                    (newCampo.tipo.toLowerCase() === "texto"
+                                                                        || newCampo.tipo.toLowerCase() === "numerico"
+                                                                        || newCampo.tipo.toLowerCase() === "booleano"
+                                                                    ))
+                                                                    && newTipo.toLowerCase() === "fecha") {
+                                                                    newCampo.contenido = new Date().toISOString();
                                                                 }
-
                                                                 newCampo.tipo = newTipo;
                                                                 setEditedField({ ...editedField, tipo: newTipo, contenido: newCampo.contenido });
                                                             }}
@@ -1301,6 +1353,7 @@ function Reporte() {
                                                         >
                                                             <MenuItem value="texto">Texto</MenuItem>
                                                             <MenuItem value="numerico">Número</MenuItem>
+                                                            <MenuItem value="fecha">Fecha</MenuItem>
                                                             <MenuItem value="booleano">Alternativa Única</MenuItem>
                                                             <MenuItem value="tabla">Tabla</MenuItem>
                                                         </Select>
@@ -1333,6 +1386,61 @@ function Reporte() {
                                                             >
                                                                 Editar Tabla
                                                             </Button>
+                                                        ) : editedField.tipo.toLowerCase() === "fecha" ? (
+                                                            <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+                                                                <DatePicker
+                                                                    label="Fecha"
+                                                                    name="contenido"
+                                                                    variant="outlined"
+                                                                    margin="normal"
+                                                                    sx={{ width: "99%", my: 2 }}
+                                                                    value={editedField.contenido ? new Date(editedField.contenido) : null}
+                                                                    inputFormat="dd/MM/yyyy"  // O 'dd/MM/yy' si prefieres
+                                                                    onChange={(date) => {
+                                                                        if (date) {
+                                                                            const formattedDate = date.toISOString();
+                                                                            setEditedField({ ...editedField, contenido: formattedDate });
+                                                                        }
+                                                                    }}
+                                                                />
+                                                            </LocalizationProvider>
+                                                        ) : editedField.tipo.toLowerCase() === "numerico" ? (
+                                                            <>
+                                                                <TextField
+                                                                    label="Valor"
+                                                                    type="number"
+                                                                    name="contenido"
+                                                                    variant="outlined"
+                                                                    fullWidth
+                                                                    margin="normal"
+                                                                    autoComplete="off"
+                                                                    sx={{ width: "99%" }}
+                                                                    value={editedField.contenido}
+                                                                    onChange={handleFieldChange}
+                                                                    InputProps={{
+                                                                        endAdornment: (
+                                                                            <InputAdornment position="end">
+                                                                                {editedField.porcentaje ? '%' : ''}
+                                                                            </InputAdornment>
+                                                                        ),
+                                                                        inputProps: { step: "any" }
+                                                                    }}
+                                                                />
+
+                                                                <FormControlLabel
+                                                                    label="Porcentaje"
+                                                                    control={
+                                                                        <Checkbox
+                                                                            checked={editedField.porcentaje}
+                                                                            onChange={(event) => {
+                                                                                setEditedField({ ...editedField, porcentaje: event.target.checked });
+                                                                            }}
+                                                                            inputProps={{ 'aria-label': 'controlled' }}
+                                                                        />
+                                                                    }
+                                                                />
+                                                            </>
+
                                                         ) : (
                                                             <TextField
                                                                 label="Valor"
@@ -1340,6 +1448,7 @@ function Reporte() {
                                                                 variant="outlined"
                                                                 fullWidth
                                                                 multiline
+                                                                autoComplete="off"
                                                                 minRows={4}
                                                                 margin="normal"
                                                                 sx={{ width: "99%" }}
@@ -1367,6 +1476,7 @@ function Reporte() {
                                                                     name={`subCampos-titulo-${index}`}
                                                                     variant="outlined"
                                                                     fullWidth
+                                                                    autoComplete="off"
                                                                     margin="normal"
                                                                     value={subCampo.titulo}
                                                                     onChange={(event) => {
@@ -1385,7 +1495,7 @@ function Reporte() {
                                                                         value={subCampo.tipo}
                                                                         onChange={(event) => {
                                                                             const newSubcampos = [...editedField.subCampos];
-                                                                            if (newSubcampos[index].tipo === "Booleano") {
+                                                                            if (newSubcampos[index].tipo === "Booleano" || newSubcampos[index].tipo === "Fecha") {
                                                                                 newSubcampos[index].contenido = "";
                                                                             }
                                                                             newSubcampos[index].tipo = event.target.value;
@@ -1394,6 +1504,7 @@ function Reporte() {
                                                                     >
                                                                         <MenuItem value="Texto">Texto</MenuItem>
                                                                         <MenuItem value="Numerico">Número</MenuItem>
+                                                                        <MenuItem value="Fecha">Fecha</MenuItem>
                                                                         <MenuItem value="Booleano">Alternativa Única</MenuItem>
                                                                         <MenuItem value="Tabla">Tabla</MenuItem>
                                                                     </Select>
@@ -1428,6 +1539,69 @@ function Reporte() {
                                                                     >
                                                                         Editar Tabla
                                                                     </Button>
+                                                                ) : subCampo.tipo === "Fecha" ? (
+                                                                    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+                                                                        <DatePicker
+                                                                            label="Fecha del Subcampo"
+                                                                            name={`subCampos-contenido-${index}`}
+                                                                            variant="outlined"
+                                                                            margin="normal"
+                                                                            sx={{ width: "100%", my: 2 }}
+                                                                            value={subCampo.contenido ? new Date(subCampo.contenido) : null}
+                                                                            inputFormat="dd/MM/yyyy"
+                                                                            onChange={(date) => {
+                                                                                if (date) {
+                                                                                    const formattedDate = date.toISOString();
+                                                                                    const newSubcampos = [...editedField.subCampos];
+                                                                                    newSubcampos[index].contenido = formattedDate;
+                                                                                    setEditedField({ ...editedField, subCampos: newSubcampos });
+                                                                                }
+                                                                            }}
+                                                                            renderInput={(params) => <TextField {...params} />}
+                                                                        />
+                                                                    </LocalizationProvider>
+                                                                ) : subCampo.tipo === "Numerico" ? (
+                                                                    <>
+                                                                        <TextField
+                                                                            label="Valor del Subcampo"
+                                                                            type="number"
+                                                                            name={`subCampos-contenido-${index}`}
+                                                                            variant="outlined"
+                                                                            fullWidth
+                                                                            margin="normal"
+                                                                            autoComplete="off"
+                                                                            sx={{ width: "100%", my: 2 }}
+                                                                            value={subCampo.contenido}
+                                                                            onChange={(event) => {
+                                                                                const newSubcampos = [...editedField.subCampos];
+                                                                                newSubcampos[index].contenido = event.target.value;
+                                                                                setEditedField({ ...editedField, subCampos: newSubcampos });
+                                                                            }}
+                                                                            InputProps={{
+                                                                                endAdornment: (
+                                                                                    <InputAdornment position="end">
+                                                                                        {subCampo.porcentaje ? '%' : ''} {/* Muestra '%' al final si está incluido */}
+                                                                                    </InputAdornment>
+                                                                                ),
+                                                                                inputProps: { step: "any" } // Permite decimales
+                                                                            }}
+                                                                        />
+                                                                        <FormControlLabel label="Porcentaje" control={
+                                                                            <Checkbox
+                                                                                checked={subCampo.porcentaje}
+                                                                                onChange={(event) => {
+                                                                                    const newSubcampos = [...editedField.subCampos];
+                                                                                    if (event.target.checked) {
+                                                                                        newSubcampos[index].porcentaje = true;
+                                                                                    } else {
+                                                                                        newSubcampos[index].porcentaje = false;
+                                                                                    }
+                                                                                    setEditedField({ ...editedField, subCampos: newSubcampos });
+                                                                                }}
+                                                                                inputProps={{ 'aria-label': 'controlled' }}
+                                                                            />
+                                                                        } />
+                                                                    </>
                                                                 ) : (
                                                                     <TextField
                                                                         label="Valor del Subcampo"
@@ -1500,6 +1674,7 @@ function Reporte() {
                                                 label="Buscar Evidencias"
                                                 variant="outlined"
                                                 fullWidth
+                                                autoComplete="off"
                                                 margin="normal"
                                                 value={searchTerm}
                                                 onChange={handleSearchChange}
@@ -1655,6 +1830,7 @@ function Reporte() {
                                             label="Título de la Sección"
                                             variant="outlined"
                                             fullWidth
+                                            autoComplete="off"
                                             value={editedSection.titulo}
                                             onChange={(event) => setEditedSection({ ...editedSection, titulo: event.target.value })}
                                         />
@@ -1697,6 +1873,7 @@ function Reporte() {
                                         <TextField
                                             label="Título de la Categoría"
                                             variant="outlined"
+                                            autoComplete="off"
                                             fullWidth
                                             value={tituloIngresado}
                                             onChange={(event) => setTituloIngresado(event.target.value)}
@@ -1775,6 +1952,7 @@ function Reporte() {
                                     <TextField
                                         label="Título de la Sección"
                                         variant="outlined"
+                                        autoComplete="off"
                                         fullWidth
                                         value={editedSection.titulo}
                                         onChange={(event) => setEditedSection({ ...editedSection, titulo: event.target.value })}

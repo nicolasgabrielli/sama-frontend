@@ -294,6 +294,11 @@ function ListaReportes() {
                                             </Link>
                                         </Grid>
                                     </Grid>
+                                    {listaReportes.length === 0 && (
+                                        <Typography variant="body1" color="secondary" sx={{ fontStyle: "italic", fontWeight: "bold", mt: 2, ml: 2 }}>
+                                            No hay reportes disponibles.
+                                        </Typography>
+                                    )}
                                     {listaReportes.map((reporte) => (
                                         <Box key={reporte.id} sx={{ pl: 2, pr: 2 }}>
                                             <Grid container alignItems="center" justifyContent="space-between" borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, mb: 1, py: 1 }}>
