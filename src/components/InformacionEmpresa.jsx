@@ -1,5 +1,6 @@
 import React from 'react';
-import { Typography, Grid, Paper } from '@mui/material';
+import { Typography, Grid, Paper, Button } from '@mui/material';
+import { Link } from 'react-router-dom';  // Importamos useNavigate
 
 const InformacionEmpresa = ({ infoEmpresa }) => {
     return (
@@ -44,6 +45,14 @@ const InformacionEmpresa = ({ infoEmpresa }) => {
                         <Typography variant="h7">Teléfono: {infoEmpresa.telefono}</Typography>
                     </Grid>
                 )}
+
+                {/* Botón para editar los datos de la empresa */}
+                <Button variant="outlined"
+                    sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}
+                    component={Link}
+                    to={`/empresas/${infoEmpresa.id}`}>
+                    Editar
+                </Button>
             </Paper>
         </Grid>
     );

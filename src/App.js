@@ -11,6 +11,7 @@ import CrearEmpresa from './components/CrearEmpresa';
 import Login from './components/Login';
 import usuarioService from './services/UsuarioService';
 import PerfilUsuario from './components/PerfilUsuario';
+import EditarPerfilEmpresa from './components/EditarPerfilEmpresa';
 
 const theme = createTheme({
   palette: {
@@ -79,6 +80,7 @@ function App() {
             <Route path="/usuarios" element={(parseInt(rol) === 0) ? <Usuarios /> : <Navigate to="/" />} />
             <Route path="/usuarios/crear" element={(parseInt(rol) === 0) ? <CrearUsuario /> : <Navigate to="/" />} />
             <Route path="/usuarios/:id" element={<PerfilUsuario />} />
+            <Route path="/empresas/:idEmpresa" element={<EditarPerfilEmpresa />} />
           </Routes>
         </BrowserRouter>
       </ThemeProvider>
