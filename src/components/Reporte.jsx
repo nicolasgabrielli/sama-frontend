@@ -334,6 +334,7 @@ function Reporte() {
         setCurrentField(campo);                 // Guardar el campo actual.
         setEditedField({
             ...campo,
+            tipo: campo ? campo.tipo : "texto", // Si el campo es nulo, el tipo es "Texto".
             subCampos: campo ? JSON.parse(JSON.stringify(campo.subCampos || [])) : [] // Clonar correctamente los subcampos.
         });
         setIsAdding(!campo);                    // Si el campo es nulo, se está agregando un campo nuevo.
@@ -471,7 +472,7 @@ function Reporte() {
             handleOpenAlert("Por favor, complete el contenido del campo.");
             return;
         }
-    
+
         // Validación Subcampos
         const subCampos = campo.subCampos || [];
         for (let i = 0; i < subCampos.length; i++) {
@@ -491,7 +492,7 @@ function Reporte() {
             evidencias: selectedEvidencias, // Se envían solo los IDs de las evidencias.
             autorizado: false
         };
-    
+
 
         let campoIndex = 0;                                             // Se define el índice del campo.
         let seccionIndex = seccionActualIndex;                          // Se define el índice de la sección.
@@ -637,19 +638,28 @@ function Reporte() {
     // Modificar un subcampo o campo.
     const handleFieldChange = (event) => {
         const { name, value } = event.target;
-
+    
         if (name.startsWith('subCampos')) {
             const subcampoIndex = parseInt(name.split('-')[2]);
-            const newSubCampos = [...editedField.subCampos];
-            newSubCampos[subcampoIndex][name.split('-')[1]] = value;
-            setEditedField({ ...editedField, subCampos: newSubCampos });
+            // Asegúrate de que subCampos esté definido y sea un array
+            if (Array.isArray(editedField.subCampos) && subcampoIndex >= 0 && subcampoIndex < editedField.subCampos.length) {
+                const newSubCampos = [...editedField.subCampos];
+                newSubCampos[subcampoIndex] = {
+                    ...newSubCampos[subcampoIndex],
+                    [name.split('-')[1]]: value
+                };
+                setEditedField({ ...editedField, subCampos: newSubCampos });
+            } else {
+                console.error('Índice de subcampo inválido o subCampos no es un array');
+            }
         } else {
             setEditedField((prevState) => ({
                 ...prevState,
-                contenido: value,
+                [name]: value,
             }));
         }
     };
+    
 
     // Agregar un subcampo.
     const handleAddSubcampo = () => {
@@ -726,8 +736,6 @@ function Reporte() {
                 reporteService.obtenerReporte(idReporte)
                     .then((nuevoReporte) => {
                         nuevoReporte = nuevoReporte.data;
-                        console.log('Reporte obtenido:', nuevoReporte);
-
                         nuevoReporte.categorias = nuevoReporte.categorias.map((categoria, index) => {
                             if (index === categoriaIndex) { // Solo actualiza la categoría especificada
                                 return {
@@ -1323,33 +1331,25 @@ function Reporte() {
                                                         <Select
                                                             label="Tipo de Dato"
                                                             name="tipo"
-                                                            value={editedField.tipo ? editedField.tipo.toLowerCase() : "Texto"}
+                                                            value={editedField.tipo ? editedField.tipo.toLowerCase() : "texto"}
                                                             sx={{ width: "99%" }}
                                                             onChange={(event) => {
                                                                 const newTipo = event.target.value;
                                                                 const newCampo = { ...editedField };
 
-                                                                if ((newCampo.tipo &&
-                                                                    (newCampo.tipo.toLowerCase() === "texto"
-                                                                        || newCampo.tipo.toLowerCase() === "numerico"
-                                                                        || newCampo.tipo.toLowerCase() === "fecha"
-                                                                    ))
-                                                                    && newTipo.toLowerCase() === "booleano") {
+                                                                const currentTipo = newCampo.tipo ? newCampo.tipo.toLowerCase() : "";
+
+                                                                if ((currentTipo === "texto" || currentTipo === "numerico" || currentTipo === "fecha") && newTipo.toLowerCase() === "booleano") {
                                                                     newCampo.contenido = true;
-                                                                } else if (newCampo.tipo && newCampo.tipo.toLowerCase() === "tabla" || newCampo.tipo.toLowerCase() === "booleano" || newCampo.tipo.toLowerCase() === "fecha") {
+                                                                } else if (currentTipo === "tabla" || currentTipo === "booleano" || currentTipo === "fecha") {
                                                                     newCampo.contenido = "";
-                                                                } else if ((newCampo.tipo &&
-                                                                    (newCampo.tipo.toLowerCase() === "texto"
-                                                                        || newCampo.tipo.toLowerCase() === "numerico"
-                                                                        || newCampo.tipo.toLowerCase() === "booleano"
-                                                                    ))
-                                                                    && newTipo.toLowerCase() === "fecha") {
+                                                                } else if ((currentTipo === "texto" || currentTipo === "numerico" || currentTipo === "booleano") && newTipo.toLowerCase() === "fecha") {
                                                                     newCampo.contenido = new Date().toISOString();
                                                                 }
+
                                                                 newCampo.tipo = newTipo;
                                                                 setEditedField({ ...editedField, tipo: newTipo, contenido: newCampo.contenido });
                                                             }}
-
                                                         >
                                                             <MenuItem value="texto">Texto</MenuItem>
                                                             <MenuItem value="numerico">Número</MenuItem>
@@ -1359,6 +1359,7 @@ function Reporte() {
                                                         </Select>
                                                     </FormControl>
                                                 </Grid>
+
                                                 <Grid item xs={12}>
                                                     {editedField.tipo ? (
                                                         editedField.tipo.toLowerCase() === "booleano" ? (
@@ -1452,7 +1453,7 @@ function Reporte() {
                                                                 minRows={4}
                                                                 margin="normal"
                                                                 sx={{ width: "99%" }}
-                                                                value={editedField.contenido}
+                                                                value={editedField.contenido || ""}
                                                                 onChange={handleFieldChange}
                                                             />
                                                         )
