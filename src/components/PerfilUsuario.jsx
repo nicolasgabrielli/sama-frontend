@@ -10,6 +10,7 @@ import {
   Button,
   CircularProgress,
   TextField,
+  Tooltip,
   IconButton,
   Autocomplete,
   Checkbox,
@@ -32,37 +33,49 @@ function PerfilUsuario() {
   const [usuario, setUsuario] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState({});
+  const [editActivated, setEditActivated] = useState(false);
   const [listaEmpresas, setListaEmpresas] = useState([]);
   const [selectedEmpresas, setSelectedEmpresas] = useState([]);
   const [filteredEmpresas, setFilteredEmpresas] = useState([]);
 
   useEffect(() => {
-    const fetchUsuario = async () => {
-      try {
-        const response = await usuarioService.getUsuario(id);
-        setUsuario(response.data);
-        setSelectedEmpresas(response.data.empresas || []);
-      } catch (error) {
-        console.error("Error al obtener los detalles del usuario:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchUsuario();
-
-    const fetchEmpresas = async () => {
-      try {
-        const response = await empresaService.getListaEmpresas();
-        setListaEmpresas(response.data);
-        setFilteredEmpresas(response.data);
-      } catch (error) {
-        console.error("Error al obtener la lista de empresas:", error);
-      }
-    };
-    fetchEmpresas();
   }, [id]);
 
+  const fetchUsuario = async () => {
+    try {
+      const response = await empresaService.getListaEmpresas();
+      const empresas = response.data;
+      setListaEmpresas(empresas);
+      setFilteredEmpresas(empresas);
+
+      const userResponse = await usuarioService.getUsuario(id);
+      const userData = userResponse.data;
+
+      const userEmpresas = userData.empresas.map(id =>
+        empresas.find(empresa => empresa.id === id)
+      );
+
+      setUsuario({ ...userData, empresas: userEmpresas });
+      setSelectedEmpresas(userEmpresas);
+    } catch (error) {
+      console.error("Error al obtener los detalles del usuario o las empresas:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Funciones para restaurar el estado de edición.
+  const handleDescartarCambios = () => {
+    if (editActivated) {
+      setEditActivated(false);
+      setEditMode({});
+      fetchUsuario();
+    }
+  };
+
   const handleEditToggle = (field) => {
+    setEditActivated(true);
     setEditMode((prevEditMode) => ({
       ...prevEditMode,
       [field]: !prevEditMode[field],
@@ -78,6 +91,13 @@ function PerfilUsuario() {
 
   const saveChanges = async (field) => {
     try {
+      if (field === "empresas") {
+        setUsuario((prevUsuario) => ({
+          ...prevUsuario,
+          id: id,
+          empresas: selectedEmpresas.map((e) => e.id),
+        }));
+      }
       await usuarioService.actualizarUsuario(usuario);
     } catch (error) {
       console.error("Error al actualizar el usuario:", error);
@@ -88,6 +108,11 @@ function PerfilUsuario() {
 
   const handleSelectAll = () => {
     setSelectedEmpresas(filteredEmpresas.sort((a, b) => a.nombre.localeCompare(b.nombre)));
+    setEditActivated(true);
+    setEditMode((prevEditMode) => ({
+      ...prevEditMode,
+      empresas: true
+    }));
   };
 
   const handleSearchChange = (event) => {
@@ -96,13 +121,31 @@ function PerfilUsuario() {
   };
 
   const handleEmpresaToggle = (empresa) => {
-    setSelectedEmpresas((prevSelected) =>
-      prevSelected.some(e => e.nombre === empresa.nombre)
-        ? prevSelected.filter(e => e.nombre !== empresa.nombre)
-        : [...prevSelected, empresa].sort((a, b) => a.nombre.localeCompare(b.nombre))
-    );
-  };
+    setSelectedEmpresas((prevSelected) => {
+      // Maneja la lógica para actualizar la lista de empresas seleccionadas
+      const newSelected = prevSelected.some(e => e.id === empresa.id)
+        ? prevSelected.filter(e => e.id !== empresa.id)
+        : [...prevSelected, empresa].sort((a, b) => a.nombre.localeCompare(b.nombre));
   
+      // Actualiza el estado del usuario con las empresas seleccionadas
+      setUsuario((prevUsuario) => ({
+        ...prevUsuario,
+        empresas: newSelected.map((e) => e.id),
+      }));
+  
+      // Actualiza el estado de edición
+      setEditMode((prevEditMode) => ({
+        ...prevEditMode,
+        empresas: true,
+      }));
+  
+      // Marca el modo de edición como activado
+      setEditActivated(true);
+  
+      return newSelected;
+    });
+  };  
+
   const isSelected = (empresa) => selectedEmpresas.some(e => e.nombre === empresa.nombre);
 
   return (
@@ -140,21 +183,20 @@ function PerfilUsuario() {
                 right: 16,
               }}
             >
-              
-                <Button
-                  variant="contained"
-                  sx={{
-                    textTransform: "none",
-                    fontWeight: "bold",
-                    fontStyle: "italic",
-                    fontSize: "1.1rem",
-                  }}
-                  startIcon={<ArrowBackIcon />}
-                  onClick={() => navigate(-1)}
-                >
-                  Volver
-                </Button>
-              
+              <Button
+                variant="contained"
+                sx={{
+                  textTransform: "none",
+                  fontWeight: "bold",
+                  fontStyle: "italic",
+                  fontSize: "1.1rem",
+                }}
+                startIcon={<ArrowBackIcon />}
+                onClick={() => navigate(-1)}
+              >
+                Volver
+              </Button>
+
             </Box>
             <Box
               sx={{
@@ -281,8 +323,24 @@ function PerfilUsuario() {
               </IconButton>
             </Grid>
             {/* Empresas */}
-            <Grid item xs={12} sx={{ p: 1 }}>
-              <Typography variant="h6" color={"primary.main"} fontWeight={"bold"} sx={{ mb: 2 }}>Acceso a empresas:</Typography>
+            <Grid item xs={12}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6" color={"primary.main"} fontWeight={"bold"}>
+                  Acceso a empresas:
+                </Typography>
+                <Tooltip title={editMode.empresas ? "Guardar cambios de las empresas" : "No se han hecho cambios en las empresas"} placement="right">
+                  <span>
+                    <IconButton
+                      onClick={() => saveChanges("empresas")}
+                      disabled={!editMode.empresas}
+                      sx={{ ml: 1 }}
+                    >
+                      <SaveIcon />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              </Box>
+
               <Autocomplete
                 disablePortal
                 fullWidth
@@ -292,6 +350,11 @@ function PerfilUsuario() {
                 value={selectedEmpresas}
                 onChange={(event, newValue) => {
                   setSelectedEmpresas(newValue.sort((a, b) => a.nombre.localeCompare(b.nombre)));
+                  setEditActivated(true);
+                  setEditMode((prevEditMode) => ({
+                    ...prevEditMode,
+                    empresas: true
+                  }));
                 }}
                 renderInput={(params) => (
                   <TextField
@@ -335,6 +398,27 @@ function PerfilUsuario() {
                 )}
               />
             </Grid>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                mt: 4,
+              }}
+            >
+              <Button
+                variant="contained"
+                sx={{
+                  textTransform: "none",
+                  fontWeight: "bold",
+                  fontStyle: "italic",
+                  fontSize: "1.1rem",
+                }}
+                startIcon={<EditIcon />}
+                onClick={handleDescartarCambios}
+              >
+                Descartar Cambios
+              </Button>
+            </Box>
           </Paper>
         </Container>
       )}
