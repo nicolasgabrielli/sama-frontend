@@ -27,6 +27,7 @@ function Usuarios() {
     const secciones = ["Empresas", "Usuarios"];
     const seccionesRutas = ["/empresas", "/usuarios"];
     const seccionActual = "Usuarios";
+    const [usuarioLogeado, setUsuarioLogeado] = useState(null);
 
     // Listas de usuarios y roles
     const [listaUsuarios, setListaUsuarios] = useState([]);
@@ -39,6 +40,9 @@ function Usuarios() {
         setLoading(true);
         (async () => {
             await fetchData();
+            await usuarioService.getUsuarioLogeado().then((response) => {
+                setUsuarioLogeado(response.data);
+            });
             setLoading(false);
         })();
     }, []);
@@ -177,9 +181,11 @@ function Usuarios() {
                                                 </Typography>
                                             </Grid>
                                             <Grid item xs={6} container justifyContent="flex-end" spacing={1}>
-                                                <Button variant="outlined" color="error" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }} onClick={() => handleOpenDialog(usuario)}>
-                                                    Eliminar
-                                                </Button>
+                                                {usuarioLogeado && usuarioLogeado.rol === "0" && usuarioLogeado.id !== usuario.id (
+                                                    <Button variant="outlined" color="error" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }} onClick={() => handleOpenDialog(usuario)}>
+                                                        Eliminar
+                                                    </Button>    
+                                                )}
                                                 <Button variant="outlined"
                                                     sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}
                                                     component={Link}
