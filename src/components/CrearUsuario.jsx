@@ -12,9 +12,15 @@ function CrearUsuario() {
     const [nombre, setNombre] = useState("");
     const [correo, setCorreo] = useState("");
     const [contrasenia, setContrasenia] = useState("");
-    const [rol, setRol] = useState(2); // Por defecto, el rol es "Visualizador de Reporte"
+    const [rol, setRol] = useState(2);
+    const [selectedEmpresas, setSelectedEmpresas] = useState([]);
     const [listaEmpresas, setListaEmpresas] = useState([]);
     const [openDialog, setOpenDialog] = useState(false);
+    const [searchValue, setSearchValue] = useState("");
+
+    // Estados para errores
+    const [correoError, setCorreoError] = useState("");
+    const [contraseniaError, setContraseniaError] = useState("");
 
     useEffect(() => {
         empresaService.getListaEmpresas()
@@ -23,21 +29,22 @@ function CrearUsuario() {
             .catch(error => console.error('Error al obtener la lista de empresas:', error));
     }, []);
 
-    const [selectedEmpresas, setSelectedEmpresas] = useState([]);
-    const [searchValue, setSearchValue] = useState("");
-
+    // Manejar cambios en el campo de búsqueda
     const handleSearchChange = (event) => {
         setSearchValue(event.target.value);
     };
 
+    // Filtrar empresas basadas en el valor de búsqueda
     const filteredEmpresas = listaEmpresas.filter(empresa =>
         empresa.nombre.toLowerCase().includes(searchValue.toLowerCase())
     );
 
+    // Seleccionar todas las empresas
     const handleSelectAll = () => {
         setSelectedEmpresas(filteredEmpresas);
     };
 
+    // Alternar selección de una empresa
     const handleEmpresaToggle = (empresa) => {
         const selectedIndex = selectedEmpresas.findIndex(e => e.nombre === empresa.nombre);
         let newSelectedEmpresas = [];
@@ -58,10 +65,33 @@ function CrearUsuario() {
         setSelectedEmpresas(newSelectedEmpresas.sort((a, b) => a.nombre.localeCompare(b.nombre)));
     };
 
+    // Verificar si una empresa está seleccionada
     const isSelected = (empresa) => selectedEmpresas.some(e => e.nombre === empresa.nombre);
 
     const handleCrearUsuario = async (event) => {
         event.preventDefault();
+
+        // Validaciones
+        const correoPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const contraseniaPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+        let isValid = true;
+
+        if (!correoPattern.test(correo)) {
+            setCorreoError("Por favor, ingrese un correo electrónico válido.");
+            isValid = false;
+        } else {
+            setCorreoError("");
+        }
+
+        if (!contraseniaPattern.test(contrasenia)) {
+            setContraseniaError("La contraseña debe tener al menos 8 caracteres, incluir 1 mayúscula, 1 minúscula, 1 número y 1 símbolo.");
+            isValid = false;
+        } else {
+            setContraseniaError("");
+        }
+
+        if (!isValid) return;
 
         const userData = {
             nombre: nombre,
@@ -90,6 +120,8 @@ function CrearUsuario() {
         setContrasenia('');
         setRol('');
         setSelectedEmpresas([]);
+        setCorreoError('');
+        setContraseniaError('');
     };
 
     return (
@@ -128,10 +160,12 @@ function CrearUsuario() {
                                     name="correo"
                                     type="email"
                                     variant="outlined"
-                                    helperText="Correo electrónico del usuario"
+                                    helperText={correoError || "Correo electrónico del usuario"}
+                                    error={!!correoError}
                                     fullWidth
                                     required
                                     onChange={(event) => setCorreo(event.target.value)}
+                                    value={correo}
                                 />
                             </Grid>
                             <Grid item xs={12}>
@@ -140,10 +174,12 @@ function CrearUsuario() {
                                     name="contrasenia"
                                     type="password"
                                     variant="outlined"
-                                    helperText="Contraseña asignada al usuario"
+                                    helperText={contraseniaError || "Contraseña asignada al usuario"}
+                                    error={!!contraseniaError}
                                     fullWidth
                                     required
                                     onChange={(event) => setContrasenia(event.target.value)}
+                                    value={contrasenia}
                                 />
                             </Grid>
                             <Grid item xs={12}>
@@ -178,7 +214,6 @@ function CrearUsuario() {
                                             {...params}
                                             label="Empresas"
                                             variant="outlined"
-
                                             InputProps={{
                                                 ...params.InputProps,
                                                 startAdornment: (

@@ -34,8 +34,8 @@ function ListaReportes() {
     const [openDescargarReporteDialog, setOpenDescargarReporteDialog] = useState(false);
     const [idReporte, setIdReporte] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [usuarioLogeado, setUsuarioLogeado] = useState(null);
-    const [openConfirmDelete, setOpenConfirmDelete] = useState(false); // Nuevo estado para el diálogo de confirmación
+    const [usuarioLogeado, setUsuarioLogeado] = useState(null); // Información del usuario logeado
+    const [openConfirmDelete, setOpenConfirmDelete] = useState(false); // Estado para el diálogo de confirmación
     const [plantillaAEliminar, setPlantillaAEliminar] = useState(null); // Plantilla a eliminar
 
     const handleOpenConfirmDelete = (plantillaId) => {
@@ -52,7 +52,6 @@ function ListaReportes() {
         handleEliminarPreconfiguracion(plantillaAEliminar);
         handleCloseConfirmDelete();
     };
-
 
     const handleOpenCrearReporte = () => {
         setOpenCrearReporte(true);
@@ -284,7 +283,7 @@ function ListaReportes() {
     }, [idEmpresa]);
 
 
-    // Cargar la lista de reportes, preconfiguraciones y la información de la empresa al cargar el componente
+    // Cargar la lista de reportes, plantillas y la información de la empresa al cargar el componente
     useEffect(() => {
         setLoading(true);
         (async () => {
@@ -510,7 +509,7 @@ function ListaReportes() {
                                                         </Grid>
                                                         <Grid item>
                                                             {/* Mostrar el icono solo si la plantilla no está seleccionada */}
-                                                            {plantillaSeleccionadaId !== preconfiguracion.id && (
+                                                            {plantillaSeleccionadaId !== preconfiguracion.id && usuarioLogeado.rol === "0" && (
                                                                 <IconButton onClick={() => handleOpenConfirmDelete(preconfiguracion.id)} color="error" size="small">
                                                                     <DeleteIcon />
                                                                 </IconButton>

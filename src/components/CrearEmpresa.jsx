@@ -15,11 +15,46 @@ function CrearEmpresa() {
     const [telefono, setTelefono] = useState("");
     const [razonSocial, setRazonSocial] = useState("");
     const [openDialog, setOpenDialog] = useState(false);
+    const [errors, setErrors] = useState({});
 
     const tiposSociedad = ["Sociedad Anónima", "Sociedad de Responsabilidad Limitada", "Empresa Individual", "Otra"];
 
+    const validateRut = (rut) => {
+        const rutPattern = /^[0-9]+-[0-9Kk]$/;
+        return rutPattern.test(rut);
+    };
+
+    const validateEmail = (email) => {
+        const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        return emailPattern.test(email);
+    };
+
+    const validateTelefono = (telefono) => {
+        const telefonoPattern = /^\+?[0-9]{9,12}$/;
+        return telefonoPattern.test(telefono);
+    };
+
     const handleCrearEmpresa = async (event) => {
         event.preventDefault();
+
+        let validationErrors = {};
+
+        if (!validateRut(rut)) {
+            validationErrors.rut = "RUT inválido. Debe estar en formato 12345678-9.";
+        }
+
+        if (!validateEmail(email)) {
+            validationErrors.email = "Correo electrónico inválido.";
+        }
+
+        if (!validateTelefono(telefono)) {
+            validationErrors.telefono = "Teléfono inválido. Debe contener entre 9 y 12 dígitos.";
+        }
+
+        if (Object.keys(validationErrors).length > 0) {
+            setErrors(validationErrors);
+            return;
+        }
 
         const empresaData = {
             nombre,
@@ -66,7 +101,7 @@ function CrearEmpresa() {
                         <Grid container spacing={2} sx={{ p: 1 }}>
                             <Grid item xs={12}>
                                 <TextField
-                                    label="Nombre"
+                                    label="Nombre de Fantasía de la Empresa"
                                     name="nombre"
                                     variant="outlined"
                                     helperText="Nombre de la empresa"
@@ -95,7 +130,8 @@ function CrearEmpresa() {
                                     label="RUT"
                                     name="rut"
                                     variant="outlined"
-                                    helperText="RUT de la empresa"
+                                    helperText={errors.rut ? errors.rut : "RUT de la empresa"}
+                                    error={!!errors.rut}
                                     fullWidth
                                     required
                                     onChange={(event) => setRut(event.target.value)}
@@ -125,11 +161,12 @@ function CrearEmpresa() {
 
                             <Grid item xs={12}>
                                 <TextField
-                                    label="Razon Social"
+                                    label="Razón Social"
                                     name="razonSocial"
                                     variant="outlined"
-                                    helperText="Razon Social de la empresa"
+                                    helperText="Razón Social de la empresa"
                                     fullWidth
+                                    required
                                     onChange={(event) => setRazonSocial(event.target.value)}
                                 />
                             </Grid>
@@ -140,7 +177,8 @@ function CrearEmpresa() {
                                     name="email"
                                     type="email"
                                     variant="outlined"
-                                    helperText="Correo electrónico de la empresa"
+                                    helperText={errors.email ? errors.email : "Correo electrónico de la empresa"}
+                                    error={!!errors.email}
                                     fullWidth
                                     required
                                     onChange={(event) => setEmail(event.target.value)}
@@ -161,7 +199,8 @@ function CrearEmpresa() {
                                     label="Teléfono"
                                     name="telefono"
                                     variant="outlined"
-                                    helperText="Teléfono de contacto de la empresa"
+                                    helperText={errors.telefono ? errors.telefono : "Teléfono de contacto de la empresa"}
+                                    error={!!errors.telefono}
                                     fullWidth
                                     onChange={(event) => setTelefono(event.target.value)}
                                 />

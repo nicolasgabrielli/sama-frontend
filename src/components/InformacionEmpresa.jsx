@@ -1,5 +1,5 @@
 import React from 'react';
-import { Typography, Grid, Paper, Button, IconButton, Box } from '@mui/material';
+import { Typography, Grid, Paper, IconButton, Tooltip, Box } from '@mui/material';
 import { Link } from 'react-router-dom';  // Importamos useNavigate
 import EditNoteIcon from '@mui/icons-material/EditNote';
 
@@ -13,20 +13,27 @@ const InformacionEmpresa = ({ infoEmpresa, usuarioLogeado }) => {
                         Información de la Empresa
                     </Typography>
                     {usuarioLogeado && usuarioLogeado.rol === "0" && (
-                        <IconButton
-                            variant="outlined"
-                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", ml: 2 }}
-                            component={Link}
-                            to={`/empresas/${infoEmpresa.id}`}
-                        >
-                            <EditNoteIcon />
-                        </IconButton>
+                        <Tooltip title="Editar Información de la Empresa" placement="right" arrow>
+                            <IconButton
+                                variant="outlined"
+                                sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", ml: 2 }}
+                                component={Link}
+                                to={`/empresas/${infoEmpresa.id}`}
+                            >
+                                <EditNoteIcon />
+                            </IconButton>
+                        </Tooltip>
                     )}
                 </Box>
 
                 <Grid container alignItems="center" justifyContent="space-between" borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, mb: 1, py: 1 }}>
                     <Typography variant="h7">Nombre: {infoEmpresa.nombre}</Typography>
                 </Grid>
+                {infoEmpresa.razonSocial && (
+                    <Grid container alignItems="center" justifyContent="space-between" borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, mb: 1, py: 1 }}>
+                        <Typography variant="h7">Razón Social: {infoEmpresa.razonSocial}</Typography>
+                    </Grid>
+                )}
                 <Grid container alignItems="center" justifyContent="space-between" borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, mb: 1, py: 1 }}>
                     <Typography variant="h7">Tipo de sociedad: {infoEmpresa.tipoSociedad}</Typography>
                 </Grid>
@@ -41,11 +48,6 @@ const InformacionEmpresa = ({ infoEmpresa, usuarioLogeado }) => {
                 {infoEmpresa.paginaWeb && (
                     <Grid container alignItems="center" justifyContent="space-between" borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, mb: 1, py: 1 }}>
                         <Typography variant="h7">Página Web: {infoEmpresa.paginaWeb}</Typography>
-                    </Grid>
-                )}
-                {infoEmpresa.razonSocial && (
-                    <Grid container alignItems="center" justifyContent="space-between" borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, mb: 1, py: 1 }}>
-                        <Typography variant="h7">Razon Social: {infoEmpresa.razonSocial}</Typography>
                     </Grid>
                 )}
                 {(infoEmpresa.email || infoEmpresa.domicilioContacto || infoEmpresa.telefono) && (

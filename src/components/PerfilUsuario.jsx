@@ -57,27 +57,46 @@ function PerfilUsuario() {
   }, [id]);
 
   const fetchUsuario = async () => {
+    setLoading(true); // Inicia el estado de carga
+
     try {
-      const response = await empresaService.getListaEmpresas();
-      const empresas = response.data;
-      setListaEmpresas(empresas);
-      setFilteredEmpresas(empresas);
+        // Obtener la lista de empresas
+        try {
+            const response = await empresaService.getListaEmpresas();
+            const empresas = response.data || []; // Usa un array vacío si no hay datos
+            setListaEmpresas(empresas);
+            setFilteredEmpresas(empresas);
+        } catch (error) {
+            if (error.response && error.response.status === 404) {
+                // Si se recibe un error 404, establece empresas como un array vacío
+                setListaEmpresas([]);
+                setFilteredEmpresas([]);
+            } else {
+                // Maneja otros errores de la solicitud de empresas
+                console.error("Error al obtener la lista de empresas:", error);
+                // Manejar el caso de error si es necesario
+            }
+        }
 
-      const userResponse = await usuarioService.getUsuario(id);
-      const userData = userResponse.data;
+        // Obtener los datos del usuario
+        const userResponse = await usuarioService.getUsuario(id);
+        const userData = userResponse.data;
 
-      const userEmpresas = userData.empresas.map(id =>
-        empresas.find(empresa => empresa.id === id)
-      );
+        // Mapear las empresas del usuario
+        const userEmpresas = userData.empresas
+            .map(id => listaEmpresas.find(empresa => empresa.id === id))
+            .filter(empresa => empresa !== undefined); // Filtrar las empresas que no existen
 
-      setUsuario({ ...userData, empresas: userEmpresas });
-      setSelectedEmpresas(userEmpresas);
+        setUsuario({ ...userData, empresas: userEmpresas });
+        setSelectedEmpresas(userEmpresas);
     } catch (error) {
-      console.error("Error al obtener los detalles del usuario o las empresas:", error);
+        console.error("Error al obtener los detalles del usuario:", error);
+        // Manejar el caso de error si es necesario
     } finally {
-      setLoading(false);
+        setLoading(false); // Finaliza el estado de carga
     }
-  };
+};
+
 
   // Funciones para restaurar el estado de edición.
   const handleDescartarCambios = () => {
@@ -241,10 +260,10 @@ function PerfilUsuario() {
                   fontSize: "3rem",
                 }}
               >
-                {usuario.nombre.charAt(0)}
+                {usuario ? usuario.nombre.charAt(0) : ""}
               </Avatar>
               <Typography variant="h4" sx={{ mt: 2 }}>
-                {usuario.nombre}
+                {usuario ? usuario.nombre : ""}
               </Typography>
             </Box>
             <Typography
@@ -273,7 +292,7 @@ function PerfilUsuario() {
                 />
               ) : (
                 <Typography variant="body1">
-                  <strong>Nombre:</strong> {usuario.nombre}
+                  <strong>Nombre:</strong> {usuario ? usuario.nombre : ""}
                 </Typography>
               )}
               <IconButton
@@ -302,7 +321,7 @@ function PerfilUsuario() {
                 />
               ) : (
                 <Typography variant="body1">
-                  <strong>Email:</strong> {usuario.correo}
+                  <strong>Email:</strong> {usuario ? usuario.correo : ""}
                 </Typography>
               )}
               <IconButton
@@ -313,41 +332,43 @@ function PerfilUsuario() {
                 {editMode.correo ? <SaveIcon /> : <EditIcon />}
               </IconButton>
             </Grid>
-            {/* Rol */}
-            <Grid
-              container
-              alignItems="center"
-              justifyContent="space-between"
-              borderBottom={2}
-              borderColor={"secondary.main"}
-              sx={{ mx: 0, mb: 1, py: 1 }}
-            >
-              {editMode.rol ? (
-                <Select
-                  variant="standard"
-                  value={usuario.rol}
-                  onChange={(e) => handleInputChange("rol", e.target.value)}
-                  sx={{ flexGrow: 1 }}
-                >
-                  {Object.entries(usuarioService.listaRoles).map(([key, value]) => (
-                    <MenuItem key={key} value={key}>
-                      {value}
-                    </MenuItem>
-                  ))}
-                </Select>
-              ) : (
-                <Typography variant="body1">
-                  <strong>Rol:</strong> {usuarioService.listaRoles[usuario.rol]}
-                </Typography>
-              )}
-              <IconButton
-                onClick={() =>
-                  editMode.rol ? saveChanges("rol") : handleEditToggle("rol")
-                }
+            {/* Cambiar Rol */}
+            {usuarioLogeado && usuarioLogeado.rol === "0" && (
+              <Grid
+                container
+                alignItems="center"
+                justifyContent="space-between"
+                borderBottom={2}
+                borderColor={"secondary.main"}
+                sx={{ mx: 0, mb: 1, py: 1 }}
               >
-                {editMode.rol ? <SaveIcon /> : <EditIcon />}
-              </IconButton>
-            </Grid>
+                {editMode.rol ? (
+                  <Select
+                    variant="standard"
+                    value={usuario.rol}
+                    onChange={(e) => handleInputChange("rol", e.target.value)}
+                    sx={{ flexGrow: 1 }}
+                  >
+                    {Object.entries(usuarioService.listaRoles).map(([key, value]) => (
+                      <MenuItem key={key} value={key}>
+                        {value}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                ) : (
+                  <Typography variant="body1">
+                    <strong>Rol:</strong> {usuario ? usuarioService.listaRoles[usuario.rol] : "2"}
+                  </Typography>
+                )}
+                <IconButton
+                  onClick={() =>
+                    editMode.rol ? saveChanges("rol") : handleEditToggle("rol")
+                  }
+                >
+                  {editMode.rol ? <SaveIcon /> : <EditIcon />}
+                </IconButton>
+              </Grid>
+            )}
             {/* Cambiar Contraseña */}
             <Grid
               container

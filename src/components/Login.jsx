@@ -27,7 +27,7 @@ function Login() {
                 })
                 .catch((error) => {
                     console.error('Error durante el inicio de sesión:', error);
-                    setError('Error durante el inicio de sesión. Por favor, intenta de nuevo.');
+                    setError('Error, las credenciales no coinciden. Por favor, intenta de nuevo.');
                 });
         }
     };
