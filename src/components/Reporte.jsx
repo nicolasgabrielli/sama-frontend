@@ -466,6 +466,7 @@ function Reporte() {
     const handleSaveField = async () => {
         // Validación Campo
         const campo = editedField;
+        const subCampos = campo.subCampos || [];
 
         // Se crea un objeto con los datos del campo editado.
         const campoEditado = {
