@@ -467,21 +467,6 @@ function Reporte() {
         // Validación Campo
         const campo = editedField;
 
-        // Validación Campo
-        if (!campo.contenido) {
-            handleOpenAlert("Por favor, complete el contenido del campo.");
-            return;
-        }
-
-        // Validación Subcampos
-        const subCampos = campo.subCampos || [];
-        for (let i = 0; i < subCampos.length; i++) {
-            if (!subCampos[i].contenido) {
-                handleOpenAlert("Por favor, complete el contenido de los subcampos.");
-                return;
-            }
-        }
-
         // Se crea un objeto con los datos del campo editado.
         const campoEditado = {
             titulo: campo.titulo,
