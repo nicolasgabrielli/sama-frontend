@@ -1,12 +1,29 @@
 import React from 'react';
-import { Typography, Grid, Paper, Button } from '@mui/material';
+import { Typography, Grid, Paper, Button, IconButton, Box } from '@mui/material';
 import { Link } from 'react-router-dom';  // Importamos useNavigate
+import EditNoteIcon from '@mui/icons-material/EditNote';
 
-const InformacionEmpresa = ({ infoEmpresa }) => {
+const InformacionEmpresa = ({ infoEmpresa, usuarioLogeado }) => {
+
     return (
         <Grid item xs={12} md={3}>
             <Paper sx={{ mt: 2, p: 2 }}>
-                <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mb: 2 }}>Información de la Empresa</Typography>
+                <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                    <Typography variant="h5" color="primary" fontWeight="bold">
+                        Información de la Empresa
+                    </Typography>
+                    {usuarioLogeado && usuarioLogeado.rol === "0" && (
+                        <IconButton
+                            variant="outlined"
+                            sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", ml: 2 }}
+                            component={Link}
+                            to={`/empresas/${infoEmpresa.id}`}
+                        >
+                            <EditNoteIcon />
+                        </IconButton>
+                    )}
+                </Box>
+
                 <Grid container alignItems="center" justifyContent="space-between" borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, mb: 1, py: 1 }}>
                     <Typography variant="h7">Nombre: {infoEmpresa.nombre}</Typography>
                 </Grid>
@@ -46,13 +63,7 @@ const InformacionEmpresa = ({ infoEmpresa }) => {
                     </Grid>
                 )}
 
-                {/* Botón para editar los datos de la empresa */}
-                <Button variant="outlined"
-                    sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }}
-                    component={Link}
-                    to={`/empresas/${infoEmpresa.id}`}>
-                    Editar
-                </Button>
+
             </Paper>
         </Grid>
     );

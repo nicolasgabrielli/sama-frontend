@@ -26,9 +26,12 @@ import Check from '@mui/icons-material/Check';
 import usuarioService from "../services/UsuarioService";
 import empresaService from "../services/EmpresaService";
 import Navbar from "./Navbar";
+import CancelIcon from '@mui/icons-material/Cancel';
+import LockIcon from '@mui/icons-material/Lock';
 
 function PerfilUsuario() {
   const { id } = useParams();
+  const [usuarioLogeado, setUsuarioLogeado] = useState(null);
   const navigate = useNavigate();
   const [usuario, setUsuario] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -37,8 +40,19 @@ function PerfilUsuario() {
   const [listaEmpresas, setListaEmpresas] = useState([]);
   const [selectedEmpresas, setSelectedEmpresas] = useState([]);
   const [filteredEmpresas, setFilteredEmpresas] = useState([]);
+  const [newPassword, setNewPassword] = useState("");
+  const [passwordValid, setPasswordValid] = useState(true);
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+
 
   useEffect(() => {
+    usuarioService.getUsuarioLogueado().then((response) => {
+      if (response && (response.data.rol === "0" || response.data.id === id)) {
+        setUsuarioLogeado(response.data);
+      } else {
+        navigate("/login");
+      }
+    });
     fetchUsuario();
   }, [id]);
 
@@ -91,18 +105,31 @@ function PerfilUsuario() {
 
   const saveChanges = async (field) => {
     try {
-      if (field === "empresas") {
-        setUsuario((prevUsuario) => ({
-          ...prevUsuario,
-          id: id,
-          empresas: selectedEmpresas.map((e) => e.id),
+      if (field) {
+        const updatedFields = {};
+        updatedFields.id = usuario.id;
+        if (field === "nombre") updatedFields.nombre = usuario.nombre;
+        if (field === "correo") updatedFields.correo = usuario.correo;
+        if (field === "rol") updatedFields.rol = usuario.rol;
+        if (field === "empresas") {
+          updatedFields.empresas = selectedEmpresas.map((e) => e.id);
+        }
+        if (field === "password" && passwordValid) {
+          updatedFields.contrasenia = newPassword;
+        }
+        await usuarioService.actualizarUsuario(id, updatedFields);
+        setEditMode((prevEditMode) => ({
+          ...prevEditMode,
+          [field]: false,
         }));
+
+        if (field === "password" && passwordValid) {
+          setNewPassword("");
+        }
+        fetchUsuario();
       }
-      await usuarioService.actualizarUsuario(usuario);
     } catch (error) {
       console.error("Error al actualizar el usuario:", error);
-    } finally {
-      handleEditToggle(field);
     }
   };
 
@@ -121,32 +148,31 @@ function PerfilUsuario() {
   };
 
   const handleEmpresaToggle = (empresa) => {
-    setSelectedEmpresas((prevSelected) => {
-      // Maneja la lógica para actualizar la lista de empresas seleccionadas
-      const newSelected = prevSelected.some(e => e.id === empresa.id)
-        ? prevSelected.filter(e => e.id !== empresa.id)
-        : [...prevSelected, empresa].sort((a, b) => a.nombre.localeCompare(b.nombre));
-  
-      // Actualiza el estado del usuario con las empresas seleccionadas
-      setUsuario((prevUsuario) => ({
-        ...prevUsuario,
-        empresas: newSelected.map((e) => e.id),
-      }));
-  
-      // Actualiza el estado de edición
-      setEditMode((prevEditMode) => ({
-        ...prevEditMode,
-        empresas: true,
-      }));
-  
-      // Marca el modo de edición como activado
-      setEditActivated(true);
-  
-      return newSelected;
-    });
-  };  
+    const isSelected = selectedEmpresas.some(e => e.id === empresa.id);
+    const newSelected = isSelected
+      ? selectedEmpresas.filter(e => e.id !== empresa.id)
+      : [...selectedEmpresas, empresa];
+
+    setSelectedEmpresas(newSelected.sort((a, b) => a.nombre.localeCompare(b.nombre)));
+
+    setEditMode((prevEditMode) => ({
+      ...prevEditMode,
+      empresas: true,
+    }));
+
+    setEditActivated(true);
+  };
 
   const isSelected = (empresa) => selectedEmpresas.some(e => e.nombre === empresa.nombre);
+
+  const handlePasswordChange = (e) => {
+    const newPassword = e.target.value;
+    setNewPassword(newPassword);
+
+    const isValid = passwordRegex.test(newPassword);
+    setPasswordValid(isValid);
+  };
+
 
   return (
     <>
@@ -322,82 +348,117 @@ function PerfilUsuario() {
                 {editMode.rol ? <SaveIcon /> : <EditIcon />}
               </IconButton>
             </Grid>
-            {/* Empresas */}
-            <Grid item xs={12}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h6" color={"primary.main"} fontWeight={"bold"}>
-                  Acceso a empresas:
+            {/* Cambiar Contraseña */}
+            <Grid
+              container
+              alignItems="center"
+              justifyContent="space-between"
+              borderBottom={2}
+              borderColor={"secondary.main"}
+              sx={{ mx: 0, mb: 1, py: 1 }}
+            >
+              {editMode.password ? (
+                <TextField
+                  variant="standard"
+                  type="password"
+                  value={newPassword}
+                  onChange={handlePasswordChange}
+                  error={!passwordValid && newPassword !== ""}
+                  placeholder="Nueva contraseña"
+                  label="Nueva Contraseña"
+                  helperText={!passwordValid && newPassword !== "" ? "La contraseña debe tener al menos una mayúscula, una minúscula, un número, un símbolo, y al menos 8 caracteres." : ""}
+                  sx={{ flexGrow: 1 }}
+                />
+              ) : (
+                <Typography variant="body1">
+                  <strong>Contraseña:</strong> ******
                 </Typography>
-                <Tooltip title={editMode.empresas ? "Guardar cambios de las empresas" : "No se han hecho cambios en las empresas"} placement="right">
-                  <span>
-                    <IconButton
-                      onClick={() => saveChanges("empresas")}
-                      disabled={!editMode.empresas}
-                      sx={{ ml: 1 }}
-                    >
-                      <SaveIcon />
-                    </IconButton>
-                  </span>
-                </Tooltip>
-              </Box>
-
-              <Autocomplete
-                disablePortal
-                fullWidth
-                multiple
-                options={filteredEmpresas}
-                getOptionLabel={(empresa) => empresa.nombre}
-                value={selectedEmpresas}
-                onChange={(event, newValue) => {
-                  setSelectedEmpresas(newValue.sort((a, b) => a.nombre.localeCompare(b.nombre)));
-                  setEditActivated(true);
-                  setEditMode((prevEditMode) => ({
-                    ...prevEditMode,
-                    empresas: true
-                  }));
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Empresas"
-                    variant="outlined"
-                    InputProps={{
-                      ...params.InputProps,
-                      startAdornment: (
-                        <>
-                          <Search />
-                          {params.InputProps.startAdornment}
-                        </>
-                      ),
-                      endAdornment: (
-                        <>
-                          <Button
-                            onClick={handleSelectAll}
-                            color="primary"
-                            startIcon={<Check />}
-                          >
-                            Seleccionar Todo
-                          </Button>
-                          {params.InputProps.endAdornment}
-                        </>
-                      )
-                    }}
-                    onChange={handleSearchChange}
-                  />
-                )}
-                renderOption={(props, option, { selected }) => (
-                  <li key={option.nombre} {...props}>
-                    <Checkbox
-                      icon={<span className="MuiBox-root" />}
-                      checkedIcon={<span className="MuiBox-root" />}
-                      checked={isSelected(option)}
-                      onClick={() => handleEmpresaToggle(option)}
-                    />
-                    <ListItemText primary={option.nombre} />
-                  </li>
-                )}
-              />
+              )}
+              <IconButton
+                onClick={() =>
+                  (editMode.password && passwordValid) ? saveChanges("password") : handleEditToggle("password")
+                }
+              >
+                {editMode.password ? (passwordValid ? <SaveIcon /> : <CancelIcon />) : <LockIcon />}
+              </IconButton>
             </Grid>
+            {/* Empresas */}
+            {usuarioLogeado && usuarioLogeado.rol === "0" && (
+              <Grid item xs={12}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="h6" color={"primary.main"} fontWeight={"bold"}>
+                    Acceso a empresas:
+                  </Typography>
+                  <Tooltip title={editMode.empresas ? "Guardar cambios de las empresas" : "No se han hecho cambios en las empresas"} placement="right">
+                    <span>
+                      <IconButton
+                        onClick={() => saveChanges("empresas")}
+                        disabled={!editMode.empresas}
+                        sx={{ ml: 1 }}
+                      >
+                        <SaveIcon />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                </Box>
+                <Autocomplete
+                  disablePortal
+                  fullWidth
+                  multiple
+                  options={filteredEmpresas}
+                  getOptionLabel={(empresa) => empresa.nombre}
+                  value={selectedEmpresas}
+                  onChange={(event, newValue) => {
+                    setSelectedEmpresas(newValue.sort((a, b) => a.nombre.localeCompare(b.nombre)));
+                    setEditActivated(true);
+                    setEditMode((prevEditMode) => ({
+                      ...prevEditMode,
+                      empresas: true
+                    }));
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Empresas"
+                      variant="outlined"
+                      InputProps={{
+                        ...params.InputProps,
+                        startAdornment: (
+                          <>
+                            <Search />
+                            {params.InputProps.startAdornment}
+                          </>
+                        ),
+                        endAdornment: (
+                          <>
+                            <Button
+                              onClick={handleSelectAll}
+                              color="primary"
+                              startIcon={<Check />}
+                            >
+                              Seleccionar Todo
+                            </Button>
+                            {params.InputProps.endAdornment}
+                          </>
+                        )
+                      }}
+                      onChange={handleSearchChange}
+                    />
+                  )}
+                  renderOption={(props, option, { selected }) => (
+                    <li key={option.nombre} {...props}>
+                      <Checkbox
+                        icon={<span className="MuiBox-root" />}
+                        checkedIcon={<span className="MuiBox-root" />}
+                        checked={isSelected(option)}
+                        onClick={() => handleEmpresaToggle(option)}
+                      />
+                      <ListItemText primary={option.nombre} />
+                    </li>
+                  )}
+                />
+              </Grid>
+            )}
             <Box
               sx={{
                 display: "flex",
@@ -406,14 +467,16 @@ function PerfilUsuario() {
               }}
             >
               <Button
-                variant="contained"
+                variant="outlined"
+                color="error"
                 sx={{
                   textTransform: "none",
                   fontWeight: "bold",
                   fontStyle: "italic",
-                  fontSize: "1.1rem",
+                  fontSize: "1rem",
+                  width: "40%",
                 }}
-                startIcon={<EditIcon />}
+                startIcon={<CancelIcon />}
                 onClick={handleDescartarCambios}
               >
                 Descartar Cambios

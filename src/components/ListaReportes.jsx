@@ -304,7 +304,7 @@ function ListaReportes() {
                     <Container sx={{ pb: "100px" }}>
                         <Grid container spacing={2}>
                             {/*Informacion empresa*/}
-                            <InformacionEmpresa infoEmpresa={infoEmpresa} />
+                            <InformacionEmpresa infoEmpresa={infoEmpresa} usuarioLogeado={usuarioLogeado} />
                             {/*Lista de reportes*/}
                             <Grid item xs={12} md={9}>
                                 <Paper sx={{ mt: 2, p: 2 }}>
