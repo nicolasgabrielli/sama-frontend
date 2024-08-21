@@ -13,6 +13,7 @@ function CrearEmpresa() {
     const [email, setEmail] = useState("");
     const [domicilioContacto, setDomicilioContacto] = useState("");
     const [telefono, setTelefono] = useState("");
+    const [razonSocial, setRazonSocial] = useState("");
     const [openDialog, setOpenDialog] = useState(false);
 
     const tiposSociedad = ["Sociedad Anónima", "Sociedad de Responsabilidad Limitada", "Empresa Individual", "Otra"];
@@ -28,7 +29,8 @@ function CrearEmpresa() {
             paginaWeb,
             email,
             domicilioContacto,
-            telefono
+            telefono,
+            razonSocial
         };
 
         try {
@@ -120,6 +122,18 @@ function CrearEmpresa() {
                                     onChange={(event) => setPaginaWeb(event.target.value)}
                                 />
                             </Grid>
+
+                            <Grid item xs={12}>
+                                <TextField
+                                    label="Razon Social"
+                                    name="razonSocial"
+                                    variant="outlined"
+                                    helperText="Razon Social de la empresa"
+                                    fullWidth
+                                    onChange={(event) => setRazonSocial(event.target.value)}
+                                />
+                            </Grid>
+                            
                             <Grid item xs={12}>
                                 <TextField
                                     label="Correo Electrónico"
@@ -152,6 +166,7 @@ function CrearEmpresa() {
                                     onChange={(event) => setTelefono(event.target.value)}
                                 />
                             </Grid>
+                        
                             <Grid item xs={12} container justifyContent="flex-end">
                                 <Button
                                     type="submit"

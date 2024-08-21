@@ -275,6 +275,35 @@ function EditarPerfilEmpresa() {
                 {editMode.paginaWeb ? <SaveIcon /> : <EditIcon />}
               </IconButton>
             </Grid>
+            {/* Razon Social */}
+            <Grid
+              container
+              alignItems="center"
+              justifyContent="space-between"
+              borderBottom={2}
+              borderColor={"secondary.main"}
+              sx={{ mx: 0, mb: 1, py: 1 }}
+            >
+              {editMode.razonSocial ? (
+                <TextField
+                  variant="standard"
+                  value={empresa.razonSocial}
+                  onChange={(e) => handleInputChange("razonSocial", e.target.value)}
+                  sx={{ flexGrow: 1 }}
+                />
+              ) : (
+                <Typography variant="body1">
+                  <strong>Razon Social:</strong> {empresa.razonSocial}
+                </Typography>
+              )}
+              <IconButton
+                onClick={() =>
+                  editMode.razonSocial ? saveChanges("razonSocial") : handleEditToggle("razonSocial")
+                }
+              >
+                {editMode.razonSocial ? <SaveIcon /> : <EditIcon />}
+              </IconButton>
+            </Grid>
             {/* Punto de Contacto */}
             <Typography
               variant="h6"
@@ -371,6 +400,7 @@ function EditarPerfilEmpresa() {
                 {editMode.telefono ? <SaveIcon /> : <EditIcon />}
               </IconButton>
             </Grid>
+            
           </Paper>
         </Container>
       )}

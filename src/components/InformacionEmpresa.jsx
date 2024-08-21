@@ -43,6 +43,11 @@ const InformacionEmpresa = ({ infoEmpresa, usuarioLogeado }) => {
                         <Typography variant="h7">Página Web: {infoEmpresa.paginaWeb}</Typography>
                     </Grid>
                 )}
+                {infoEmpresa.razonSocial && (
+                    <Grid container alignItems="center" justifyContent="space-between" borderBottom={2} borderColor={"secondary.main"} sx={{ mx: 0, mb: 1, py: 1 }}>
+                        <Typography variant="h7">Razon Social: {infoEmpresa.razonSocial}</Typography>
+                    </Grid>
+                )}
                 {(infoEmpresa.email || infoEmpresa.domicilioContacto || infoEmpresa.telefono) && (
                     <Typography variant="h5" color="primary" fontWeight="bold" sx={{ mb: 2, mt: 2 }}>Punto de Contacto</Typography>
                 )}

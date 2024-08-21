@@ -181,7 +181,7 @@ function Usuarios() {
                                                 </Typography>
                                             </Grid>
                                             <Grid item xs={6} container justifyContent="flex-end" spacing={1}>
-                                                {usuarioLogueado && usuarioLogueado.rol === "0" && usuarioLogueado.id !== usuario.id (
+                                                {usuarioLogueado && usuarioLogueado.rol === "0" && usuarioLogueado.id !== usuario.id && (
                                                     <Button variant="outlined" color="error" sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", mr: 1 }} onClick={() => handleOpenDialog(usuario)}>
                                                         Eliminar
                                                     </Button>    
