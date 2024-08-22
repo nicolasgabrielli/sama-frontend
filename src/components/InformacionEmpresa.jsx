@@ -13,7 +13,7 @@ const InformacionEmpresa = ({ infoEmpresa, usuarioLogeado }) => {
                         Información de la Empresa
                     </Typography>
                     {usuarioLogeado && usuarioLogeado.rol === "0" && (
-                        <Tooltip title="Editar Información de la Empresa" placement="right" arrow>
+                        <Tooltip title="Editar Información de la Empresa" placement="bottom" arrow>
                             <IconButton
                                 variant="outlined"
                                 sx={{ textTransform: "none", fontWeight: "bold", fontStyle: "italic", ml: 2 }}

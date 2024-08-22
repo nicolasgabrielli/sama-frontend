@@ -73,7 +73,7 @@ function CrearUsuario() {
 
         // Validaciones
         const correoPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        const contraseniaPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        const contraseniaPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
 
         let isValid = true;
 

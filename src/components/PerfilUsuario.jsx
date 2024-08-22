@@ -58,44 +58,44 @@ function PerfilUsuario() {
 
   const fetchUsuario = async () => {
     setLoading(true); // Inicia el estado de carga
-
     try {
-        // Obtener la lista de empresas
-        try {
-            const response = await empresaService.getListaEmpresas();
-            const empresas = response.data || []; // Usa un array vacío si no hay datos
-            setListaEmpresas(empresas);
-            setFilteredEmpresas(empresas);
-        } catch (error) {
-            if (error.response && error.response.status === 404) {
-                // Si se recibe un error 404, establece empresas como un array vacío
-                setListaEmpresas([]);
-                setFilteredEmpresas([]);
-            } else {
-                // Maneja otros errores de la solicitud de empresas
-                console.error("Error al obtener la lista de empresas:", error);
-                // Manejar el caso de error si es necesario
-            }
-        }
+      // Obtener los datos del usuario
+      const userResponse = await usuarioService.getUsuario(id);
+      const userData = userResponse.data;
 
-        // Obtener los datos del usuario
-        const userResponse = await usuarioService.getUsuario(id);
-        const userData = userResponse.data;
+      // Obtener la lista de empresas
+      try {
+        const response = await empresaService.getListaEmpresas();
+        const empresas = response.data || []; // Usa un array vacío si no hay datos
+        setListaEmpresas(empresas);
+        setFilteredEmpresas(empresas);
 
-        // Mapear las empresas del usuario
+        // Mapear las empresas del usuario después de cargar la lista de empresas
         const userEmpresas = userData.empresas
-            .map(id => listaEmpresas.find(empresa => empresa.id === id))
-            .filter(empresa => empresa !== undefined); // Filtrar las empresas que no existen
+          .map(id => empresas.find(empresa => empresa.id === id))
+          .filter(empresa => empresa !== undefined); // Filtrar las empresas que no existen
 
         setUsuario({ ...userData, empresas: userEmpresas });
         setSelectedEmpresas(userEmpresas);
+      } catch (error) {
+        if (error.response && error.response.status === 404) {
+          // Si se recibe un error 404, establece empresas como un array vacío
+          setListaEmpresas([]);
+          setFilteredEmpresas([]);
+        } else {
+          // Maneja otros errores de la solicitud de empresas
+          console.error("Error al obtener la lista de empresas:", error);
+          // Manejar el caso de error si es necesario
+        }
+      }
     } catch (error) {
-        console.error("Error al obtener los detalles del usuario:", error);
-        // Manejar el caso de error si es necesario
+      console.error("Error al obtener los detalles del usuario:", error);
+      // Manejar el caso de error si es necesario
     } finally {
-        setLoading(false); // Finaliza el estado de carga
+      setLoading(false); // Finaliza el estado de carga
     }
-};
+  };
+
 
 
   // Funciones para restaurar el estado de edición.
@@ -136,6 +136,15 @@ function PerfilUsuario() {
         if (field === "password" && passwordValid) {
           updatedFields.contrasenia = newPassword;
         }
+
+        if ((updatedFields[field] === '' || updatedFields[field] === undefined || updatedFields[field] === null) && field !== "empresas") {
+          setEditMode((prevEditMode) => ({
+            ...prevEditMode,
+            [field]: false,
+          }));
+          return;
+        }
+
         await usuarioService.actualizarUsuario(id, updatedFields);
         setEditMode((prevEditMode) => ({
           ...prevEditMode,

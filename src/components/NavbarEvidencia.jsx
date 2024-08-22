@@ -155,27 +155,19 @@ function NavbarEvidencia({ evidencias, refreshEvidencias, usuarioLogeado, rolesG
     const accederEvidencia = async (evidencia) => {
         try {
             if (evidencia.tipo.toLowerCase() === 'archivo') {
-                let response = await reporteService.descargarEvidencia(evidencia.id).then(response => response.data);
-                if (response) {
-                    const url = window.URL.createObjectURL(new Blob([response.data]));
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.setAttribute('download', response.headers['content-disposition'].split('filename=')[1].replace(/"/g, ''));
-                    document.body.appendChild(link);
-                    link.click();
-              
-                    // Limpiar el enlace
-                    document.body.removeChild(link);
+                let url = await reporteService.obtenerUrlS3(evidencia.id).then(response => response.data);  // Obtener la URL del servicio S3.
+                if (url) {
+                    window.open(url, '_blank'); // Abrir la URL en una nueva pestaña.
                 } else {
-                    console.error('La URL obtenida del servicio S3 es nula o no válida.');
+                    console.error('La URL obtenida del servicio S3 es nula o no válida.');  // Mostrar un mensaje de error.
                 }
             } else {
-                window.open(formatUrl(evidencia.url), '_blank');
+                window.open(formatUrl(evidencia.url), '_blank');    // Abrir la URL en una nueva pestaña.
             }
         } catch (error) {
-            console.error('Error al acceder a la evidencia:', error);
+            console.error('Error al acceder a la evidencia:', error);   // Mostrar un mensaje de error.
         }
-    };
+    }
 
     const handleAutorizacion = async () => {
         try {

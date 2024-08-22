@@ -19,7 +19,7 @@ export default {
     crearEvidencia: (idReporte, evidencia) => axiosInstance.post(`${API_URL2}evidencia/${idReporte}`, evidencia),
     eliminarEvidencia: (idEvidencia) => axiosInstance.delete(`${API_URL2}evidencia/${idEvidencia}`),
     obtenerUrlS3: (idEvidencia) => axiosInstance.get(`${API_URL2}evidencia/url/${idEvidencia}`),
-    descargarEvidencia: (idEvidencia) => axiosInstance.get(`${API_URL2}evidencia/descargar/${idEvidencia}`, { responseType: 'blob' }),
+    descargarEvidencia: (idEvidencia) => axiosInstance.get(`${API_URL2}evidencia/descargar/${idEvidencia}`),
     descargarReporte: (idReporte, formato) => axiosInstance.get(`${API_URL}${formato}/${idReporte}`, { responseType: 'blob' }),
     autorizarCampo: (idReporte, coordenadas) => axiosInstance.put(`${API_URL}autorizar/campo/${idReporte}`, coordenadas),
     autorizarReporte: (idReporte, coordenadas) => axiosInstance.put(`${API_URL}autorizar/all-campos/${idReporte}`, coordenadas),

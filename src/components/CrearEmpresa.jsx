@@ -47,7 +47,7 @@ function CrearEmpresa() {
             validationErrors.email = "Correo electrónico inválido.";
         }
 
-        if (!validateTelefono(telefono)) {
+        if (!validateTelefono(telefono) && telefono !== "") {
             validationErrors.telefono = "Teléfono inválido. Debe contener entre 9 y 12 dígitos.";
         }
 

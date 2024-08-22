@@ -26,6 +26,11 @@ function EditarPerfilEmpresa() {
   const [empresa, setEmpresa] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState({});
+  const [errors, setErrors] = useState({});
+  const rutRegex = /^[0-9]+-[0-9kK]$/;
+  const emailRegex = /\S+@\S+\.\S+/;
+  const telefonoRegex = /^\+?[0-9]{9,12}$/;
+
 
   const tiposSociedad = ["Sociedad Anónima", "Sociedad de Responsabilidad Limitada", "Empresa Individual", "Otra"];
 
@@ -51,19 +56,49 @@ function EditarPerfilEmpresa() {
   };
 
   const handleInputChange = (field, value) => {
+    let isValid = true;
+
+    switch (field) {
+      case "rut":
+        isValid = rutRegex.test(value);
+        break;
+      case "email":
+        isValid = emailRegex.test(value);
+        break;
+      case "telefono":
+        if (value.trim() === "") {
+          isValid = true;
+          break;
+        }
+        isValid = telefonoRegex.test(value);
+        break;
+      default:
+        break;
+    }
+
     setEmpresa((prevEmpresa) => ({
       ...prevEmpresa,
       [field]: value,
+    }));
+
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      [field]: !isValid,
     }));
   };
 
   const saveChanges = async (field) => {
     try {
+      if (errors[field]) {
+        return;
+      }
+      if ((field === "rut" || field === "razonSocial" || field === "nombre" || field === "domicilio" || field === "email") && empresa[field].trim() === "") {
+        return;
+      }
       await empresaService.actualizarEmpresa(empresa); // Cambia esto según tu servicio
+      handleEditToggle(field);
     } catch (error) {
       console.error("Error al actualizar la empresa:", error);
-    } finally {
-      handleEditToggle(field);
     }
   };
 
@@ -139,10 +174,11 @@ function EditarPerfilEmpresa() {
                   value={empresa.nombre}
                   onChange={(e) => handleInputChange("nombre", e.target.value)}
                   sx={{ flexGrow: 1 }}
+                  required
                 />
               ) : (
                 <Typography variant="body1">
-                  <strong>Nombre:</strong> {empresa.nombre}
+                  <strong>Nombre de Fantasía:</strong> {empresa.nombre}
                 </Typography>
               )}
               <IconButton
@@ -202,6 +238,9 @@ function EditarPerfilEmpresa() {
                   variant="standard"
                   value={empresa.rut}
                   onChange={(e) => handleInputChange("rut", e.target.value)}
+                  required
+                  error={errors.rut}
+                  helperText={errors.rut ? "RUT inválido. Ejemplo: 12345678-9" : ""}
                   sx={{ flexGrow: 1 }}
                 />
               ) : (
@@ -289,6 +328,7 @@ function EditarPerfilEmpresa() {
                   variant="standard"
                   value={empresa.razonSocial}
                   onChange={(e) => handleInputChange("razonSocial", e.target.value)}
+                  required
                   sx={{ flexGrow: 1 }}
                 />
               ) : (
@@ -327,6 +367,9 @@ function EditarPerfilEmpresa() {
                   variant="standard"
                   value={empresa.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
+                  error={errors.email}
+                  helperText={errors.email ? "Email inválido." : ""}
+                  required
                   sx={{ flexGrow: 1 }}
                 />
               ) : (
@@ -342,7 +385,7 @@ function EditarPerfilEmpresa() {
                 {editMode.email ? <SaveIcon /> : <EditIcon />}
               </IconButton>
             </Grid>
-            {/* DomicilioContacto */}
+            {/* Domicilio Contacto */}
             <Grid
               container
               alignItems="center"
@@ -385,6 +428,8 @@ function EditarPerfilEmpresa() {
                   variant="standard"
                   value={empresa.telefono}
                   onChange={(e) => handleInputChange("telefono", e.target.value)}
+                  error={errors.telefono}
+                  helperText={errors.telefono ? "Teléfono inválido." : ""}
                   sx={{ flexGrow: 1 }}
                 />
               ) : (
