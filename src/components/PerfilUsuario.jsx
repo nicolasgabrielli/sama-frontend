@@ -42,7 +42,9 @@ function PerfilUsuario() {
   const [filteredEmpresas, setFilteredEmpresas] = useState([]);
   const [newPassword, setNewPassword] = useState("");
   const [passwordValid, setPasswordValid] = useState(true);
+  const [correoValid, setCorreoValid] = useState(true);
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+  const correoRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 
   useEffect(() => {
@@ -62,6 +64,7 @@ function PerfilUsuario() {
       // Obtener los datos del usuario
       const userResponse = await usuarioService.getUsuario(id);
       const userData = userResponse.data;
+      setUsuario(userData);
 
       // Obtener la lista de empresas
       try {
@@ -75,7 +78,7 @@ function PerfilUsuario() {
           .map(id => empresas.find(empresa => empresa.id === id))
           .filter(empresa => empresa !== undefined); // Filtrar las empresas que no existen
 
-        setUsuario({ ...userData, empresas: userEmpresas });
+        setUsuario({ ...usuario, empresas: userEmpresas });
         setSelectedEmpresas(userEmpresas);
       } catch (error) {
         if (error.response && error.response.status === 404) {
@@ -95,8 +98,6 @@ function PerfilUsuario() {
       setLoading(false); // Finaliza el estado de carga
     }
   };
-
-
 
   // Funciones para restaurar el estado de edición.
   const handleDescartarCambios = () => {
@@ -128,13 +129,29 @@ function PerfilUsuario() {
         const updatedFields = {};
         updatedFields.id = usuario.id;
         if (field === "nombre") updatedFields.nombre = usuario.nombre;
-        if (field === "correo") updatedFields.correo = usuario.correo;
+        if (field === "correo" && correoValid) {
+          updatedFields.correo = usuario.correo;
+        } else if (field === "correo" && !correoValid) {
+          setEditMode((prevEditMode) => ({
+            ...prevEditMode,
+            [field]: false,
+          }));
+          fetchUsuario();
+          return;
+        }
         if (field === "rol") updatedFields.rol = usuario.rol;
         if (field === "empresas") {
           updatedFields.empresas = selectedEmpresas.map((e) => e.id);
         }
         if (field === "password" && passwordValid) {
           updatedFields.contrasenia = newPassword;
+        } else if (field === "password" && !passwordValid) {
+          setEditMode((prevEditMode) => ({
+            ...prevEditMode,
+            [field]: false,
+          }));
+          fetchUsuario();
+          return;
         }
 
         if ((updatedFields[field] === '' || updatedFields[field] === undefined || updatedFields[field] === null) && field !== "empresas") {
@@ -142,6 +159,7 @@ function PerfilUsuario() {
             ...prevEditMode,
             [field]: false,
           }));
+          fetchUsuario();
           return;
         }
 
@@ -201,6 +219,16 @@ function PerfilUsuario() {
     setPasswordValid(isValid);
   };
 
+  const handleCorreoChange = (e) => {
+    const newCorreo = e.target.value;
+    setUsuario((prevUsuario) => ({
+      ...prevUsuario,
+      correo: newCorreo,
+    }));
+
+    const isValid = correoRegex.test(newCorreo);
+    setCorreoValid(isValid);
+  };
 
   return (
     <>
@@ -325,8 +353,12 @@ function PerfilUsuario() {
                 <TextField
                   variant="standard"
                   value={usuario.correo}
-                  onChange={(e) => handleInputChange("correo", e.target.value)}
+                  onChange={handleCorreoChange}
                   sx={{ flexGrow: 1 }}
+                  error={!correoValid && usuario.correo !== ""}
+                  placeholder="Correo Electrónico"
+                  label="Correo Electrónico"
+                  helperText={!correoValid && usuario.correo !== "" ? "El correo electrónico debe tener un formato válido." : ""}
                 />
               ) : (
                 <Typography variant="body1">
@@ -338,7 +370,7 @@ function PerfilUsuario() {
                   editMode.correo ? saveChanges("correo") : handleEditToggle("correo")
                 }
               >
-                {editMode.correo ? <SaveIcon /> : <EditIcon />}
+                {editMode.correo ? (correoValid ? <SaveIcon /> : <CancelIcon />) : <EditIcon />}
               </IconButton>
             </Grid>
             {/* Cambiar Rol */}
