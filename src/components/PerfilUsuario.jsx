@@ -72,7 +72,6 @@ function PerfilUsuario() {
       const userResponse = await usuarioService.getUsuario(id);
       const userData = userResponse.data;
       setUsuario(userData); // Sobrescribe el estado de usuario con los datos obtenidos
-  
       // Obtener la lista de empresas
       try {
         const response = await empresaService.getListaEmpresas();
@@ -96,14 +95,11 @@ function PerfilUsuario() {
           setListaEmpresas([]);
           setFilteredEmpresas([]);
         } else {
-          // Maneja otros errores de la solicitud de empresas
           console.error("Error al obtener la lista de empresas:", error);
-          // Manejar el caso de error si es necesario
         }
       }
     } catch (error) {
       console.error("Error al obtener los detalles del usuario:", error);
-      // Manejar el caso de error si es necesario
     } finally {
       setLoading(false); // Finaliza el estado de carga
     }
