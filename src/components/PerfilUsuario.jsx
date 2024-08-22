@@ -33,7 +33,7 @@ function PerfilUsuario() {
   const { id } = useParams();
   const [usuarioLogeado, setUsuarioLogeado] = useState(null);
   const navigate = useNavigate();
-  const [usuario, setUsuario] = useState(null);
+  const [usuario, setUsuario] = useState({});
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState({});
   const [editActivated, setEditActivated] = useState(false);
@@ -48,15 +48,22 @@ function PerfilUsuario() {
 
 
   useEffect(() => {
-    usuarioService.getUsuarioLogueado().then((response) => {
-      if (response && (response.data.rol === "0" || response.data.id === id)) {
-        setUsuarioLogeado(response.data);
-      } else {
-        navigate("/login");
-      }
-    });
+    fetchUsuarioLogeado();
     fetchUsuario();
   }, [id]);
+
+  const fetchUsuarioLogeado = async () => {
+    try {
+      const response = await usuarioService.getUsuarioLogueado();
+      setUsuarioLogeado(response.data);
+      if (response.data.rol !== "0" && response.data.id !== id) {
+        navigate("/login");
+      }
+    } catch (error) {
+      console.error("Error al obtener el usuario logueado:", error);
+    }
+  };
+
 
   const fetchUsuario = async () => {
     setLoading(true); // Inicia el estado de carga
@@ -64,21 +71,24 @@ function PerfilUsuario() {
       // Obtener los datos del usuario
       const userResponse = await usuarioService.getUsuario(id);
       const userData = userResponse.data;
-      setUsuario(userData);
-
+      setUsuario(userData); // Sobrescribe el estado de usuario con los datos obtenidos
+  
       // Obtener la lista de empresas
       try {
         const response = await empresaService.getListaEmpresas();
         const empresas = response.data || []; // Usa un array vacío si no hay datos
         setListaEmpresas(empresas);
         setFilteredEmpresas(empresas);
-
+  
         // Mapear las empresas del usuario después de cargar la lista de empresas
         const userEmpresas = userData.empresas
           .map(id => empresas.find(empresa => empresa.id === id))
           .filter(empresa => empresa !== undefined); // Filtrar las empresas que no existen
-
-        setUsuario({ ...usuario, empresas: userEmpresas });
+  
+        setUsuario((prevUsuario) => ({
+          ...prevUsuario,
+          empresas: userEmpresas, // Actualiza el campo empresas del usuario
+        }));
         setSelectedEmpresas(userEmpresas);
       } catch (error) {
         if (error.response && error.response.status === 404) {
@@ -98,6 +108,7 @@ function PerfilUsuario() {
       setLoading(false); // Finaliza el estado de carga
     }
   };
+  
 
   // Funciones para restaurar el estado de edición.
   const handleDescartarCambios = () => {
@@ -297,10 +308,10 @@ function PerfilUsuario() {
                   fontSize: "3rem",
                 }}
               >
-                {usuario ? usuario.nombre.charAt(0) : ""}
+                {usuario.nombre ? usuario.nombre.charAt(0) : ""}
               </Avatar>
               <Typography variant="h4" sx={{ mt: 2 }}>
-                {usuario ? usuario.nombre : ""}
+                {usuario.nombre ? usuario.nombre : ""}
               </Typography>
             </Box>
             <Typography
