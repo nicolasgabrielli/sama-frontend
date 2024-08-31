@@ -147,8 +147,8 @@ function NavbarEvidencia({ evidencias, refreshEvidencias, usuarioLogeado, rolesG
         setOpenDialogAdjuntarEvidencia(false);
     };
 
-    const handleEliminarEvidencia = async (idEvidencia) => {
-        await reporteService.eliminarEvidencia(idEvidencia);
+    const handleEliminarEvidencia = async (evidencia) => {
+        await reporteService.eliminarEvidencia(evidencia.id);
         refreshEvidencias();
     };
 
